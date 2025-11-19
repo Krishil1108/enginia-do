@@ -1,0 +1,1969 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Calendar, Users, Bell, MessageCircle, Mic, Plus, Edit2, Trash2, MoreVertical, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye } from 'lucide-react';
+import API_URL from './config';
+
+const PRIORITY_COLORS = {
+  Low: 'bg-green-100 text-green-800 border-green-300',
+  Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+  High: 'bg-red-100 text-red-800 border-red-300'
+};
+
+const SEVERITY_BADGES = {
+  Minor: 'bg-blue-100 text-blue-700',
+  Major: 'bg-orange-100 text-orange-700',
+  Critical: 'bg-red-100 text-red-700'
+};
+
+const STATUS_COLORS = {
+  'Pending': 'bg-yellow-50 border-yellow-200 text-yellow-800',
+  'In Progress': 'bg-blue-50 border-blue-200 text-blue-800',
+  'Completed': 'bg-green-50 border-green-200 text-green-800',
+  'Overdue': 'bg-red-50 border-red-200 text-red-800'
+};
+
+const TEAMS = ['Team A', 'Team B', 'Team C'];
+const PROJECTS = ['Website Redesign', 'Mobile App', 'Marketing Campaign', 'Infrastructure'];
+
+const TaskManagementSystem = () => {
+  // Auth state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  
+  // App state
+  const [currentView, setCurrentView] = useState('my-tasks');
+  const [tasks, setTasks] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
+  const [filters, setFilters] = useState({});
+  const [isRecording, setIsRecording] = useState(false);
+  const [showAdvancedMenu, setShowAdvancedMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'table'
+  
+  // Modals for task actions
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showOverdueModal, setShowOverdueModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [completionReason, setCompletionReason] = useState('');
+  const [overdueReason, setOverdueReason] = useState('');
+  const [showTaskDetailsModal, setShowTaskDetailsModal] = useState(false);
+  const [taskDetails, setTaskDetails] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [confirmDialogData, setConfirmDialogData] = useState({ title: '', message: '', onConfirm: null });
+  
+  // Check if user is logged in
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      setCurrentUser(user);
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // Load data when logged in
+  useEffect(() => {
+    if (isLoggedIn && currentUser) {
+      loadTasks();
+      loadUsers();
+      loadNotifications();
+      // Poll for new notifications every 30 seconds
+      const interval = setInterval(loadNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn, currentUser]);
+
+  // Close dropdown menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const menus = document.querySelectorAll('[id^="menu-"]');
+      menus.forEach(menu => {
+        if (!menu.contains(event.target) && !event.target.closest('button')) {
+          menu.style.display = 'none';
+        }
+      });
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/users`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/tasks`);
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadNotifications = async () => {
+    if (!currentUser) return;
+    try {
+      const response = await axios.get(`${API_URL}/notifications/user/${currentUser.username}`);
+      setNotifications(response.data);
+      const unread = response.data.filter(n => !n.isRead).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      await axios.put(`${API_URL}/notifications/${notificationId}/read`);
+      loadNotifications();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    try {
+      await axios.put(`${API_URL}/notifications/user/${currentUser.username}/read-all`);
+      loadNotifications();
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const createNotification = async (taskId, userId, message, type, assignedBy) => {
+    try {
+      await axios.post(`${API_URL}/notifications`, {
+        userId,
+        taskId,
+        message,
+        type,
+        assignedBy
+      });
+    } catch (error) {
+      console.error('Error creating notification:', error);
+    }
+  };
+
+  const [formData, setFormData] = useState({
+    project: '',
+    title: '',
+    description: '',
+    priority: 'Medium',
+    severity: 'Minor',
+    inDate: '',
+    outDate: '',
+    team: 'Team A',
+    associates: [],
+    assignedTo: '',
+    assignedBy: '',
+    reminder: '',
+    whatsapp: false,
+    status: 'Pending'
+  });
+
+  const resetForm = () => {
+    setFormData({
+      project: selectedProject || '',
+      title: '',
+      description: '',
+      priority: 'Medium',
+      severity: 'Minor',
+      inDate: '',
+      outDate: '',
+      team: 'Team A',
+      associates: [],
+      assignedTo: '',
+      assignedBy: currentUser?.username || '',
+      reminder: '',
+      whatsapp: false,
+      status: 'Pending'
+    });
+    setEditingTask(null);
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.project || !formData.title || !formData.inDate || !formData.outDate || !formData.assignedTo) {
+      alert('Please fill in all required fields including Assigned To');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const taskData = {
+        ...formData,
+        assignedBy: currentUser.username
+      };
+      
+      let savedTask;
+      if (editingTask) {
+        const response = await axios.put(`${API_URL}/tasks/${editingTask._id}`, taskData);
+        savedTask = response.data;
+        
+        // Notify about update
+        await createNotification(
+          savedTask._id,
+          formData.assignedTo,
+          `Task "${formData.title}" was updated by ${currentUser.name}`,
+          'task_updated',
+          currentUser.username
+        );
+      } else {
+        const response = await axios.post(`${API_URL}/tasks`, taskData);
+        savedTask = response.data;
+        
+        // Notify assigned user
+        await createNotification(
+          savedTask._id,
+          formData.assignedTo,
+          `New task "${formData.title}" assigned to you by ${currentUser.name}`,
+          'task_assigned',
+          currentUser.username
+        );
+      }
+      
+      await loadTasks();
+      setShowTaskModal(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error saving task:', error);
+      alert('Failed to save task');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteTask = async (id) => {
+    setConfirmDialogData({
+      title: 'Delete Task',
+      message: 'Are you sure you want to delete this task? This action cannot be undone.',
+      onConfirm: () => performDeleteTask(id)
+    });
+    setShowConfirmDialog(true);
+  };
+
+  const performDeleteTask = async (id) => {
+    
+    try {
+      setLoading(true);
+      await axios.delete(`${API_URL}/tasks/${id}`);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      alert('Failed to delete task');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editTask = (task) => {
+    setFormData({
+      project: task.project,
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      severity: task.severity,
+      inDate: task.inDate ? new Date(task.inDate).toISOString().split('T')[0] : '',
+      outDate: task.outDate ? new Date(task.outDate).toISOString().split('T')[0] : '',
+      team: task.team,
+      associates: task.associates,
+      assignedTo: task.assignedTo,
+      assignedBy: task.assignedBy,
+      reminder: task.reminder ? new Date(task.reminder).toISOString().slice(0, 16) : '',
+      whatsapp: task.whatsapp,
+      status: task.status
+    });
+    setEditingTask(task);
+    setShowTaskModal(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
+    setIsLoggedIn(false);
+    setTasks([]);
+    setNotifications([]);
+  };
+
+  const handleCompleteTask = (task) => {
+    setSelectedTask(task);
+    setCompletionReason('');
+    setShowCompleteModal(true);
+  };
+
+  const handleMarkOverdue = (task) => {
+    setSelectedTask(task);
+    setOverdueReason('');
+    setShowOverdueModal(true);
+  };
+
+  const submitCompleteTask = async () => {
+    if (!completionReason.trim()) {
+      alert('Please provide a reason for task completion');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const updatedTask = {
+        ...selectedTask,
+        status: 'Completed',
+        completionReason: completionReason,
+        completedAt: new Date().toISOString()
+      };
+      
+      await axios.put(`${API_URL}/tasks/${selectedTask._id}`, updatedTask);
+      
+      // Notify task creator
+      await createNotification(
+        selectedTask._id,
+        selectedTask.assignedBy,
+        `Task "${selectedTask.title}" completed by ${currentUser.name}. Reason: ${completionReason}`,
+        'task_completed',
+        currentUser.username
+      );
+      
+      await loadTasks();
+      setShowCompleteModal(false);
+      setSelectedTask(null);
+      setCompletionReason('');
+    } catch (error) {
+      console.error('Error completing task:', error);
+      alert('Failed to complete task');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitMarkOverdue = async () => {
+    if (!overdueReason.trim()) {
+      alert('Please provide a reason for marking as overdue');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const updatedTask = {
+        ...selectedTask,
+        status: 'Overdue',
+        overdueReason: overdueReason
+      };
+      
+      await axios.put(`${API_URL}/tasks/${selectedTask._id}`, updatedTask);
+      
+      // Notify task creator
+      await createNotification(
+        selectedTask._id,
+        selectedTask.assignedBy,
+        `Task "${selectedTask.title}" marked as overdue by ${currentUser.name}. Reason: ${overdueReason}`,
+        'task_overdue',
+        currentUser.username
+      );
+      
+      await loadTasks();
+      setShowOverdueModal(false);
+      setSelectedTask(null);
+      setOverdueReason('');
+    } catch (error) {
+      console.error('Error marking task as overdue:', error);
+      alert('Failed to mark task as overdue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFilteredTasks = () => {
+    return tasks.filter(task => {
+      if (filters.project && task.project !== filters.project) return false;
+      if (filters.team && task.team !== filters.team) return false;
+      if (filters.priority && task.priority !== filters.priority) return false;
+      if (filters.severity && task.severity !== filters.severity) return false;
+      if (filters.status && task.status !== filters.status) return false;
+      return true;
+    });
+  };
+
+  const getMyTasks = () => {
+    return tasks.filter(task => task.assignedTo === currentUser?.username);
+  };
+
+  const getTasksAssignedByMe = () => {
+    return tasks.filter(task => task.assignedBy === currentUser?.username);
+  };
+
+  const voiceInput = () => {
+    setIsRecording(!isRecording);
+    setTimeout(() => setIsRecording(false), 2000);
+  };
+
+  // Login Screen Component
+  const LoginScreen = () => {
+    const [loginData, setLoginData] = useState({ username: '', password: '' });
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [registerData, setRegisterData] = useState({
+      username: '',
+      password: '',
+      name: '',
+      email: '',
+      role: 'Employee',
+      department: ''
+    });
+
+    const handleLogin = async (e) => {
+      e.preventDefault();
+      try {
+        setLoading(true);
+        const response = await axios.post(`${API_URL}/users/login`, loginData);
+        const user = response.data.user;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+      } catch (error) {
+        alert(error.response?.data?.message || 'Login failed');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleRegister = async (e) => {
+      e.preventDefault();
+      try {
+        setLoading(true);
+        await axios.post(`${API_URL}/users/register`, registerData);
+        alert('Registration successful! Please login.');
+        setIsRegistering(false);
+        setRegisterData({
+          username: '',
+          password: '',
+          name: '',
+          email: '',
+          role: 'Employee',
+          department: ''
+        });
+      } catch (error) {
+        alert(error.response?.data?.message || 'Registration failed');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+              <Users className="w-8 h-8 text-blue-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Task Management</h1>
+            <p className="text-gray-600 mt-2">
+              {isRegistering ? 'Create your account' : 'Sign in to continue'}
+            </p>
+          </div>
+
+          {!isRegistering ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={loginData.username}
+                    onChange={(e) => setLoginData({...loginData, username: e.target.value})}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your username"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="password"
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your password"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsRegistering(true)}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
+                  Don't have an account? Register
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                <input
+                  type="text"
+                  value={registerData.name}
+                  onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Username *</label>
+                <input
+                  type="text"
+                  value={registerData.username}
+                  onChange={(e) => setRegisterData({...registerData, username: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <input
+                  type="email"
+                  value={registerData.email}
+                  onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                <input
+                  type="password"
+                  value={registerData.password}
+                  onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Role *</label>
+                <select
+                  value={registerData.role}
+                  onChange={(e) => setRegisterData({...registerData, role: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Team Lead">Team Lead</option>
+                  <option value="Employee">Employee</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                <input
+                  type="text"
+                  value={registerData.department}
+                  onChange={(e) => setRegisterData({...registerData, department: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., IT, Sales, HR"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+              >
+                {loading ? 'Creating account...' : 'Register'}
+              </button>
+
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsRegistering(false)}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
+                  Already have an account? Sign in
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <p className="text-xs text-blue-800 font-medium mb-2">Demo Credentials:</p>
+            <p className="text-xs text-blue-700">Username: admin / Password: admin123</p>
+            <p className="text-xs text-blue-700 mt-1">Or register a new account above</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Horizontal Task Card for list view
+  // Table View Component
+  const TableView = ({ tasks, showActions = true, showStats = false, stats }) => {
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+    };
+
+    const formatTime = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    };
+
+    const getStatusBadge = (task) => {
+      const isPastDue = new Date(task.outDate) < new Date() && task.status !== 'Completed';
+      const status = isPastDue ? 'Overdue' : task.status;
+      
+      const colors = {
+        'Pending': 'bg-yellow-100 text-yellow-700',
+        'In Progress': 'bg-blue-100 text-blue-700',
+        'Completed': 'bg-green-100 text-green-700',
+        'Overdue': 'bg-red-100 text-red-700'
+      };
+      
+      return (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${colors[status]}`}>
+          {status}
+        </span>
+      );
+    };
+
+    const getAttendanceBadge = (status) => {
+      const colors = {
+        'Present': 'bg-green-100 text-green-700',
+        'Absent': 'bg-red-100 text-red-700',
+        'At office': 'bg-blue-100 text-blue-700'
+      };
+      return (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
+          {status}
+        </span>
+      );
+    };
+
+    return (
+      <div className="space-y-6">
+        {showStats && stats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                  <p className="text-4xl font-bold mt-2">{stats.pending}</p>
+                </div>
+                <Clock className="w-12 h-12 opacity-50" />
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                  <p className="text-4xl font-bold mt-2">{stats.inProgress}</p>
+                </div>
+                <Users className="w-12 h-12 opacity-50" />
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">Completed</p>
+                  <p className="text-4xl font-bold mt-2">{stats.completed}</p>
+                </div>
+                <Check className="w-12 h-12 opacity-50" />
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-100 text-sm font-medium">Overdue</p>
+                  <p className="text-4xl font-bold mt-2">{stats.overdue}</p>
+                </div>
+                <AlertCircle className="w-12 h-12 opacity-50" />
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-8">
+                  <input type="checkbox" className="rounded border-gray-300" />
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned To</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Project</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Task Title</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Time In</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Time Out</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Time</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned By</th>
+                {showActions && (
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {tasks.map((task, index) => {
+                const timeIn = task.inDate ? formatTime(task.inDate) : '-';
+                const timeOut = task.outDate ? formatTime(task.outDate) : '-';
+                const totalTime = task.inDate && task.outDate ? 
+                  Math.round((new Date(task.outDate) - new Date(task.inDate)) / (1000 * 60 * 60 * 24)) + ' days' : '-';
+                const assignedUser = users.find(u => u.username === task.assignedTo);
+                
+                return (
+                  <tr key={task._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <input type="checkbox" className="rounded border-gray-300" />
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      {String(index + 1).padStart(6, '0')}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold">
+                          {assignedUser?.name?.charAt(0) || 'U'}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{assignedUser?.name || task.assignedTo}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium text-gray-900">{task.project || 'No Project'}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                      <div className="text-xs text-gray-500">{task.description || 'No description'}</div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {formatDate(task.inDate || task.createdAt)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{timeIn}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{timeOut}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{totalTime}</td>
+                    <td className="px-4 py-3">{getStatusBadge(task)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-700">{task.assignedBy}</span>
+                      </div>
+                    </td>
+                    {showActions && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                            {/* View Details - Always visible */}
+                            <button
+                              onClick={() => {
+                                setTaskDetails(task);
+                                setShowTaskDetailsModal(true);
+                              }}
+                              className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+
+                            {/* Quick Actions for assigned users on incomplete tasks */}
+                            {task.assignedTo === currentUser?.username && task.status !== 'Completed' && (
+                              <>
+                                <button
+                                  onClick={() => handleCompleteTask(task)}
+                                  className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                                  title="Mark Complete"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleMarkOverdue(task)}
+                                  className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                  title="Mark Overdue"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+
+                            {/* Three Dots Menu - Administrative actions */}
+                            <div className="relative">
+                              <button 
+                                onClick={() => {
+                                  const menuId = `menu-${task._id}`;
+                                  const menu = document.getElementById(menuId);
+                                  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                                }}
+                                className="p-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
+                                title="More Actions"
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </button>
+                              
+                              <div 
+                                id={`menu-${task._id}`}
+                                className="absolute right-0 top-8 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
+                                style={{ display: 'none' }}
+                              >
+                                <button
+                                  onClick={() => {
+                                    setEditingTask(task);
+                                    setShowTaskModal(true);
+                                    document.getElementById(`menu-${task._id}`).style.display = 'none';
+                                  }}
+                                  className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-blue-600 text-sm"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                  Edit
+                                </button>
+                                
+                                {(currentUser?.role === 'Admin' || task.assignedBy === currentUser?.username) && (
+                                  <button
+                                    onClick={() => {
+                                      deleteTask(task._id);
+                                      document.getElementById(`menu-${task._id}`).style.display = 'none';
+                                    }}
+                                    className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 text-sm"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        </div>
+      </div>
+    );
+  };
+
+  const HorizontalTaskCard = ({ task, showActions = true }) => {
+    const isOverdue = new Date(task.outDate) < new Date() && task.status !== 'Completed';
+    const daysUntilDue = Math.ceil((new Date(task.outDate) - new Date()) / (1000 * 60 * 60 * 24));
+    const assignedUser = users.find(u => u.username === task.assignedTo);
+    const assignedByUser = users.find(u => u.username === task.assignedBy);
+
+    return (
+      <div className={`bg-white rounded-lg border-2 p-4 hover:shadow-md transition-all ${STATUS_COLORS[task.status]}`}>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="font-semibold text-gray-900">{task.title}</h4>
+              <span className={`px-2 py-1 rounded text-xs font-medium ${PRIORITY_COLORS[task.priority]} border`}>
+                {task.priority}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 mb-2 line-clamp-2">{task.description || 'No description'}</p>
+          </div>
+          {showActions && (
+            <div className="flex items-center gap-1 ml-4">
+              {/* Tick and Cross buttons for task completion */}
+              {task.assignedTo === currentUser?.username && task.status !== 'Completed' && (
+                <>
+                  <button
+                    onClick={() => handleCompleteTask(task)}
+                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    title="Mark as Complete"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleMarkOverdue(task)}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Mark as Overdue"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+              
+              <button
+                onClick={() => editTask(task)}
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Edit"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              {(currentUser?.role === 'Admin' || task.assignedBy === currentUser?.username) && (
+                <button
+                  onClick={() => deleteTask(task._id)}
+                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+          <div>
+            <span className="text-gray-500">Project:</span>
+            <span className="ml-1 font-medium text-gray-900">{task.project}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">Team:</span>
+            <span className="ml-1 font-medium text-gray-900">{task.team}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">Assigned To:</span>
+            <span className="ml-1 font-medium text-gray-900">{assignedUser?.name || task.assignedTo}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">Assigned By:</span>
+            <span className="ml-1 font-medium text-gray-900">{assignedByUser?.name || task.assignedBy}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-gray-600">
+              <Calendar className="w-3 h-3" />
+              {new Date(task.outDate).toLocaleDateString()}
+            </span>
+            {task.status !== 'Completed' && (
+              <span className={`font-medium ${daysUntilDue < 0 ? 'text-red-600' : daysUntilDue <= 2 ? 'text-orange-600' : 'text-gray-600'}`}>
+                {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : `${daysUntilDue} days left`}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-1 rounded text-xs font-medium ${SEVERITY_BADGES[task.severity]}`}>
+              {task.severity}
+            </span>
+            <span className={`px-2 py-1 rounded text-xs font-medium border ${STATUS_COLORS[task.status]}`}>
+              {task.status}
+            </span>
+          </div>
+        </div>
+
+        {task.completionReason && (
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <p className="text-xs text-gray-500">
+              <span className="font-medium">Completion Note:</span> {task.completionReason}
+            </p>
+          </div>
+        )}
+        {task.overdueReason && (
+          <div className="mt-3 pt-3 border-t border-red-200">
+            <p className="text-xs text-red-600">
+              <span className="font-medium">Overdue Reason:</span> {task.overdueReason}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // My Tasks Dashboard
+  const MyTasksDashboard = () => {
+    const myTasks = getMyTasks();
+    const pendingTasks = myTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = myTasks.filter(t => t.status === 'In Progress');
+    const completedTasks = myTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = myTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+
+    return (
+      <div className="space-y-6">
+        {/* View Toggle */}
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setViewMode('cards')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Cards View
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <List className="w-4 h-4" />
+            Table View
+          </button>
+        </div>
+
+        {viewMode === 'table' ? (
+          <TableView 
+            tasks={myTasks} 
+            showActions={true}
+            showStats={true}
+            stats={{
+              pending: pendingTasks.length,
+              inProgress: inProgressTasks.length,
+              completed: completedTasks.length,
+              overdue: overdueTasks.length
+            }}
+          />
+        ) : (
+      <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+              </div>
+              <Users className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+              </div>
+              <CheckCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">Overdue</p>
+                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+              </div>
+              <AlertCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+        </div>
+
+        {/* Overdue Tasks */}
+        {overdueTasks.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-red-600 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Overdue Tasks ({overdueTasks.length})
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {overdueTasks.map(task => (
+                <HorizontalTaskCard key={task._id} task={task} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pending Tasks */}
+        {pendingTasks.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-yellow-600" />
+                Pending Tasks ({pendingTasks.length})
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pendingTasks.map(task => (
+                <HorizontalTaskCard key={task._id} task={task} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* In Progress Tasks */}
+        {inProgressTasks.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-600" />
+                In Progress ({inProgressTasks.length})
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {inProgressTasks.map(task => (
+                <HorizontalTaskCard key={task._id} task={task} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Completed Tasks */}
+        {completedTasks.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                Completed Tasks ({completedTasks.length})
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {completedTasks.map(task => (
+                <HorizontalTaskCard key={task._id} task={task} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {myTasks.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+            <Users className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500">No tasks assigned to you yet</p>
+          </div>
+        )}
+      </div>
+        )}
+      </div>
+    );
+  };
+
+  // All Tasks View (Full List)
+  const AllTasksView = () => {
+    const filteredTasks = getFilteredTasks();
+
+    return (
+      <div className="space-y-6">
+        {/* View Toggle */}
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setViewMode('cards')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Cards View
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <List className="w-4 h-4" />
+            Table View
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Filters
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
+              <select
+                value={filters.project || ''}
+                onChange={(e) => setFilters({...filters, project: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Team</label>
+              <select
+                value={filters.team || ''}
+                onChange={(e) => setFilters({...filters, team: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <select
+                value={filters.priority || ''}
+                onChange={(e) => setFilters({...filters, priority: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Severity</label>
+              <select
+                value={filters.severity || ''}
+                onChange={(e) => setFilters({...filters, severity: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="Minor">Minor</option>
+                <option value="Major">Major</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select
+                value={filters.status || ''}
+                onChange={(e) => setFilters({...filters, status: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button 
+                onClick={() => setFilters({})}
+                className="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {viewMode === 'table' ? (
+          <TableView tasks={filteredTasks} />
+        ) : (
+          <>
+            {/* Tasks Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTasks.map(task => (
+                <HorizontalTaskCard key={task._id} task={task} />
+              ))}
+            </div>
+
+            {filteredTasks.length === 0 && (
+              <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+                <p className="text-gray-500">No tasks found</p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // Tasks Assigned By Me
+  const AssignedByMeView = () => {
+    const assignedByMe = getTasksAssignedByMe();
+
+    return (
+      <div className="space-y-6">
+        {/* View Toggle */}
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setViewMode('cards')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Cards View
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <List className="w-4 h-4" />
+            Table View
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Tasks You Assigned ({assignedByMe.length})
+          </h3>
+        </div>
+
+        {viewMode === 'table' ? (
+          <TableView tasks={assignedByMe} />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {assignedByMe.map(task => (
+                <HorizontalTaskCard key={task._id} task={task} />
+              ))}
+            </div>
+
+            {assignedByMe.length === 0 && (
+              <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+                <p className="text-gray-500">You haven't assigned any tasks yet</p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // Notifications Panel
+  const NotificationsPanel = () => (
+    <div className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-96 bg-white shadow-2xl border-l border-gray-200 z-40 overflow-y-auto">
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-900">Notifications</h3>
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllNotificationsAsRead}
+                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Mark all read
+              </button>
+            )}
+            <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="divide-y divide-gray-100">
+        {notifications.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            <Bell className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+            <p>No notifications</p>
+          </div>
+        ) : (
+          notifications.map(notification => (
+            <div
+              key={notification._id}
+              className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-blue-50' : ''}`}
+              onClick={() => !notification.isRead && markNotificationAsRead(notification._id)}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-lg ${
+                  notification.type === 'task_assigned' ? 'bg-blue-100 text-blue-600' :
+                  notification.type === 'task_completed' ? 'bg-green-100 text-green-600' :
+                  notification.type === 'task_overdue' ? 'bg-red-100 text-red-600' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-900">{notification.message}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(notification.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                {!notification.isRead && (
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  if (!isLoggedIn) {
+    return <LoginScreen />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {loading && (
+        <div className="fixed top-0 left-0 right-0 h-1 bg-blue-500 z-50">
+          <div className="h-full bg-blue-600 animate-pulse"></div>
+        </div>
+      )}
+      
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-gray-900">Task Management</h1>
+              <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-lg">
+                <User className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">{currentUser.name}</span>
+                <span className="text-xs text-blue-600 px-2 py-0.5 bg-blue-100 rounded">
+                  {currentUser.role}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setFormData({...formData, assignedBy: currentUser.username});
+                  setShowTaskModal(true);
+                }}
+                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="hidden sm:inline">Assign Task</span>
+              </button>
+              
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setShowAdvancedMenu(!showAdvancedMenu)}
+                className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          
+          {showAdvancedMenu && (
+            <div className="mt-3 flex gap-2 pb-2 border-t pt-3">
+              <button
+                onClick={() => { setCurrentView('my-tasks'); setShowAdvancedMenu(false); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'my-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                My Tasks
+              </button>
+              <button
+                onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                All Tasks
+              </button>
+              <button
+                onClick={() => { setCurrentView('assigned-by-me'); setShowAdvancedMenu(false); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Assigned By Me
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {currentView === 'my-tasks' && <MyTasksDashboard />}
+        {currentView === 'all-tasks' && <AllTasksView />}
+        {currentView === 'assigned-by-me' && <AssignedByMeView />}
+      </div>
+
+      {/* Notifications Panel */}
+      {showNotifications && <NotificationsPanel />}
+
+      {/* Task Modal */}
+      {showTaskModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">
+                {editingTask ? 'Edit Task' : 'Assign New Task'}
+              </h2>
+              <button onClick={() => { setShowTaskModal(false); resetForm(); }} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Assign To *</label>
+                <select
+                  value={formData.assignedTo}
+                  onChange={(e) => setFormData({...formData, assignedTo: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Select User</option>
+                  {users.map(user => (
+                    <option key={user._id} value={user.username}>
+                      {user.name} ({user.role}) - {user.department}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Project *</label>
+                <select
+                  value={formData.project}
+                  onChange={(e) => setFormData({...formData, project: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Select Project</option>
+                  {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Task Title *</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter task title"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows="3"
+                  placeholder="Task description"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Severity</label>
+                  <select
+                    value={formData.severity}
+                    onChange={(e) => setFormData({...formData, severity: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="Minor">Minor</option>
+                    <option value="Major">Major</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                  <input
+                    type="date"
+                    value={formData.inDate}
+                    onChange={(e) => setFormData({...formData, inDate: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Date *</label>
+                  <input
+                    type="date"
+                    value={formData.outDate}
+                    onChange={(e) => setFormData({...formData, outDate: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Team</label>
+                <select
+                  value={formData.team}
+                  onChange={(e) => setFormData({...formData, team: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Overdue">Overdue</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : (editingTask ? 'Update Task' : 'Assign Task')}
+                </button>
+                <button
+                  onClick={() => { setShowTaskModal(false); resetForm(); }}
+                  className="px-6 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Task Modal */}
+      {showCompleteModal && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="bg-green-50 border-b border-green-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+                <h2 className="text-xl font-semibold text-green-900">Complete Task</h2>
+              </div>
+              <button onClick={() => { setShowCompleteModal(false); setSelectedTask(null); setCompletionReason(''); }} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Task: <span className="font-semibold text-gray-900">{selectedTask.title}</span></p>
+                <p className="text-sm text-gray-600">Project: <span className="font-semibold text-gray-900">{selectedTask.project}</span></p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Completion Reason / Notes *
+                </label>
+                <textarea
+                  value={completionReason}
+                  onChange={(e) => setCompletionReason(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  rows="4"
+                  placeholder="Please provide details about task completion (e.g., deliverables, results, notes)..."
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={submitCompleteTask}
+                  disabled={loading || !completionReason.trim()}
+                  className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  {loading ? 'Completing...' : 'Mark as Complete'}
+                </button>
+                <button
+                  onClick={() => { setShowCompleteModal(false); setSelectedTask(null); setCompletionReason(''); }}
+                  className="px-6 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mark Overdue Modal */}
+      {showOverdueModal && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+              <div className="flex items-center gap-2">
+                <XCircle className="w-6 h-6 text-red-600" />
+                <h2 className="text-xl font-semibold text-red-900">Mark as Overdue</h2>
+              </div>
+              <button onClick={() => { setShowOverdueModal(false); setSelectedTask(null); setOverdueReason(''); }} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Task: <span className="font-semibold text-gray-900">{selectedTask.title}</span></p>
+                <p className="text-sm text-gray-600">Project: <span className="font-semibold text-gray-900">{selectedTask.project}</span></p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for Overdue / Delay *
+                </label>
+                <textarea
+                  value={overdueReason}
+                  onChange={(e) => setOverdueReason(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  rows="4"
+                  placeholder="Please explain why this task is overdue (e.g., blockers, dependencies, resource issues)..."
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={submitMarkOverdue}
+                  disabled={loading || !overdueReason.trim()}
+                  className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <XCircle className="w-5 h-5" />
+                  {loading ? 'Updating...' : 'Mark as Overdue'}
+                </button>
+                <button
+                  onClick={() => { setShowOverdueModal(false); setSelectedTask(null); setOverdueReason(''); }}
+                  className="px-6 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Task Details Modal */}
+      {showTaskDetailsModal && taskDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Eye className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Task Details</h3>
+                  <p className="text-sm text-gray-600">Complete task information</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowTaskDetailsModal(false);
+                  setTaskDetails(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Task ID</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-lg font-mono">{taskDetails._id}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                    taskDetails.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                    taskDetails.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                    taskDetails.status === 'Overdue' ? 'bg-red-100 text-red-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {taskDetails.status}
+                  </span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+                <p className="text-lg font-semibold text-gray-900">{taskDetails.title}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <p className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg min-h-[60px]">
+                  {taskDetails.description || 'No description provided'}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                  <p className="text-sm text-gray-900">{taskDetails.project || 'No Project'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
+                    taskDetails.priority === 'High' ? 'bg-red-100 text-red-700' :
+                    taskDetails.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {taskDetails.priority || 'Medium'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                  <p className="text-sm text-gray-900">{taskDetails.assignedTo}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned By</label>
+                  <p className="text-sm text-gray-900">{taskDetails.assignedBy}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Created Date</label>
+                  <p className="text-sm text-gray-900">
+                    {new Date(taskDetails.createdAt).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <p className="text-sm text-gray-900">
+                    {taskDetails.outDate ? 
+                      new Date(taskDetails.outDate).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      }) : 'No due date'
+                    }
+                  </p>
+                </div>
+              </div>
+              
+              {taskDetails.completionReason && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Completion Reason</label>
+                  <p className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+                    {taskDetails.completionReason}
+                  </p>
+                </div>
+              )}
+              
+              {taskDetails.overdueReason && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Overdue Reason</label>
+                  <p className="text-sm text-red-700 bg-red-50 px-3 py-2 rounded-lg">
+                    {taskDetails.overdueReason}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => {
+                  setShowTaskDetailsModal(false);
+                  setTaskDetails(null);
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {confirmDialogData.title}
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              {confirmDialogData.message}
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  setConfirmDialogData({ title: '', message: '', onConfirm: null });
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmDialogData.onConfirm) {
+                    confirmDialogData.onConfirm();
+                  }
+                  setShowConfirmDialog(false);
+                  setConfirmDialogData({ title: '', message: '', onConfirm: null });
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default TaskManagementSystem;
+
