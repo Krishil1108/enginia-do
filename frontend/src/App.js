@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Calendar, Users, Bell, MessageCircle, Mic, Plus, Edit2, Trash2, MoreVertical, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye } from 'lucide-react';
+import { Calendar, Users, Bell, MessageCircle, Mic, Plus, Edit2, Trash2, MoreVertical, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp } from 'lucide-react';
 import API_URL from './config';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import './datepicker-styles.css';
 
 const PRIORITY_COLORS = {
   Low: 'bg-green-100 text-green-800 border-green-300',
@@ -15,6 +21,8 @@ const SEVERITY_BADGES = {
   Critical: 'bg-red-100 text-red-700'
 };
 
+
+
 const STATUS_COLORS = {
   'Pending': 'bg-yellow-50 border-yellow-200 text-yellow-800',
   'In Progress': 'bg-blue-50 border-blue-200 text-blue-800',
@@ -25,7 +33,10 @@ const STATUS_COLORS = {
 const TEAMS = ['Team A', 'Team B', 'Team C'];
 const PROJECTS = ['Website Redesign', 'Mobile App', 'Marketing Campaign', 'Infrastructure'];
 
+
+
 const TaskManagementSystem = () => {
+  
   // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -45,6 +56,13 @@ const TaskManagementSystem = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'table'
+  
+  // Admin reporting states
+  const [showAdminReports, setShowAdminReports] = useState(false);
+  const [reportDateRange, setReportDateRange] = useState({ start: null, end: null });
+  const [reportType, setReportType] = useState('alltime'); // 'alltime', 'quarterly', 'halfyearly', 'yearly', 'custom'
+  const [reportData, setReportData] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(false);
   
   // Modals for task actions
   const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -79,6 +97,8 @@ const TaskManagementSystem = () => {
     }
   }, [isLoggedIn, currentUser]);
 
+
+
   // Close dropdown menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -102,6 +122,13 @@ const TaskManagementSystem = () => {
       console.error('Error loading users:', error);
     }
   };
+
+  // Check if current user is admin (you can customize this logic)
+  const isAdmin = useCallback(() => {
+    // console.log('Current User:', currentUser); // Commented out to reduce console noise
+    // Temporarily return true to show admin reports for all users
+    return true;
+  }, [currentUser]);
 
   const loadTasks = async () => {
     try {
@@ -405,10 +432,349 @@ const TaskManagementSystem = () => {
     return tasks.filter(task => task.assignedBy === currentUser?.username);
   };
 
+
+
   const voiceInput = () => {
     setIsRecording(!isRecording);
     setTimeout(() => setIsRecording(false), 2000);
   };
+
+  // Admin Reporting Functions
+  const generateAdminReport = useCallback(async () => {
+    setLoadingReport(true);
+    try {
+      const currentDate = new Date();
+      let startDate, endDate;
+      let reportTasks;
+
+      switch (reportType) {
+        case 'alltime':
+          reportTasks = tasks; // Include all tasks
+          startDate = new Date('2020-01-01'); // Default start date
+          endDate = currentDate;
+          break;
+        case 'quarterly':
+          const currentQuarter = Math.floor((currentDate.getMonth() + 3) / 3);
+          startDate = new Date(currentDate.getFullYear(), (currentQuarter - 1) * 3, 1);
+          endDate = new Date(currentDate.getFullYear(), currentQuarter * 3, 0);
+          reportTasks = tasks.filter(task => {
+            const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
+            return taskDate >= startDate && taskDate <= endDate;
+          });
+          break;
+        case 'halfyearly':
+          const currentHalf = currentDate.getMonth() >= 6 ? 2 : 1;
+          startDate = new Date(currentDate.getFullYear(), (currentHalf - 1) * 6, 1);
+          endDate = new Date(currentDate.getFullYear(), currentHalf * 6, 0);
+          reportTasks = tasks.filter(task => {
+            const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
+            return taskDate >= startDate && taskDate <= endDate;
+          });
+          break;
+        case 'yearly':
+          startDate = new Date(currentDate.getFullYear(), 0, 1);
+          endDate = new Date(currentDate.getFullYear(), 11, 31);
+          reportTasks = tasks.filter(task => {
+            const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
+            return taskDate >= startDate && taskDate <= endDate;
+          });
+          break;
+        case 'custom':
+          startDate = reportDateRange.start;
+          endDate = reportDateRange.end;
+          reportTasks = tasks.filter(task => {
+            const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
+            return taskDate >= startDate && taskDate <= endDate;
+          });
+          break;
+        default:
+          reportTasks = tasks;
+          startDate = new Date('2020-01-01');
+          endDate = currentDate;
+      }
+
+      // Debug logs (commented out to reduce console noise)
+      // console.log('Total tasks available:', tasks.length);
+      // console.log('Filtered tasks for report:', reportTasks.length);
+      // console.log('Report type:', reportType);
+      // console.log('Date range:', startDate, 'to', endDate);
+
+      // Generate comprehensive report data
+      const report = {
+        period: {
+          type: reportType,
+          startDate,
+          endDate,
+          label: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
+        },
+        summary: {
+          totalTasks: reportTasks.length,
+          completed: reportTasks.filter(t => t.status === 'Completed').length,
+          pending: reportTasks.filter(t => t.status === 'Pending').length,
+          inProgress: reportTasks.filter(t => t.status === 'In Progress').length,
+          overdue: reportTasks.filter(t => {
+            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+            return isOverdue || t.status === 'Overdue';
+          }).length
+        },
+        byTeam: {},
+        byUser: {},
+        byProject: {},
+        byPriority: {
+          High: reportTasks.filter(t => t.priority === 'High').length,
+          Medium: reportTasks.filter(t => t.priority === 'Medium').length,
+          Low: reportTasks.filter(t => t.priority === 'Low').length
+        },
+        completionRate: reportTasks.length > 0 ? 
+          (reportTasks.filter(t => t.status === 'Completed').length / reportTasks.length * 100).toFixed(2) : 0
+      };
+
+      // Group by team
+      TEAMS.forEach(team => {
+        const teamTasks = reportTasks.filter(t => t.team === team);
+        report.byTeam[team] = {
+          total: teamTasks.length,
+          completed: teamTasks.filter(t => t.status === 'Completed').length,
+          pending: teamTasks.filter(t => t.status === 'Pending').length,
+          inProgress: teamTasks.filter(t => t.status === 'In Progress').length,
+          overdue: teamTasks.filter(t => {
+            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+            return isOverdue || t.status === 'Overdue';
+          }).length,
+          completionRate: teamTasks.length > 0 ? 
+            (teamTasks.filter(t => t.status === 'Completed').length / teamTasks.length * 100).toFixed(2) : 0
+        };
+      });
+
+      // Group by user
+      users.forEach(user => {
+        const userTasks = reportTasks.filter(t => t.assignedTo === user.name);
+        report.byUser[user.name] = {
+          total: userTasks.length,
+          completed: userTasks.filter(t => t.status === 'Completed').length,
+          pending: userTasks.filter(t => t.status === 'Pending').length,
+          inProgress: userTasks.filter(t => t.status === 'In Progress').length,
+          overdue: userTasks.filter(t => {
+            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+            return isOverdue || t.status === 'Overdue';
+          }).length,
+          completionRate: userTasks.length > 0 ? 
+            (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : 0
+        };
+      });
+
+      // Group by project
+      PROJECTS.forEach(project => {
+        const projectTasks = reportTasks.filter(t => t.project === project);
+        report.byProject[project] = {
+          total: projectTasks.length,
+          completed: projectTasks.filter(t => t.status === 'Completed').length,
+          pending: projectTasks.filter(t => t.status === 'Pending').length,
+          inProgress: projectTasks.filter(t => t.status === 'In Progress').length,
+          overdue: projectTasks.filter(t => {
+            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+            return isOverdue || t.status === 'Overdue';
+          }).length,
+          completionRate: projectTasks.length > 0 ? 
+            (projectTasks.filter(t => t.status === 'Completed').length / projectTasks.length * 100).toFixed(2) : 0
+        };
+      });
+
+      setReportData(report);
+    } catch (error) {
+      console.error('Error generating report:', error);
+    } finally {
+      setLoadingReport(false);
+    }
+  }, [tasks, users, reportType, reportDateRange]);
+
+  // Export Functions
+  const exportToExcel = useCallback((data, filename = 'task_report') => {
+    if (!data) return;
+
+    const wb = XLSX.utils.book_new();
+
+    // Summary Sheet
+    const summaryData = [
+      ['Task Management Report'],
+      ['Period', data.period.label],
+      ['Report Type', data.period.type.toUpperCase()],
+      ['Generated On', new Date().toLocaleDateString()],
+      [''],
+      ['SUMMARY'],
+      ['Total Tasks', data.summary.totalTasks],
+      ['Completed', data.summary.completed],
+      ['Pending', data.summary.pending],
+      ['In Progress', data.summary.inProgress],
+      ['Overdue', data.summary.overdue],
+      ['Completion Rate (%)', data.completionRate]
+    ];
+
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
+
+    // Team Analysis Sheet
+    const teamData = [['Team', 'Total Tasks', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate (%)']];
+    Object.entries(data.byTeam).forEach(([team, stats]) => {
+      teamData.push([team, stats.total, stats.completed, stats.pending, stats.inProgress, stats.overdue, stats.completionRate]);
+    });
+    const teamSheet = XLSX.utils.aoa_to_sheet(teamData);
+    XLSX.utils.book_append_sheet(wb, teamSheet, 'Team Analysis');
+
+    // User Analysis Sheet
+    const userData = [['User', 'Total Tasks', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate (%)']];
+    Object.entries(data.byUser).forEach(([user, stats]) => {
+      userData.push([user, stats.total, stats.completed, stats.pending, stats.inProgress, stats.overdue, stats.completionRate]);
+    });
+    const userSheet = XLSX.utils.aoa_to_sheet(userData);
+    XLSX.utils.book_append_sheet(wb, userSheet, 'User Analysis');
+
+    // Project Analysis Sheet
+    const projectData = [['Project', 'Total Tasks', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate (%)']];
+    Object.entries(data.byProject).forEach(([project, stats]) => {
+      projectData.push([project, stats.total, stats.completed, stats.pending, stats.inProgress, stats.overdue, stats.completionRate]);
+    });
+    const projectSheet = XLSX.utils.aoa_to_sheet(projectData);
+    XLSX.utils.book_append_sheet(wb, projectSheet, 'Project Analysis');
+
+    XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  }, []);
+
+  const exportToPDF = useCallback((data, filename = 'task_report') => {
+    if (!data) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    let yPosition = 20;
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont(undefined, 'bold');
+    doc.text('Task Management Report', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    // Period Info
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Period: ${data.period.label}`, 20, yPosition);
+    yPosition += 10;
+    doc.text(`Report Type: ${data.period.type.toUpperCase()}`, 20, yPosition);
+    yPosition += 10;
+    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 20, yPosition);
+    yPosition += 20;
+
+    // Summary Table
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Summary', 20, yPosition);
+    yPosition += 10;
+
+    doc.autoTable({
+      startY: yPosition,
+      head: [['Metric', 'Count']],
+      body: [
+        ['Total Tasks', data.summary.totalTasks],
+        ['Completed', data.summary.completed],
+        ['Pending', data.summary.pending],
+        ['In Progress', data.summary.inProgress],
+        ['Overdue', data.summary.overdue],
+        ['Completion Rate (%)', data.completionRate + '%']
+      ],
+      theme: 'grid'
+    });
+
+    yPosition = doc.lastAutoTable.finalY + 20;
+
+    // Team Analysis
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Team Analysis', 20, yPosition);
+    yPosition += 10;
+
+    const teamRows = Object.entries(data.byTeam).map(([team, stats]) => [
+      team, stats.total, stats.completed, stats.pending, stats.inProgress, stats.overdue, stats.completionRate + '%'
+    ]);
+
+    doc.autoTable({
+      startY: yPosition,
+      head: [['Team', 'Total', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate']],
+      body: teamRows,
+      theme: 'grid'
+    });
+
+    // User Analysis (New Page)
+    doc.addPage();
+    yPosition = 20;
+    
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('User Analysis', 20, yPosition);
+    yPosition += 10;
+
+    const userRows = Object.entries(data.byUser).map(([user, stats]) => [
+      user, stats.total, stats.completed, stats.pending, stats.inProgress, stats.overdue, stats.completionRate + '%'
+    ]);
+
+    doc.autoTable({
+      startY: yPosition,
+      head: [['User', 'Total', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate']],
+      body: userRows,
+      theme: 'grid'
+    });
+
+    // Project Analysis
+    yPosition = doc.lastAutoTable.finalY + 20;
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Project Analysis', 20, yPosition);
+    yPosition += 10;
+
+    const projectRows = Object.entries(data.byProject).map(([project, stats]) => [
+      project, stats.total, stats.completed, stats.pending, stats.inProgress, stats.overdue, stats.completionRate + '%'
+    ]);
+
+    doc.autoTable({
+      startY: yPosition,
+      head: [['Project', 'Total', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate']],
+      body: projectRows,
+      theme: 'grid'
+    });
+
+    doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
+  }, []);
+
+  const exportTaskList = useCallback((taskList, format = 'excel', filename = 'tasks') => {
+    if (format === 'excel') {
+      const wb = XLSX.utils.book_new();
+      const taskData = taskList.map(task => ({
+        'Task ID': task._id,
+        'Title': task.title,
+        'Description': task.description,
+        'Status': task.status,
+        'Priority': task.priority,
+        'Project': task.project,
+        'Team': task.team,
+        'Assigned To': task.assignedTo,
+        'Assigned By': task.assignedBy,
+        'Start Date': task.inDate ? new Date(task.inDate).toLocaleDateString() : '',
+        'Due Date': task.outDate ? new Date(task.outDate).toLocaleDateString() : '',
+        'Created Date': task.createdDate ? new Date(task.createdDate).toLocaleDateString() : ''
+      }));
+      const ws = XLSX.utils.json_to_sheet(taskData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+      XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+  }, []);
 
   // Login Screen Component
   const LoginScreen = () => {
@@ -1003,9 +1369,20 @@ const TaskManagementSystem = () => {
 
     return (
       <div className="space-y-6">
-        {/* View Toggle */}
-        <div className="flex justify-end gap-2">
+        {/* Export and View Toggle */}
+        <div className="flex justify-end items-center gap-4">
+          {/* Export Button */}
           <button
+            onClick={() => exportTaskList(myTasks, 'excel', 'my_tasks')}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Export Excel
+          </button>
+          
+          {/* View Toggle */}
+          <div className="flex gap-2">
+            <button
             onClick={() => setViewMode('cards')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
           >
@@ -1018,7 +1395,8 @@ const TaskManagementSystem = () => {
           >
             <List className="w-4 h-4" />
             Table View
-          </button>
+            </button>
+          </div>
         </div>
 
         {viewMode === 'table' ? (
@@ -1034,7 +1412,7 @@ const TaskManagementSystem = () => {
             }}
           />
         ) : (
-      <div className="space-y-6">
+          <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
@@ -1149,7 +1527,348 @@ const TaskManagementSystem = () => {
             <p className="text-gray-500">No tasks assigned to you yet</p>
           </div>
         )}
+          </div>
+        )}
       </div>
+    );
+  };
+
+  // Admin Reports View
+  const AdminReportsView = () => {
+    const [selectedQuarter, setSelectedQuarter] = useState(Math.floor((new Date().getMonth() + 3) / 3));
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+    const getQuarterDates = (quarter, year) => {
+      const startMonth = (quarter - 1) * 3;
+      const endMonth = quarter * 3 - 1;
+      return {
+        start: new Date(year, startMonth, 1),
+        end: new Date(year, endMonth + 1, 0)
+      };
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Admin Reports</h2>
+            <p className="text-gray-600">Comprehensive task analytics and reporting</p>
+            <div className="mt-2 text-sm text-blue-600">
+              Total Tasks in System: <span className="font-semibold">{tasks.length}</span>
+            </div>
+          </div>
+          
+          {reportData && (
+            <div className="flex gap-3">
+              <button
+                onClick={() => exportToExcel(reportData, 'admin_report')}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Export Excel
+              </button>
+              <button
+                onClick={() => exportToPDF(reportData, 'admin_report')}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                Export PDF
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Report Controls */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Generate Report</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Report Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+              <select
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="alltime">All Time</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="halfyearly">Half Yearly</option>
+                <option value="yearly">Yearly</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+
+            {/* Quarter Selection (for quarterly reports) */}
+            {reportType === 'quarterly' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+                <select
+                  value={selectedQuarter}
+                  onChange={(e) => setSelectedQuarter(parseInt(e.target.value))}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value={1}>Q1 (Jan-Mar)</option>
+                  <option value={2}>Q2 (Apr-Jun)</option>
+                  <option value={3}>Q3 (Jul-Sep)</option>
+                  <option value={4}>Q4 (Oct-Dec)</option>
+                </select>
+              </div>
+            )}
+
+            {/* Year Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {[...Array(5)].map((_, i) => {
+                  const year = new Date().getFullYear() - 2 + i;
+                  return <option key={year} value={year}>{year}</option>;
+                })}
+              </select>
+            </div>
+          </div>
+
+          {/* Custom Date Range */}
+          {reportType === 'custom' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <DatePicker
+                  selected={reportDateRange.start}
+                  onChange={(date) => setReportDateRange(prev => ({ ...prev, start: date }))}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholderText="Select start date"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <DatePicker
+                  selected={reportDateRange.end}
+                  onChange={(date) => setReportDateRange(prev => ({ ...prev, end: date }))}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholderText="Select end date"
+                />
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={generateAdminReport}
+            disabled={loadingReport || (reportType === 'custom' && (!reportDateRange.start || !reportDateRange.end))}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          >
+            {loadingReport ? (
+              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+            ) : (
+              <TrendingUp className="w-4 h-4" />
+            )}
+            {loadingReport ? 'Generating...' : 'Generate Report'}
+          </button>
+        </div>
+
+        {/* Report Results */}
+        {reportData && (
+          <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-600 text-sm font-medium">Total Tasks</p>
+                    <p className="text-2xl font-bold text-blue-800">{reportData.summary.totalTasks}</p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-blue-600" />
+                </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-600 text-sm font-medium">Completed</p>
+                    <p className="text-2xl font-bold text-green-800">{reportData.summary.completed}</p>
+                  </div>
+                  <Check className="w-8 h-8 text-green-600" />
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-yellow-600 text-sm font-medium">Pending</p>
+                    <p className="text-2xl font-bold text-yellow-800">{reportData.summary.pending}</p>
+                  </div>
+                  <Clock className="w-8 h-8 text-yellow-600" />
+                </div>
+              </div>
+              
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-600 text-sm font-medium">In Progress</p>
+                    <p className="text-2xl font-bold text-purple-800">{reportData.summary.inProgress}</p>
+                  </div>
+                  <Users className="w-8 h-8 text-purple-600" />
+                </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-red-600 text-sm font-medium">Overdue</p>
+                    <p className="text-2xl font-bold text-red-800">{reportData.summary.overdue}</p>
+                  </div>
+                  <AlertCircle className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+            </div>
+
+            {/* Completion Rate */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">Overall Completion Rate</h4>
+              <div className="w-full bg-gray-200 rounded-full h-8">
+                <div 
+                  className="bg-gradient-to-r from-green-500 to-green-600 h-8 rounded-full flex items-center justify-center text-white font-medium"
+                  style={{ width: `${reportData.completionRate}%` }}
+                >
+                  {reportData.completionRate}%
+                </div>
+              </div>
+            </div>
+
+            {/* Team Analysis */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">Team Performance</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-4 font-medium text-gray-700">Team</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Total</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Completed</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Pending</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">In Progress</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Overdue</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Completion %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(reportData.byTeam).map(([team, stats]) => (
+                      <tr key={team} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium">{team}</td>
+                        <td className="py-3 px-4 text-center">{stats.total}</td>
+                        <td className="py-3 px-4 text-center text-green-600">{stats.completed}</td>
+                        <td className="py-3 px-4 text-center text-yellow-600">{stats.pending}</td>
+                        <td className="py-3 px-4 text-center text-purple-600">{stats.inProgress}</td>
+                        <td className="py-3 px-4 text-center text-red-600">{stats.overdue}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            parseFloat(stats.completionRate) >= 80 ? 'bg-green-100 text-green-800' :
+                            parseFloat(stats.completionRate) >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {stats.completionRate}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* User Analysis */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">Individual Performance</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-4 font-medium text-gray-700">User</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Total</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Completed</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Pending</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">In Progress</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Overdue</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Completion %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(reportData.byUser)
+                      .filter(([_, stats]) => stats.total > 0)
+                      .sort(([, a], [, b]) => parseFloat(b.completionRate) - parseFloat(a.completionRate))
+                      .map(([user, stats]) => (
+                      <tr key={user} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium">{user}</td>
+                        <td className="py-3 px-4 text-center">{stats.total}</td>
+                        <td className="py-3 px-4 text-center text-green-600">{stats.completed}</td>
+                        <td className="py-3 px-4 text-center text-yellow-600">{stats.pending}</td>
+                        <td className="py-3 px-4 text-center text-purple-600">{stats.inProgress}</td>
+                        <td className="py-3 px-4 text-center text-red-600">{stats.overdue}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            parseFloat(stats.completionRate) >= 80 ? 'bg-green-100 text-green-800' :
+                            parseFloat(stats.completionRate) >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {stats.completionRate}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Project Analysis */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">Project Analysis</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-4 font-medium text-gray-700">Project</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Total</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Completed</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Pending</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">In Progress</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Overdue</th>
+                      <th className="text-center py-2 px-4 font-medium text-gray-700">Completion %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(reportData.byProject)
+                      .filter(([_, stats]) => stats.total > 0)
+                      .sort(([, a], [, b]) => parseFloat(b.completionRate) - parseFloat(a.completionRate))
+                      .map(([project, stats]) => (
+                      <tr key={project} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium">{project}</td>
+                        <td className="py-3 px-4 text-center">{stats.total}</td>
+                        <td className="py-3 px-4 text-center text-green-600">{stats.completed}</td>
+                        <td className="py-3 px-4 text-center text-yellow-600">{stats.pending}</td>
+                        <td className="py-3 px-4 text-center text-purple-600">{stats.inProgress}</td>
+                        <td className="py-3 px-4 text-center text-red-600">{stats.overdue}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            parseFloat(stats.completionRate) >= 80 ? 'bg-green-100 text-green-800' :
+                            parseFloat(stats.completionRate) >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {stats.completionRate}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -1157,13 +1876,24 @@ const TaskManagementSystem = () => {
 
   // All Tasks View (Full List)
   const AllTasksView = () => {
-    const filteredTasks = getFilteredTasks();
+    const allTasks = getFilteredTasks();
 
     return (
       <div className="space-y-6">
-        {/* View Toggle */}
-        <div className="flex justify-end gap-2">
+        {/* Export and View Toggle */}
+        <div className="flex justify-end items-center gap-4">
+          {/* Export Button */}
           <button
+            onClick={() => exportTaskList(allTasks, 'excel', 'all_tasks')}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Export Excel
+          </button>
+          
+          {/* View Toggle */}
+          <div className="flex gap-2">
+            <button
             onClick={() => setViewMode('cards')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
           >
@@ -1176,7 +1906,8 @@ const TaskManagementSystem = () => {
           >
             <List className="w-4 h-4" />
             Table View
-          </button>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -1260,17 +1991,17 @@ const TaskManagementSystem = () => {
         </div>
 
         {viewMode === 'table' ? (
-          <TableView tasks={filteredTasks} />
+          <TableView tasks={allTasks} />
         ) : (
           <>
             {/* Tasks Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredTasks.map(task => (
+              {allTasks.map(task => (
                 <HorizontalTaskCard key={task._id} task={task} />
               ))}
             </div>
 
-            {filteredTasks.length === 0 && (
+            {allTasks.length === 0 && (
               <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
                 <p className="text-gray-500">No tasks found</p>
               </div>
@@ -1287,9 +2018,20 @@ const TaskManagementSystem = () => {
 
     return (
       <div className="space-y-6">
-        {/* View Toggle */}
-        <div className="flex justify-end gap-2">
+        {/* Export and View Toggle */}
+        <div className="flex justify-end items-center gap-4">
+          {/* Export Button */}
           <button
+            onClick={() => exportTaskList(assignedByMe, 'excel', 'assigned_by_me')}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Export Excel
+          </button>
+          
+          {/* View Toggle */}
+          <div className="flex gap-2">
+            <button
             onClick={() => setViewMode('cards')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
           >
@@ -1302,7 +2044,8 @@ const TaskManagementSystem = () => {
           >
             <List className="w-4 h-4" />
             Table View
-          </button>
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
@@ -1487,6 +2230,20 @@ const TaskManagementSystem = () => {
               >
                 Assigned By Me
               </button>
+              
+              {isAdmin() && (
+                <button
+                  onClick={() => { setCurrentView('admin-reports'); setShowAdvancedMenu(false); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentView === 'admin-reports' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4" />
+                    Admin Reports
+                  </div>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1497,6 +2254,7 @@ const TaskManagementSystem = () => {
         {currentView === 'my-tasks' && <MyTasksDashboard />}
         {currentView === 'all-tasks' && <AllTasksView />}
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
+        {currentView === 'admin-reports' && isAdmin() && <AdminReportsView />}
       </div>
 
       {/* Notifications Panel */}
