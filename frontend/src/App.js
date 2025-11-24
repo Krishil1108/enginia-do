@@ -596,7 +596,7 @@ const TaskManagementSystem = () => {
 
     // Summary Sheet
     const summaryData = [
-      ['Task Management Report'],
+      ['TriDo Report'],
       ['Period', data.period.label],
       ['Report Type', data.period.type.toUpperCase()],
       ['Generated On', new Date().toLocaleDateString()],
@@ -650,7 +650,7 @@ const TaskManagementSystem = () => {
     // Title
     doc.setFontSize(20);
     doc.setFont(undefined, 'bold');
-    doc.text('Task Management Report', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('TriDo Report', pageWidth / 2, yPosition, { align: 'center' });
     yPosition += 15;
 
     // Period Info
@@ -834,7 +834,7 @@ const TaskManagementSystem = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
               <Users className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Task Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900">TriDo</h1>
             <p className="text-gray-600 mt-2">
               {isRegistering ? 'Create your account' : 'Sign in to continue'}
             </p>
@@ -981,11 +981,7 @@ const TaskManagementSystem = () => {
             </form>
           )}
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-800 font-medium mb-2">Demo Credentials:</p>
-            <p className="text-xs text-blue-700">Username: admin / Password: admin123</p>
-            <p className="text-xs text-blue-700 mt-1">Or register a new account above</p>
-          </div>
+
         </div>
       </div>
     );
@@ -2153,7 +2149,7 @@ const TaskManagementSystem = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-gray-900">Task Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">TriDo</h1>
               <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-lg">
                 <User className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900">{currentUser.name}</span>
