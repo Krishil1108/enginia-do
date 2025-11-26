@@ -2277,14 +2277,18 @@ const TaskManagementSystem = () => {
                       No projects yet. Add one above.
                     </div>
                   ) : (
-                    projects.map((project, index) => (
+                    projects.map((project, index) => {
+                      const projectName = typeof project === 'string' ? project : project?.name || '';
+                      const projectId = typeof project === 'object' ? project?._id : index;
+                      
+                      return (
                       <div
-                        key={project._id || index}
+                        key={projectId}
                         className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <FolderKanban className="w-5 h-5 text-blue-600" />
-                          <span className="font-medium text-gray-900">{project.name || project}</span>
+                          <span className="font-medium text-gray-900">{projectName}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -2303,7 +2307,7 @@ const TaskManagementSystem = () => {
                           </button>
                         </div>
                       </div>
-                    ))
+                    )})
                   )}
                 </div>
               </div>
@@ -2352,7 +2356,11 @@ const TaskManagementSystem = () => {
                     required
                   >
                     <option value="">Select Project</option>
-                    {projects.map(p => <option key={p._id || p} value={p.name || p}>{p.name || p}</option>)}
+                    {projects.map((p, idx) => {
+                      const projectName = typeof p === 'string' ? p : p?.name || '';
+                      const projectKey = typeof p === 'object' ? p?._id : idx;
+                      return <option key={projectKey} value={projectName}>{projectName}</option>;
+                    })}
                   </select>
                   <button
                     type="button"
