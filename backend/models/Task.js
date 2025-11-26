@@ -33,7 +33,8 @@ const taskSchema = new mongoose.Schema({
   },
   team: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   associates: {
     type: [String],
