@@ -99,6 +99,11 @@ const TaskManagementSystem = () => {
   }, [isLoggedIn, currentUser]);
 
 
+  // Helper function to safely get project name
+  const getProjectName = (project) => {
+    if (!project) return 'No Project';
+    return typeof project === 'string' ? project : project?.name || 'No Project';
+  };
 
   // Close dropdown menus when clicking outside
   useEffect(() => {
@@ -1145,7 +1150,7 @@ const TaskManagementSystem = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-sm font-medium text-gray-900">{task.project || 'No Project'}</div>
+                      <div className="text-sm font-medium text-gray-900">{getProjectName(task.project)}</div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-sm font-medium text-gray-900">{task.title}</div>
@@ -1321,7 +1326,7 @@ const TaskManagementSystem = () => {
         <div className="grid grid-cols-2 gap-3 text-xs mb-3">
           <div>
             <span className="text-gray-500">Project:</span>
-            <span className="ml-1 font-medium text-gray-900">{task.project}</span>
+            <span className="ml-1 font-medium text-gray-900">{getProjectName(task.project)}</span>
           </div>
           <div>
             <span className="text-gray-500">Team:</span>
@@ -2501,7 +2506,7 @@ const TaskManagementSystem = () => {
             <div className="p-6 space-y-4">
               <div>
                 <p className="text-sm text-gray-600 mb-2">Task: <span className="font-semibold text-gray-900">{selectedTask.title}</span></p>
-                <p className="text-sm text-gray-600">Project: <span className="font-semibold text-gray-900">{selectedTask.project}</span></p>
+                <p className="text-sm text-gray-600">Project: <span className="font-semibold text-gray-900">{getProjectName(selectedTask.project)}</span></p>
               </div>
               
               <div>
@@ -2555,7 +2560,7 @@ const TaskManagementSystem = () => {
             <div className="p-6 space-y-4">
               <div>
                 <p className="text-sm text-gray-600 mb-2">Task: <span className="font-semibold text-gray-900">{selectedTask.title}</span></p>
-                <p className="text-sm text-gray-600">Project: <span className="font-semibold text-gray-900">{selectedTask.project}</span></p>
+                <p className="text-sm text-gray-600">Project: <span className="font-semibold text-gray-900">{getProjectName(selectedTask.project)}</span></p>
               </div>
               
               <div>
