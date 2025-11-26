@@ -529,7 +529,6 @@ const TaskManagementSystem = () => {
             return isOverdue || t.status === 'Overdue';
           }).length
         },
-        byTeam: {},
         byUser: {},
         byProject: {},
         byPriority: {
@@ -540,23 +539,6 @@ const TaskManagementSystem = () => {
         completionRate: reportTasks.length > 0 ? 
           (reportTasks.filter(t => t.status === 'Completed').length / reportTasks.length * 100).toFixed(2) : 0
       };
-
-      // Group by team
-      TEAMS.forEach(team => {
-        const teamTasks = reportTasks.filter(t => t.team === team);
-        report.byTeam[team] = {
-          total: teamTasks.length,
-          completed: teamTasks.filter(t => t.status === 'Completed').length,
-          pending: teamTasks.filter(t => t.status === 'Pending').length,
-          inProgress: teamTasks.filter(t => t.status === 'In Progress').length,
-          overdue: teamTasks.filter(t => {
-            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
-            return isOverdue || t.status === 'Overdue';
-          }).length,
-          completionRate: teamTasks.length > 0 ? 
-            (teamTasks.filter(t => t.status === 'Completed').length / teamTasks.length * 100).toFixed(2) : 0
-        };
-      });
 
       // Group by user
       users.forEach(user => {
@@ -625,14 +607,6 @@ const TaskManagementSystem = () => {
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
     XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
 
-    // Team Analysis Sheet
-    const teamData = [['Team', 'Total Tasks', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate (%)']];
-    Object.entries(data.byTeam).forEach(([team, stats]) => {
-      teamData.push([team, stats.total, stats.completed, stats.pending, stats.inProgress, stats.overdue, stats.completionRate]);
-    });
-    const teamSheet = XLSX.utils.aoa_to_sheet(teamData);
-    XLSX.utils.book_append_sheet(wb, teamSheet, 'Team Analysis');
-
     // User Analysis Sheet
     const userData = [['User', 'Total Tasks', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate (%)']];
     Object.entries(data.byUser).forEach(([user, stats]) => {
@@ -692,30 +666,6 @@ const TaskManagementSystem = () => {
         ['Overdue', data.summary.overdue],
         ['Completion Rate (%)', data.completionRate + '%']
       ],
-      theme: 'grid'
-    });
-
-    yPosition = doc.lastAutoTable.finalY + 20;
-
-    // Team Analysis
-    if (yPosition > 250) {
-      doc.addPage();
-      yPosition = 20;
-    }
-    
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Team Analysis', 20, yPosition);
-    yPosition += 10;
-
-    const teamRows = Object.entries(data.byTeam).map(([team, stats]) => [
-      team, stats.total, stats.completed, stats.pending, stats.inProgress, stats.overdue, stats.completionRate + '%'
-    ]);
-
-    doc.autoTable({
-      startY: yPosition,
-      head: [['Team', 'Total', 'Completed', 'Pending', 'In Progress', 'Overdue', 'Completion Rate']],
-      body: teamRows,
       theme: 'grid'
     });
 
@@ -1748,47 +1698,6 @@ const TaskManagementSystem = () => {
               </div>
             </div>
 
-            {/* Team Analysis */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Team Performance</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 px-4 font-medium text-gray-700">Team</th>
-                      <th className="text-center py-2 px-4 font-medium text-gray-700">Total</th>
-                      <th className="text-center py-2 px-4 font-medium text-gray-700">Completed</th>
-                      <th className="text-center py-2 px-4 font-medium text-gray-700">Pending</th>
-                      <th className="text-center py-2 px-4 font-medium text-gray-700">In Progress</th>
-                      <th className="text-center py-2 px-4 font-medium text-gray-700">Overdue</th>
-                      <th className="text-center py-2 px-4 font-medium text-gray-700">Completion %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(reportData.byTeam).map(([team, stats]) => (
-                      <tr key={team} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 font-medium">{team}</td>
-                        <td className="py-3 px-4 text-center">{stats.total}</td>
-                        <td className="py-3 px-4 text-center text-green-600">{stats.completed}</td>
-                        <td className="py-3 px-4 text-center text-yellow-600">{stats.pending}</td>
-                        <td className="py-3 px-4 text-center text-purple-600">{stats.inProgress}</td>
-                        <td className="py-3 px-4 text-center text-red-600">{stats.overdue}</td>
-                        <td className="py-3 px-4 text-center">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            parseFloat(stats.completionRate) >= 80 ? 'bg-green-100 text-green-800' :
-                            parseFloat(stats.completionRate) >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {stats.completionRate}%
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
             {/* User Analysis */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <h4 className="text-lg font-semibold text-gray-900 mb-4">Individual Performance</h4>
@@ -2282,7 +2191,7 @@ const TaskManagementSystem = () => {
                   <option value="">Select User</option>
                   {users.map(user => (
                     <option key={user._id} value={user.username}>
-                      {user.name} ({user.role}) - {user.department}
+                      {user.name} - {user.department}
                     </option>
                   ))}
                 </select>
