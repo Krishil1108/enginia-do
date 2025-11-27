@@ -391,9 +391,7 @@ const TaskManagementSystem = () => {
 
   const copyTaskToClipboard = (task) => {
     const assignedToInfo = task.isAssociate && task.associateDetails 
-      ? `${task.associateDetails.name}${task.associateDetails.company ? ` (${task.associateDetails.company})` : ''}
-Email: ${task.associateDetails.email || 'N/A'}
-Phone: ${task.associateDetails.phone || 'N/A'}`
+      ? `${task.associateDetails.name}${task.associateDetails.company ? ` (${task.associateDetails.company})` : ''}`
       : task.assignedTo;
 
     const taskInfo = `Task Name: ${task.title}
@@ -406,7 +404,7 @@ Priority: ${task.priority}
 
 Severity: ${task.severity}
 
-Assigned To: ${assignedToInfo}`;
+To: ${assignedToInfo}`;
     
     navigator.clipboard.writeText(taskInfo).then(() => {
       setCopiedTaskData(taskInfo);
