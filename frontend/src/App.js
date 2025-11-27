@@ -691,19 +691,21 @@ Severity: ${task.severity}`;
 
       // Group by user
       users.forEach(user => {
-        const userTasks = reportTasks.filter(t => !t.isAssociate && t.assignedTo === user.name);
-        report.byUser[user.name] = {
-          total: userTasks.length,
-          completed: userTasks.filter(t => t.status === 'Completed').length,
-          pending: userTasks.filter(t => t.status === 'Pending').length,
-          inProgress: userTasks.filter(t => t.status === 'In Progress').length,
-          overdue: userTasks.filter(t => {
-            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
-            return isOverdue || t.status === 'Overdue';
-          }).length,
-          completionRate: userTasks.length > 0 ? 
-            (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : 0
-        };
+        const userTasks = reportTasks.filter(t => !t.isAssociate && t.assignedTo === user.username);
+        if (userTasks.length > 0) {
+          report.byUser[user.name] = {
+            total: userTasks.length,
+            completed: userTasks.filter(t => t.status === 'Completed').length,
+            pending: userTasks.filter(t => t.status === 'Pending').length,
+            inProgress: userTasks.filter(t => t.status === 'In Progress').length,
+            overdue: userTasks.filter(t => {
+              const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+              return isOverdue || t.status === 'Overdue';
+            }).length,
+            completionRate: userTasks.length > 0 ? 
+              (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : 0
+          };
+        }
       });
 
       // Group by associate
@@ -728,18 +730,20 @@ Severity: ${task.severity}`;
       // Group by project
       projects.forEach(project => {
         const projectTasks = reportTasks.filter(t => t.project === project);
-        report.byProject[project] = {
-          total: projectTasks.length,
-          completed: projectTasks.filter(t => t.status === 'Completed').length,
-          pending: projectTasks.filter(t => t.status === 'Pending').length,
-          inProgress: projectTasks.filter(t => t.status === 'In Progress').length,
-          overdue: projectTasks.filter(t => {
-            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
-            return isOverdue || t.status === 'Overdue';
-          }).length,
-          completionRate: projectTasks.length > 0 ? 
-            (projectTasks.filter(t => t.status === 'Completed').length / projectTasks.length * 100).toFixed(2) : 0
-        };
+        if (projectTasks.length > 0) {
+          report.byProject[project] = {
+            total: projectTasks.length,
+            completed: projectTasks.filter(t => t.status === 'Completed').length,
+            pending: projectTasks.filter(t => t.status === 'Pending').length,
+            inProgress: projectTasks.filter(t => t.status === 'In Progress').length,
+            overdue: projectTasks.filter(t => {
+              const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+              return isOverdue || t.status === 'Overdue';
+            }).length,
+            completionRate: projectTasks.length > 0 ? 
+              (projectTasks.filter(t => t.status === 'Completed').length / projectTasks.length * 100).toFixed(2) : 0
+          };
+        }
       });
 
       setReportData(report);
