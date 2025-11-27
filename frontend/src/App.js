@@ -1567,50 +1567,6 @@ Severity: ${task.severity}`;
 
     return (
       <div className="space-y-6">
-        {/* Export and View Toggle */}
-        <div className="flex justify-end items-center gap-4">
-          {/* Export Button */}
-          <button
-            onClick={() => exportTaskList(myTasks, 'excel', 'my_tasks')}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-          >
-            <Download className="w-4 h-4" />
-            Export Excel
-          </button>
-          
-          {/* View Toggle */}
-          <div className="flex gap-2">
-            <button
-            onClick={() => setViewMode('cards')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-            Cards View
-          </button>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
-          >
-            <List className="w-4 h-4" />
-            Table View
-            </button>
-          </div>
-        </div>
-
-        {viewMode === 'table' ? (
-          <TableView 
-            tasks={myTasks} 
-            showActions={true}
-            showStats={true}
-            stats={{
-              pending: pendingTasks.length,
-              inProgress: inProgressTasks.length,
-              completed: completedTasks.length,
-              overdue: overdueTasks.length
-            }}
-          />
-        ) : (
-          <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
@@ -1651,6 +1607,44 @@ Severity: ${task.severity}`;
           </div>
         </div>
 
+        {/* Export and View Toggle */}
+        <div className="flex justify-end items-center gap-4">
+          {/* Export Button */}
+          <button
+            onClick={() => exportTaskList(myTasks, 'excel', 'my_tasks')}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Export Excel
+          </button>
+          
+          {/* View Toggle */}
+          <div className="flex gap-2">
+            <button
+            onClick={() => setViewMode('cards')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Cards View
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <List className="w-4 h-4" />
+            Table View
+            </button>
+          </div>
+        </div>
+
+        {viewMode === 'table' ? (
+          <TableView 
+            tasks={myTasks} 
+            showActions={true}
+            showStats={false}
+          />
+        ) : (
+          <div className="space-y-6">
         {/* Overdue Tasks */}
         {overdueTasks.length > 0 && (
           <div>
