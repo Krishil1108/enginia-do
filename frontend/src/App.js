@@ -575,6 +575,7 @@ Severity: ${task.severity}`;
   const getFilteredTasks = () => {
     return tasks.filter(task => {
       if (filters.project && task.project !== filters.project) return false;
+      if (filters.assignedTo && task.assignedTo !== filters.assignedTo) return false;
       if (filters.team && task.team !== filters.team) return false;
       if (filters.priority && task.priority !== filters.priority) return false;
       if (filters.severity && task.severity !== filters.severity) return false;
@@ -1277,6 +1278,25 @@ Severity: ${task.severity}`;
                                 >
                                   <MessageCircle className="w-4 h-4" />
                                 </button>
+                                {/* Done and Cross buttons for associate tasks - anyone can mark */}
+                                {task.status !== 'Completed' && (
+                                  <>
+                                    <button
+                                      onClick={() => handleCompleteTask(task)}
+                                      className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                                      title="Mark Complete"
+                                    >
+                                      <CheckCircle className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleMarkOverdue(task)}
+                                      className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                      title="Mark Overdue"
+                                    >
+                                      <XCircle className="w-4 h-4" />
+                                    </button>
+                                  </>
+                                )}
                               </>
                             )}
                             
@@ -1292,8 +1312,8 @@ Severity: ${task.severity}`;
                               <Eye className="w-4 h-4" />
                             </button>
 
-                            {/* Quick Actions for assigned users on incomplete tasks */}
-                            {task.assignedTo === currentUser?.username && task.status !== 'Completed' && (
+                            {/* Quick Actions for assigned users on incomplete tasks - regular tasks only */}
+                            {!showCopyButton && task.assignedTo === currentUser?.username && task.status !== 'Completed' && (
                               <>
                                 <button
                                   onClick={() => handleCompleteTask(task)}
@@ -1408,11 +1428,30 @@ Severity: ${task.severity}`;
                   >
                     <MessageCircle className="w-5 h-5" />
                   </button>
+                  {/* Done and Cross buttons for associate tasks - anyone can mark */}
+                  {task.status !== 'Completed' && (
+                    <>
+                      <button
+                        onClick={() => handleCompleteTask(task)}
+                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Mark as Complete"
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleMarkOverdue(task)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Mark as Overdue"
+                      >
+                        <XCircle className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
                 </>
               )}
               
-              {/* Tick and Cross buttons for task completion */}
-              {task.assignedTo === currentUser?.username && task.status !== 'Completed' && (
+              {/* Tick and Cross buttons for task completion - regular tasks */}
+              {!showCopyButton && task.assignedTo === currentUser?.username && task.status !== 'Completed' && (
                 <>
                   <button
                     onClick={() => handleCompleteTask(task)}
@@ -1995,9 +2034,55 @@ Severity: ${task.severity}`;
   // All Tasks View (Full List)
   const AllTasksView = () => {
     const allTasks = getFilteredTasks();
+    
+    // Calculate stats
+    const pendingTasks = allTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = allTasks.filter(t => t.status === 'In Progress');
+    const completedTasks = allTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = allTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
 
     return (
       <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+              </div>
+              <Users className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+              </div>
+              <CheckCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">Overdue</p>
+                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+              </div>
+              <AlertCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+        </div>
+        
         {/* Export and View Toggle */}
         <div className="flex justify-end items-center gap-4">
           {/* Export Button */}
@@ -2034,7 +2119,7 @@ Severity: ${task.severity}`;
             <Filter className="w-5 h-5" />
             Filters
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
               <select
@@ -2048,6 +2133,22 @@ Severity: ${task.severity}`;
                   const projectKey = typeof p === 'object' ? p?._id : idx;
                   return <option key={projectKey} value={projectName}>{projectName}</option>;
                 })}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
+              <select
+                value={filters.assignedTo || ''}
+                onChange={(e) => setFilters({...filters, assignedTo: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                {users.map(user => (
+                  <option key={user._id} value={user.username}>
+                    {user.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -2127,9 +2228,55 @@ Severity: ${task.severity}`;
   // Tasks Assigned By Me
   const AssignedByMeView = () => {
     const assignedByMe = getTasksAssignedByMe();
+    
+    // Calculate stats
+    const pendingTasks = assignedByMe.filter(t => t.status === 'Pending');
+    const inProgressTasks = assignedByMe.filter(t => t.status === 'In Progress');
+    const completedTasks = assignedByMe.filter(t => t.status === 'Completed');
+    const overdueTasks = assignedByMe.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
 
     return (
       <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+              </div>
+              <Users className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+              </div>
+              <CheckCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">Overdue</p>
+                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+              </div>
+              <AlertCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+        </div>
+        
         {/* Export and View Toggle */}
         <div className="flex justify-end items-center gap-4">
           {/* Export Button */}
@@ -2190,9 +2337,55 @@ Severity: ${task.severity}`;
   // Associate Tasks View
   const AssociateTasksView = () => {
     const associateTasks = tasks.filter(task => task.isAssociate === true);
+    
+    // Calculate stats
+    const pendingTasks = associateTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = associateTasks.filter(t => t.status === 'In Progress');
+    const completedTasks = associateTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = associateTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
 
     return (
       <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+              </div>
+              <Users className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+              </div>
+              <CheckCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">Overdue</p>
+                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+              </div>
+              <AlertCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+        </div>
+        
         {/* Export and View Toggle */}
         <div className="flex justify-end items-center gap-4">
           {/* Export Button */}
