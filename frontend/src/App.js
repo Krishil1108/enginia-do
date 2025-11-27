@@ -415,6 +415,40 @@ Severity: ${task.severity}`;
     });
   };
 
+  const sendToWhatsApp = (task) => {
+    const assignedToInfo = task.isAssociate && task.associateDetails 
+      ? `${task.associateDetails.name}${task.associateDetails.company ? ` (${task.associateDetails.company})` : ''}`
+      : task.assignedTo;
+
+    const taskInfo = `To: ${assignedToInfo}
+
+Task Name: ${task.title}
+
+Description: ${task.description || 'No description'}
+
+Timeline: ${new Date(task.startDate || task.inDate).toLocaleDateString()} - ${new Date(task.dueDate || task.outDate).toLocaleDateString()}
+
+Priority: ${task.priority}
+
+Severity: ${task.severity}`;
+
+    // Get phone number if available
+    const phoneNumber = task.isAssociate && task.associateDetails?.phone 
+      ? task.associateDetails.phone.replace(/\D/g, '') // Remove non-numeric characters
+      : '';
+
+    // Encode the message for URL
+    const encodedMessage = encodeURIComponent(taskInfo);
+    
+    // Create WhatsApp URL
+    const whatsappUrl = phoneNumber 
+      ? `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+      : `https://web.whatsapp.com/send?text=${encodedMessage}`;
+
+    // Open WhatsApp in new tab
+    window.open(whatsappUrl, '_blank');
+  };
+
   const editTask = (task) => {
     setFormData({
       project: task.project,
@@ -1226,15 +1260,24 @@ Severity: ${task.severity}`;
                     {showActions && (
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
-                            {/* Copy button for associate tasks */}
+                            {/* Copy and WhatsApp buttons for associate tasks */}
                             {showCopyButton && (
-                              <button
-                                onClick={() => copyTaskToClipboard(task)}
-                                className="p-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded transition-colors"
-                                title="Copy Task Details"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => copyTaskToClipboard(task)}
+                                  className="p-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded transition-colors"
+                                  title="Copy Task Details"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => sendToWhatsApp(task)}
+                                  className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                                  title="Send via WhatsApp"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                </button>
+                              </>
                             )}
                             
                             {/* View Details - Always visible */}
@@ -1348,15 +1391,24 @@ Severity: ${task.severity}`;
           </div>
           {showActions && (
             <div className="flex items-center gap-1 ml-4">
-              {/* Copy button for associate tasks */}
+              {/* Copy and WhatsApp buttons for associate tasks */}
               {showCopyButton && (
-                <button
-                  onClick={() => copyTaskToClipboard(task)}
-                  className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                  title="Copy Task Details"
-                >
-                  <FileText className="w-5 h-5" />
-                </button>
+                <>
+                  <button
+                    onClick={() => copyTaskToClipboard(task)}
+                    className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                    title="Copy Task Details"
+                  >
+                    <FileText className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => sendToWhatsApp(task)}
+                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    title="Send via WhatsApp"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                  </button>
+                </>
               )}
               
               {/* Tick and Cross buttons for task completion */}
