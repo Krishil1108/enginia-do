@@ -1533,8 +1533,7 @@ Status: ${task.status}`;
                               >
                                 <button
                                   onClick={() => {
-                                    setEditingTask(task);
-                                    setShowTaskModal(true);
+                                    editTask(task);
                                     document.getElementById(`menu-${task._id}`).style.display = 'none';
                                   }}
                                   className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-blue-600 text-sm"
