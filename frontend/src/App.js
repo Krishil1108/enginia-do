@@ -114,6 +114,33 @@ const TaskManagementSystem = () => {
     return typeof project === 'string' ? project : project?.name || 'No Project';
   };
 
+  // Utility functions for formatting
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const getStatusBadge = (task) => {
+    const isPastDue = new Date(task.outDate) < new Date() && task.status !== 'Completed';
+    const status = isPastDue ? 'Overdue' : task.status;
+    
+    const colors = {
+      'Pending': 'bg-yellow-100 text-yellow-700',
+      'In Progress': 'bg-blue-100 text-blue-700',
+      'Completed': 'bg-green-100 text-green-700',
+      'Overdue': 'bg-red-100 text-red-700'
+    };
+    
+    return (
+      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[status]}`}>
+        {status}
+      </span>
+    );
+  };
+
   // Close dropdown menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -1253,41 +1280,39 @@ Status: ${task.status}`;
     );
   };
 
-  // Utility functions for formatting
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-  };
-
-  const getStatusBadge = (task) => {
-    const isPastDue = new Date(task.outDate) < new Date() && task.status !== 'Completed';
-    const status = isPastDue ? 'Overdue' : task.status;
-    
-    const colors = {
-      'Pending': 'bg-yellow-100 text-yellow-700',
-      'In Progress': 'bg-blue-100 text-blue-700',
-      'Completed': 'bg-green-100 text-green-700',
-      'Overdue': 'bg-red-100 text-red-700'
-    };
-    
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[status]}`}>
-        {status}
-      </span>
-    );
-  };
-
   // Horizontal Task Card for list view
   // Table View Component
   const TableView = ({ tasks, showActions = true, showStats = false, stats, showCopyButton = false }) => {
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
+
+    const formatTime = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    };
+
+    const getStatusBadge = (task) => {
+      const isPastDue = new Date(task.outDate) < new Date() && task.status !== 'Completed';
+      const status = isPastDue ? 'Overdue' : task.status;
+      
+      const colors = {
+        'Pending': 'bg-yellow-100 text-yellow-700',
+        'In Progress': 'bg-blue-100 text-blue-700',
+        'Completed': 'bg-green-100 text-green-700',
+        'Overdue': 'bg-red-100 text-red-700'
+      };
+      
+      return (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${colors[status]}`}>
+          {status}
+        </span>
+      );
+    };
 
     const getAttendanceBadge = (status) => {
       const colors = {
