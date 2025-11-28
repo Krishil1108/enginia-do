@@ -2899,10 +2899,7 @@ Status: ${task.status}`;
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => {
-                              setEditingTask(task);
-                              setShowTaskModal(true);
-                            }}
+                            onClick={() => editTask(task)}
                             className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                             title="Edit Task"
                           >
@@ -2912,7 +2909,7 @@ Status: ${task.status}`;
                           </button>
                           <button
                             onClick={() => {
-                              setSelectedTask(task);
+                              setTaskDetails(task);
                               setShowTaskDetailsModal(true);
                             }}
                             className="p-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
