@@ -58,6 +58,7 @@ const TaskManagementSystem = () => {
   const [filters, setFilters] = useState({});
   const [associateFilters, setAssociateFilters] = useState({});
   const [associateDateRange, setAssociateDateRange] = useState({ from: '', to: '' });
+  const [selectedAssociateTasks, setSelectedAssociateTasks] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [showAdvancedMenu, setShowAdvancedMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -477,22 +478,72 @@ Timeline: ${new Date(task.startDate || task.inDate).toLocaleDateString()} - ${ne
 Priority: ${task.priority}
 
 Severity: ${task.severity}`;
-
-    // Get phone number if available
-    const phoneNumber = task.isAssociate && task.associateDetails?.phone 
-      ? task.associateDetails.phone.replace(/\D/g, '') // Remove non-numeric characters
-      : '';
-
-    // Encode the message for URL
-    const encodedMessage = encodeURIComponent(taskInfo);
     
-    // Create WhatsApp URL
+    const phoneNumber = task.isAssociate && task.associateDetails?.phone 
+      ? task.associateDetails.phone.replace(/\D/g, '')
+      : '';
+    
     const whatsappUrl = phoneNumber 
-      ? `https://wa.me/${phoneNumber}?text=${encodedMessage}`
-      : `https://web.whatsapp.com/send?text=${encodedMessage}`;
-
-    // Open WhatsApp in new tab
+      ? `https://wa.me/${phoneNumber}?text=${encodeURIComponent(taskInfo)}`
+      : `https://wa.me/?text=${encodeURIComponent(taskInfo)}`;
+    
     window.open(whatsappUrl, '_blank');
+  };
+
+  const copyBulkTasksToClipboard = () => {
+    if (selectedAssociateTasks.length === 0) {
+      alert('Please select tasks to copy');
+      return;
+    }
+
+    const tasksInfo = selectedAssociateTasks.map(taskId => {
+      const task = tasks.find(t => t._id === taskId);
+      if (!task) return '';
+
+      const assignedToInfo = task.isAssociate && task.associateDetails 
+        ? `${task.associateDetails.name}${task.associateDetails.company ? ` (${task.associateDetails.company})` : ''}`
+        : task.assignedTo;
+
+      return `To: ${assignedToInfo}
+
+Task Name: ${task.title}
+
+Description: ${task.description || 'No description'}
+
+Timeline: ${new Date(task.startDate || task.inDate).toLocaleDateString()} - ${new Date(task.dueDate || task.outDate).toLocaleDateString()}
+
+Priority: ${task.priority}
+
+Severity: ${task.severity}
+
+Project: ${task.project}
+
+Status: ${task.status}`;
+    }).filter(Boolean).join('\n\n' + '='.repeat(50) + '\n\n');
+
+    navigator.clipboard.writeText(tasksInfo).then(() => {
+      alert(`${selectedAssociateTasks.length} tasks copied to clipboard!`);
+      setSelectedAssociateTasks([]);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy tasks');
+    });
+  };
+
+  const toggleTaskSelection = (taskId) => {
+    setSelectedAssociateTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
+
+  const toggleAllTasksSelection = (taskIds) => {
+    if (selectedAssociateTasks.length === taskIds.length) {
+      setSelectedAssociateTasks([]);
+    } else {
+      setSelectedAssociateTasks(taskIds);
+    }
   };
 
   const editTask = (task) => {
@@ -1202,39 +1253,41 @@ Severity: ${task.severity}`;
     );
   };
 
+  // Utility functions for formatting
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
+
+  const getStatusBadge = (task) => {
+    const isPastDue = new Date(task.outDate) < new Date() && task.status !== 'Completed';
+    const status = isPastDue ? 'Overdue' : task.status;
+    
+    const colors = {
+      'Pending': 'bg-yellow-100 text-yellow-700',
+      'In Progress': 'bg-blue-100 text-blue-700',
+      'Completed': 'bg-green-100 text-green-700',
+      'Overdue': 'bg-red-100 text-red-700'
+    };
+    
+    return (
+      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[status]}`}>
+        {status}
+      </span>
+    );
+  };
+
   // Horizontal Task Card for list view
   // Table View Component
   const TableView = ({ tasks, showActions = true, showStats = false, stats, showCopyButton = false }) => {
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
-
-    const formatTime = (dateString) => {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    };
-
-    const getStatusBadge = (task) => {
-      const isPastDue = new Date(task.outDate) < new Date() && task.status !== 'Completed';
-      const status = isPastDue ? 'Overdue' : task.status;
-      
-      const colors = {
-        'Pending': 'bg-yellow-100 text-yellow-700',
-        'In Progress': 'bg-blue-100 text-blue-700',
-        'Completed': 'bg-green-100 text-green-700',
-        'Overdue': 'bg-red-100 text-red-700'
-      };
-      
-      return (
-        <span className={`px-2 py-1 rounded text-xs font-medium ${colors[status]}`}>
-          {status}
-        </span>
-      );
-    };
 
     const getAttendanceBadge = (status) => {
       const colors = {
@@ -2723,14 +2776,132 @@ Severity: ${task.severity}`;
         </div>
 
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Associate Tasks ({associateTasks.length})
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">Tasks assigned to external partners and associates</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Associate Tasks ({associateTasks.length})
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">Tasks assigned to external partners and associates</p>
+            </div>
+            {selectedAssociateTasks.length > 0 && (
+              <button
+                onClick={copyBulkTasksToClipboard}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy Selected ({selectedAssociateTasks.length})
+              </button>
+            )}
+          </div>
         </div>
 
         {viewMode === 'table' ? (
-          <TableView tasks={associateTasks} showCopyButton={true} />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-8">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedAssociateTasks.length === associateTasks.length && associateTasks.length > 0}
+                        onChange={() => toggleAllTasksSelection(associateTasks.map(t => t._id))}
+                        className="rounded border-gray-300" 
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned To</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Project</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Task Title</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Due Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned By</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {associateTasks.map((task, index) => (
+                    <tr key={task._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedAssociateTasks.includes(task._id)}
+                          onChange={() => toggleTaskSelection(task._id)}
+                          className="rounded border-gray-300" 
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        {String(index + 1).padStart(6, '0')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs font-semibold">
+                            {task.associateDetails?.name?.charAt(0).toUpperCase() || 'A'}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {task.associateDetails?.name || task.assignedTo}
+                            </div>
+                            {task.associateDetails?.company && (
+                              <div className="text-xs text-gray-500">{task.associateDetails.company}</div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-900">{getProjectName(task.project)}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                        <div className="text-xs text-gray-500">{task.description || 'No description'}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {formatDate(task.inDate || task.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {task.outDate ? formatDate(task.outDate) : '-'}
+                      </td>
+                      <td className="px-4 py-3">{getStatusBadge(task)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-700">{task.assignedBy}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => copyTaskToClipboard(task)}
+                            className="p-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded transition-colors"
+                            title="Copy Task Details"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => sendToWhatsApp(task)}
+                            className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                            title="Send via WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {associateTasks.length === 0 && (
+              <div className="text-center py-12 text-gray-500">
+                <p>No tasks found</p>
+              </div>
+            )}
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
