@@ -1,10 +1,7 @@
 // Service Worker for Task Management System
-const CACHE_NAME = 'task-manager-v1';
+const CACHE_NAME = 'task-manager-v2';
 const urlsToCache = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json'
+  '/'
 ];
 
 // Install Service Worker
@@ -12,13 +9,29 @@ self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
+      .then(async (cache) => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => {
+        
+        // Cache essential resources one by one with error handling
+        const cachePromises = urlsToCache.map(async (url) => {
+          try {
+            await cache.add(url);
+            console.log(`Cached: ${url}`);
+          } catch (error) {
+            console.warn(`Failed to cache ${url}:`, error);
+            // Continue with other resources even if one fails
+          }
+        });
+        
+        await Promise.all(cachePromises);
         console.log('Service Worker installed successfully');
+        
         // Force the waiting service worker to become the active service worker
+        return self.skipWaiting();
+      })
+      .catch((error) => {
+        console.error('Service Worker installation failed:', error);
+        // Still proceed with SW installation for push notifications
         return self.skipWaiting();
       })
   );
@@ -26,13 +39,46 @@ self.addEventListener('install', (event) => {
 
 // Fetch event
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests and skip API calls for caching
+  if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      }
-    )
+        if (response) {
+          return response;
+        }
+        
+        // Fetch from network and cache for future use
+        return fetch(event.request).then((response) => {
+          // Don't cache non-successful responses
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+          
+          // Clone the response for caching
+          const responseToCache = response.clone();
+          
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            })
+            .catch((error) => {
+              console.warn('Failed to cache response:', error);
+            });
+          
+          return response;
+        });
+      })
+      .catch((error) => {
+        console.warn('Fetch failed:', error);
+        // Return a fallback for navigation requests
+        if (event.request.mode === 'navigate') {
+          return caches.match('/');
+        }
+      })
   );
 });
 
