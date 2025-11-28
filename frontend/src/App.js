@@ -378,9 +378,17 @@ const TaskManagementSystem = () => {
 
   const sendTaskNotification = async (userId, taskData, type = 'task_assigned') => {
     try {
-      console.log('Sending push notification to userId:', userId);
-      console.log('Current user:', currentUser);
-      console.log('Notification type:', type);
+      console.log('🔔 sendTaskNotification called with:', {
+        userId,
+        taskData,
+        type,
+        pushNotificationsEnabled
+      });
+      
+      if (!pushNotificationsEnabled) {
+        console.log('❌ Push notifications not enabled, skipping...');
+        return;
+      }
       
       const notificationData = {
         title: getNotificationTitle(type, taskData),
@@ -392,41 +400,64 @@ const TaskManagementSystem = () => {
         }
       };
 
-      console.log('Notification data:', notificationData);
+      console.log('📤 Sending notification data:', notificationData);
 
       // Send via API to backend - try both userId formats
       const pushRequests = [];
       
       // Try with username (userId as passed)
+      console.log(`📨 Attempting push to username: ${userId}`);
       pushRequests.push(
         axios.post(`${API_URL}/notifications/send-push`, {
           userId,
           ...notificationData
+        }).then(response => {
+          console.log(`✅ Push success for username ${userId}:`, response.data);
+          return response;
+        }).catch(error => {
+          console.log(`❌ Push failed for username ${userId}:`, error.response?.data || error.message);
+          throw error;
         })
       );
       
       // Also try with user._id if we can find it
       const targetUser = users.find(u => u.username === userId);
       if (targetUser && targetUser._id && targetUser._id !== userId) {
+        console.log(`📨 Attempting push to user._id: ${targetUser._id}`);
         pushRequests.push(
           axios.post(`${API_URL}/notifications/send-push`, {
             userId: targetUser._id,
             ...notificationData
+          }).then(response => {
+            console.log(`✅ Push success for _id ${targetUser._id}:`, response.data);
+            return response;
+          }).catch(error => {
+            console.log(`❌ Push failed for _id ${targetUser._id}:`, error.response?.data || error.message);
+            throw error;
           })
         );
       }
       
       const results = await Promise.allSettled(pushRequests);
-      console.log('Push notification results:', results);
+      console.log('📊 Push notification results summary:', results.map(r => ({
+        status: r.status,
+        success: r.status === 'fulfilled' ? r.value?.data?.success : false,
+        error: r.status === 'rejected' ? r.reason?.response?.data || r.reason?.message : null
+      })));
       
       // Check if any succeeded
-      const hasSuccess = results.some(result => result.status === 'fulfilled');
+      const hasSuccess = results.some(result => 
+        result.status === 'fulfilled' && result.value?.data?.success
+      );
+      
       if (!hasSuccess) {
-        console.warn('All push notification attempts failed');
+        console.warn('⚠️ All push notification attempts failed');
+      } else {
+        console.log('🎉 At least one push notification succeeded');
       }
       
     } catch (error) {
-      console.error('Error sending task notification:', error);
+      console.error('💥 Error in sendTaskNotification:', error);
       console.error('Error details:', error.response?.data || error.message);
     }
   };
@@ -545,6 +576,14 @@ const TaskManagementSystem = () => {
 
   const createNotification = async (taskId, userId, message, type, assignedBy) => {
     try {
+      console.log('📢 createNotification called with:', {
+        taskId,
+        userId,
+        message,
+        type,
+        assignedBy
+      });
+      
       // Create in-app notification
       await axios.post(`${API_URL}/notifications`, {
         userId,
@@ -554,17 +593,27 @@ const TaskManagementSystem = () => {
         assignedBy
       });
       
+      console.log('✅ In-app notification created successfully');
+      
       // Send push notification if enabled
       const task = tasks.find(t => t._id === taskId) || formData;
+      console.log('🔍 Found task for push notification:', task ? {
+        id: task._id || 'formData',
+        title: task.title || formData.title
+      } : 'No task found');
+      
       if (task) {
+        console.log('🚀 Calling sendTaskNotification...');
         await sendTaskNotification(userId, {
           _id: taskId,
           title: task.title || formData.title,
           description: task.description || formData.description
         }, type);
+      } else {
+        console.warn('⚠️ No task found, skipping push notification');
       }
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error('💥 Error creating notification:', error);
     }
   };
 

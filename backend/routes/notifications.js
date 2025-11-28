@@ -87,12 +87,8 @@ router.post('/', async (req, res) => {
     const notification = new Notification(req.body);
     const newNotification = await notification.save();
     
-    // Send push notification if user is subscribed
-    await sendPushNotification(req.body.userId, {
-      title: req.body.title || 'New Notification',
-      body: req.body.message || '',
-      data: { notificationId: newNotification._id }
-    });
+    // Note: Push notifications are handled by the frontend via /send-push endpoint
+    // This avoids duplicate notifications and gives frontend more control
     
     res.status(201).json(newNotification);
   } catch (error) {
