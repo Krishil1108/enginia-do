@@ -34,7 +34,7 @@ mongoose.connection.on('reconnected', () => {
 // Routes
 const taskRoutes = require('./routes/tasks');
 const userRoutes = require('./routes/users');
-const notificationRoutes = require('./routes/notifications');
+const { router: notificationRoutes } = require('./routes/notifications');
 const projectRoutes = require('./routes/projects');
 
 app.use('/api/tasks', taskRoutes);

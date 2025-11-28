@@ -8,6 +8,7 @@ import 'jspdf-autotable';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './datepicker-styles.css';
+import notificationService from './services/notificationService';
 
 const PRIORITY_COLORS = {
   Low: 'bg-green-100 text-green-800 border-green-300',
@@ -59,6 +60,10 @@ const TaskManagementSystem = () => {
   const [associateFilters, setAssociateFilters] = useState({});
   const [associateDateRange, setAssociateDateRange] = useState({ from: '', to: '' });
   const [selectedAssociateTasks, setSelectedAssociateTasks] = useState([]);
+  
+  // Push notification states
+  const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
   const [isRecording, setIsRecording] = useState(false);
   const [showAdvancedMenu, setShowAdvancedMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -156,6 +161,22 @@ const TaskManagementSystem = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Initialize push notifications
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      if (isLoggedIn && currentUser) {
+        const initialized = await notificationService.initialize();
+        if (initialized) {
+          const status = await notificationService.getSubscriptionStatus();
+          setPushNotificationsEnabled(status.subscribed);
+          setNotificationPermission(status.permission);
+        }
+      }
+    };
+
+    initializeNotifications();
+  }, [isLoggedIn, currentUser]);
+
   const loadUsers = async () => {
     try {
       const response = await axios.get(`${API_URL}/users`);
@@ -227,6 +248,116 @@ const TaskManagementSystem = () => {
         // Add new associate
         updatedAssociates = [...associates, associateData];
       }
+
+      setAssociates(updatedAssociates);
+      localStorage.setItem('associates', JSON.stringify(updatedAssociates));
+    } catch (error) {
+      console.error('Error saving associate:', error);
+    }
+  };
+
+  // Push Notification Functions
+  const enablePushNotifications = async () => {
+    try {
+      const hasPermission = await notificationService.requestPermission();
+      
+      if (hasPermission) {
+        const subscription = await notificationService.subscribeToPush();
+        if (subscription) {
+          setPushNotificationsEnabled(true);
+          setNotificationPermission('granted');
+          alert('Push notifications enabled successfully!');
+        } else {
+          alert('Failed to enable push notifications. Please try again.');
+        }
+      } else {
+        alert('Notification permission denied. You can enable it in your browser settings.');
+      }
+    } catch (error) {
+      console.error('Error enabling push notifications:', error);
+      alert('Failed to enable push notifications.');
+    }
+  };
+
+  const disablePushNotifications = async () => {
+    try {
+      const success = await notificationService.unsubscribeFromPush();
+      if (success) {
+        setPushNotificationsEnabled(false);
+        alert('Push notifications disabled successfully!');
+      } else {
+        alert('Failed to disable push notifications.');
+      }
+    } catch (error) {
+      console.error('Error disabling push notifications:', error);
+      alert('Failed to disable push notifications.');
+    }
+  };
+
+  const testPushNotification = async () => {
+    try {
+      if (!pushNotificationsEnabled) {
+        alert('Please enable push notifications first.');
+        return;
+      }
+
+      await notificationService.testNotification();
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      alert('Failed to send test notification.');
+    }
+  };
+
+  const sendTaskNotification = async (userId, taskData, type = 'task_assigned') => {
+    try {
+      const notificationData = {
+        title: getNotificationTitle(type, taskData),
+        body: getNotificationBody(type, taskData),
+        data: {
+          type,
+          taskId: taskData._id,
+          taskTitle: taskData.title
+        }
+      };
+
+      // Send via API to backend
+      await axios.post(`${API_URL}/notifications/send-push`, {
+        userId,
+        ...notificationData
+      });
+    } catch (error) {
+      console.error('Error sending task notification:', error);
+    }
+  };
+
+  const getNotificationTitle = (type, taskData) => {
+    switch (type) {
+      case 'task_assigned':
+        return '📋 New Task Assigned';
+      case 'task_completed':
+        return '✅ Task Completed';
+      case 'task_overdue':
+        return '⚠️ Task Overdue';
+      case 'task_reminder':
+        return '🔔 Task Reminder';
+      default:
+        return 'Task Update';
+    }
+  };
+
+  const getNotificationBody = (type, taskData) => {
+    switch (type) {
+      case 'task_assigned':
+        return `You have been assigned: ${taskData.title}`;
+      case 'task_completed':
+        return `Task completed: ${taskData.title}`;
+      case 'task_overdue':
+        return `Task is overdue: ${taskData.title}`;
+      case 'task_reminder':
+        return `Reminder: ${taskData.title} is due soon`;
+      default:
+        return `Update for task: ${taskData.title}`;
+    }
       
       setAssociates(updatedAssociates);
       localStorage.setItem('associates', JSON.stringify(updatedAssociates));
@@ -319,6 +450,7 @@ const TaskManagementSystem = () => {
 
   const createNotification = async (taskId, userId, message, type, assignedBy) => {
     try {
+      // Create in-app notification
       await axios.post(`${API_URL}/notifications`, {
         userId,
         taskId,
@@ -326,6 +458,16 @@ const TaskManagementSystem = () => {
         type,
         assignedBy
       });
+      
+      // Send push notification if enabled
+      const task = tasks.find(t => t._id === taskId) || formData;
+      if (task) {
+        await sendTaskNotification(userId, {
+          _id: taskId,
+          title: task.title || formData.title,
+          description: task.description || formData.description
+        }, type);
+      }
     } catch (error) {
       console.error('Error creating notification:', error);
     }
@@ -1904,6 +2046,170 @@ Status: ${task.status}`;
     );
   };
 
+  // Notification Settings View
+  const NotificationSettingsView = () => {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Notification Settings</h2>
+          <p className="text-gray-600">Configure your notification preferences and push notifications.</p>
+        </div>
+
+        {/* Push Notification Settings */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Bell className="w-5 h-5 text-blue-600" />
+            Push Notifications
+          </h3>
+          
+          <div className="space-y-4">
+            {/* Browser Support Check */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h4 className="font-medium text-gray-900">Browser Support</h4>
+                <p className="text-sm text-gray-600">
+                  {notificationService.isSupported ? 
+                    'Your browser supports push notifications' : 
+                    'Your browser does not support push notifications'
+                  }
+                </p>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                notificationService.isSupported ? 
+                'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}>
+                {notificationService.isSupported ? 'Supported' : 'Not Supported'}
+              </div>
+            </div>
+
+            {/* Permission Status */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h4 className="font-medium text-gray-900">Permission Status</h4>
+                <p className="text-sm text-gray-600">
+                  Current notification permission: {notificationPermission}
+                </p>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                notificationPermission === 'granted' ? 'bg-green-100 text-green-700' :
+                notificationPermission === 'denied' ? 'bg-red-100 text-red-700' :
+                'bg-yellow-100 text-yellow-700'
+              }`}>
+                {notificationPermission}
+              </div>
+            </div>
+
+            {/* Enable/Disable Notifications */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h4 className="font-medium text-gray-900">Push Notifications</h4>
+                <p className="text-sm text-gray-600">
+                  Receive notifications for task updates, assignments, and reminders
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {pushNotificationsEnabled ? (
+                  <button
+                    onClick={disablePushNotifications}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                  >
+                    Disable
+                  </button>
+                ) : (
+                  <button
+                    onClick={enablePushNotifications}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    Enable
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Test Notification */}
+            {pushNotificationsEnabled && (
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <div>
+                  <h4 className="font-medium text-gray-900">Test Notification</h4>
+                  <p className="text-sm text-gray-600">
+                    Send a test notification to verify everything is working
+                  </p>
+                </div>
+                <button
+                  onClick={testPushNotification}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  Send Test
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Notification Types */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <MessageCircle className="w-5 h-5 text-green-600" />
+            Notification Types
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h4 className="font-medium text-gray-900 mb-2">📋 Task Assignments</h4>
+              <p className="text-sm text-gray-600">Get notified when new tasks are assigned to you</p>
+            </div>
+            
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h4 className="font-medium text-gray-900 mb-2">⚠️ Due Date Reminders</h4>
+              <p className="text-sm text-gray-600">Receive alerts before tasks are due</p>
+            </div>
+            
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h4 className="font-medium text-gray-900 mb-2">✅ Task Completions</h4>
+              <p className="text-sm text-gray-600">Know when tasks assigned by you are completed</p>
+            </div>
+            
+            <div className="p-4 border border-gray-200 rounded-lg">
+              <h4 className="font-medium text-gray-900 mb-2">🔄 Status Updates</h4>
+              <p className="text-sm text-gray-600">Get updates when task status changes</p>
+            </div>
+          </div>
+        </div>
+
+        {/* PWA Information */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Download className="w-5 h-5 text-purple-600" />
+            Install App (PWA)
+          </h3>
+          
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Install this app on your device for a better experience and to ensure you receive push notifications even when the browser is closed.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">📱 Mobile Installation</h4>
+                <p className="text-sm text-gray-600">
+                  On your phone, tap the share button in your browser and select "Add to Home Screen"
+                </p>
+              </div>
+              
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">💻 Desktop Installation</h4>
+                <p className="text-sm text-gray-600">
+                  Look for the install icon in your browser's address bar or use the browser menu
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Admin Reports View
   const AdminReportsView = () => {
     const [selectedQuarter, setSelectedQuarter] = useState(Math.floor((new Date().getMonth() + 3) / 3));
@@ -3201,6 +3507,18 @@ Status: ${task.status}`;
                   </div>
                 </button>
               )}
+              
+              <button
+                onClick={() => { setCurrentView('settings'); setShowAdvancedMenu(false); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'settings' ? 'bg-gray-600 text-white' : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4" />
+                  Notification Settings
+                </div>
+              </button>
             </div>
           )}
         </div>
@@ -3213,6 +3531,7 @@ Status: ${task.status}`;
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
         {currentView === 'associate-tasks' && <AssociateTasksView />}
         {currentView === 'admin-reports' && isAdmin() && <AdminReportsView />}
+        {currentView === 'settings' && <NotificationSettingsView />}
       </div>
 
       {/* Notifications Panel */}
