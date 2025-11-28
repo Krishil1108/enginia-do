@@ -1,5 +1,5 @@
 // Service Worker for Task Management System
-const CACHE_NAME = 'task-manager-v3';
+const CACHE_NAME = 'task-manager-v4';
 const urlsToCache = [
   '/'
 ];
@@ -145,12 +145,12 @@ self.addEventListener('push', (event) => {
     notificationData.title,
     {
       body: notificationData.body,
-      icon: notificationData.icon,
-      badge: notificationData.badge,
+      icon: notificationData.icon || '/favicon.ico',
+      badge: notificationData.badge || '/favicon.ico',
       tag: notificationData.tag,
-      requireInteraction: notificationData.requireInteraction,
-      silent: notificationData.silent,
-      vibrate: notificationData.vibrate,
+      requireInteraction: notificationData.requireInteraction || false,
+      silent: notificationData.silent || false,
+      vibrate: notificationData.vibrate || [200, 100, 200],
       actions: notificationData.actions || [
         { action: 'view', title: '👀 View' },
         { action: 'dismiss', title: '❌ Dismiss' }
@@ -158,19 +158,28 @@ self.addEventListener('push', (event) => {
       data: notificationData.data || {}
     }
   ).then(() => {
-    console.log('✅ Notification displayed successfully');
+    console.log('✅ Notification displayed successfully via service worker');
+    return true;
   }).catch((error) => {
-    console.error('❌ Failed to show notification:', error);
+    console.error('❌ Failed to show notification via service worker:', error);
     
-    // Fallback: try showing a basic notification
+    // Fallback: try showing a very basic notification
+    console.log('🔄 Attempting fallback notification...');
     return self.registration.showNotification(
-      'TriDo - New Task',
+      'TriDo Notification',
       {
-        body: 'You have received a new task notification',
+        body: 'You have a new notification',
         icon: '/favicon.ico',
-        tag: 'fallback-notification'
+        tag: 'fallback-notification',
+        requireInteraction: false
       }
-    );
+    ).then(() => {
+      console.log('✅ Fallback notification displayed');
+      return true;
+    }).catch((fallbackError) => {
+      console.error('❌ Even fallback notification failed:', fallbackError);
+      return false;
+    });
   });
 
   event.waitUntil(showNotificationPromise);

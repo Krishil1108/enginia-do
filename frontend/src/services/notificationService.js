@@ -248,22 +248,48 @@ class NotificationService {
     }
   }
 
-  // Show local notification (fallback)
-  showLocalNotification(title, options = {}) {
-    if (Notification.permission === 'granted') {
-      const notification = new Notification(title, {
-        icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%236366f1"/%3E%3Cpath d="M25 50L40 65L75 30" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E',
-        badge: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%236366f1"/%3E%3Cpath d="M25 50L40 65L75 30" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E',
-        tag: 'task-notification',
-        ...options
-      });
+  // Show local notification using service worker
+  async showLocalNotification(title, options = {}) {
+    if (Notification.permission !== 'granted') {
+      console.warn('Notification permission not granted');
+      return null;
+    }
 
-      // Auto close after 5 seconds if not clicked
-      setTimeout(() => {
-        notification.close();
-      }, 5000);
+    try {
+      if (this.registration) {
+        // Use service worker to show notification (recommended when SW is active)
+        console.log('Showing notification via service worker:', title);
+        return await this.registration.showNotification(title, {
+          body: options.body || 'Task Management notification',
+          icon: options.icon || '/favicon.ico',
+          badge: options.badge || '/favicon.ico',
+          tag: options.tag || 'task-notification',
+          requireInteraction: false,
+          silent: false,
+          vibrate: [200, 100, 200],
+          data: options.data || {},
+          ...options
+        });
+      } else {
+        // Fallback to direct notification (when SW not available)
+        console.log('Showing notification directly (no SW):', title);
+        const notification = new Notification(title, {
+          body: options.body || 'Task Management notification',
+          icon: options.icon || '/favicon.ico',
+          tag: options.tag || 'task-notification',
+          ...options
+        });
 
-      return notification;
+        // Auto close after 5 seconds if not clicked
+        setTimeout(() => {
+          notification.close();
+        }, 5000);
+
+        return notification;
+      }
+    } catch (error) {
+      console.error('Error showing local notification:', error);
+      return null;
     }
   }
 
@@ -274,10 +300,17 @@ class NotificationService {
       return;
     }
 
-    this.showLocalNotification('Test Notification', {
+    console.log('Showing test notification...');
+    const result = await this.showLocalNotification('Test Notification', {
       body: 'This is a test notification from Task Manager!',
       requireInteraction: false
     });
+    
+    if (result) {
+      console.log('✅ Test notification shown successfully');
+    } else {
+      console.error('❌ Failed to show test notification');
+    }
   }
 
   // Helper function to convert VAPID key
