@@ -3,18 +3,24 @@ const webpush = require('web-push');
 const router = express.Router();
 const Notification = require('../models/Notification');
 
-// VAPID Keys - In production, these should be environment variables
+// VAPID Keys - Use environment variables in production
 const vapidKeys = {
-  publicKey: 'BFNVI-J2_zF_ZzZtk49ZwfFfq-HiePDgJRzXm2vP-ar2ABnfVI-wJmSKJTAyWKKZkRH-Og77s4_1ER-7fAES3xU',
-  privateKey: 'ryUh3Js6fhVUJURfr1WOb8boWO7MbcIxjhMb7rvB7DU'
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'BFNVI-J2_zF_ZzZtk49ZwfFfq-HiePDgJRzXm2vP-ar2ABnfVI-wJmSKJTAyWKKZkRH-Og77s4_1ER-7fAES3xU',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'ryUh3Js6fhVUJURfr1WOb8boWO7MbcIxjhMb7rvB7DU'
 };
 
 // Configure web-push
-webpush.setVapidDetails(
-  'mailto:your-email@example.com', // Replace with your email
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
+try {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL || 'mailto:noreply@taskmanager.com',
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+  );
+  console.log('✅ VAPID keys configured for push notifications');
+} catch (error) {
+  console.error('❌ Failed to configure VAPID keys:', error.message);
+  console.log('💡 Run "node generate-vapid-keys.js" to generate new keys');
+}
 
 // In-memory storage for subscriptions (in production, use a database)
 const subscriptions = new Map();
