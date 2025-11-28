@@ -499,10 +499,10 @@ const TaskManagementSystem = () => {
       const result = await serverPromise;
       console.log('🎯 Final burst result:', result);
       
-      if (response.data.success) {
-        alert(`💥 WhatsApp-style burst notifications initiated!\n\n${response.data.message}\n\n⚡ These should be VERY noticeable - just like WhatsApp or Teams!\n\nYou'll receive 3 notifications over 9 seconds with strong vibration.`);
+      if (result.success) {
+        alert(`💥 WhatsApp-style burst notifications initiated!\n\n${result.message}\n\n⚡ These should be VERY noticeable - just like WhatsApp or Teams!\n\nYou'll receive 3 notifications over 9 seconds with strong vibration.`);
       } else {
-        alert('❌ Failed to send burst notifications: ' + response.data.error);
+        alert('❌ Failed to send burst notifications: ' + result.error);
       }
       
     } catch (error) {
