@@ -56,6 +56,8 @@ const TaskManagementSystem = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [filters, setFilters] = useState({});
+  const [associateFilters, setAssociateFilters] = useState({});
+  const [associateDateRange, setAssociateDateRange] = useState({ from: '', to: '' });
   const [isRecording, setIsRecording] = useState(false);
   const [showAdvancedMenu, setShowAdvancedMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -350,7 +352,7 @@ const TaskManagementSystem = () => {
       status: 'Pending'
     });
     setEditingTask(null);
-    setSelectedAssociate('new');
+    setSelectedAssociate('');
   };
 
   const handleSubmit = async () => {
@@ -360,7 +362,7 @@ const TaskManagementSystem = () => {
     }
     
     // Check if associate is selected when isAssociate is true
-    if (formData.isAssociate && selectedAssociate === 'new') {
+    if (formData.isAssociate && !selectedAssociate) {
       alert('Please select an associate from the dropdown or add a new one using the Add button');
       return;
     }
@@ -1205,7 +1207,10 @@ Severity: ${task.severity}`;
   const TableView = ({ tasks, showActions = true, showStats = false, stats, showCopyButton = false }) => {
     const formatDate = (dateString) => {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     };
 
     const formatTime = (dateString) => {
@@ -2473,13 +2478,44 @@ Severity: ${task.severity}`;
 
   // Associate Tasks View
   const AssociateTasksView = () => {
-    const associateTasks = tasks.filter(task => task.isAssociate === true);
+    let associateTasks = tasks.filter(task => task.isAssociate === true);
+    
+    // Apply filters
+    if (associateFilters.project) {
+      associateTasks = associateTasks.filter(t => t.project === associateFilters.project);
+    }
+    if (associateFilters.associate) {
+      associateTasks = associateTasks.filter(t => t.associateDetails?.name === associateFilters.associate);
+    }
+    if (associateFilters.priority) {
+      associateTasks = associateTasks.filter(t => t.priority === associateFilters.priority);
+    }
+    if (associateFilters.severity) {
+      associateTasks = associateTasks.filter(t => t.severity === associateFilters.severity);
+    }
+    if (associateFilters.status) {
+      associateTasks = associateTasks.filter(t => t.status === associateFilters.status);
+    }
+    if (associateFilters.assignedBy) {
+      associateTasks = associateTasks.filter(t => t.assignedBy === associateFilters.assignedBy);
+    }
+    
+    // Apply date range filter
+    if (associateDateRange.from) {
+      associateTasks = associateTasks.filter(t => new Date(t.outDate) >= new Date(associateDateRange.from));
+    }
+    if (associateDateRange.to) {
+      associateTasks = associateTasks.filter(t => new Date(t.outDate) <= new Date(associateDateRange.to));
+    }
     
     // Calculate stats
     const pendingTasks = associateTasks.filter(t => t.status === 'Pending');
     const inProgressTasks = associateTasks.filter(t => t.status === 'In Progress');
     const completedTasks = associateTasks.filter(t => t.status === 'Completed');
     const overdueTasks = associateTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+    
+    // Get unique associate names for filter
+    const uniqueAssociates = [...new Set(tasks.filter(t => t.isAssociate && t.associateDetails?.name).map(t => t.associateDetails.name))];
 
     return (
       <div className="space-y-6">
@@ -2550,6 +2586,139 @@ Severity: ${task.severity}`;
             <List className="w-4 h-4" />
             Table View
             </button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Filters
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
+              <select
+                value={associateFilters.project || ''}
+                onChange={(e) => setAssociateFilters({...associateFilters, project: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                {projects.map((p, idx) => {
+                  const projectName = typeof p === 'string' ? p : p?.name || '';
+                  const projectKey = typeof p === 'object' ? p?._id : idx;
+                  return <option key={projectKey} value={projectName}>{projectName}</option>;
+                })}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Associate</label>
+              <select
+                value={associateFilters.associate || ''}
+                onChange={(e) => setAssociateFilters({...associateFilters, associate: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                {uniqueAssociates.map((assoc, idx) => (
+                  <option key={idx} value={assoc}>
+                    {assoc}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <select
+                value={associateFilters.priority || ''}
+                onChange={(e) => setAssociateFilters({...associateFilters, priority: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Severity</label>
+              <select
+                value={associateFilters.severity || ''}
+                onChange={(e) => setAssociateFilters({...associateFilters, severity: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="Minor">Minor</option>
+                <option value="Major">Major</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select
+                value={associateFilters.status || ''}
+                onChange={(e) => setAssociateFilters({...associateFilters, status: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Assigned By</label>
+              <select
+                value={associateFilters.assignedBy || ''}
+                onChange={(e) => setAssociateFilters({...associateFilters, assignedBy: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                {users.map(user => (
+                  <option key={user._id} value={user.username}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Date Range Filter */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+              <input
+                type="date"
+                value={associateDateRange.from}
+                onChange={(e) => setAssociateDateRange({...associateDateRange, from: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+              <input
+                type="date"
+                value={associateDateRange.to}
+                onChange={(e) => setAssociateDateRange({...associateDateRange, to: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setAssociateFilters({});
+                  setAssociateDateRange({ from: '', to: '' });
+                }}
+                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+              >
+                Clear All Filters
+              </button>
+            </div>
           </div>
         </div>
 
@@ -3042,7 +3211,7 @@ Severity: ${task.severity}`;
                         onChange={(e) => {
                           const value = e.target.value;
                           setSelectedAssociate(value);
-                          if (value !== 'new') {
+                          if (value) {
                             const assoc = associates.find(a => a.name === value);
                             if (assoc) {
                               setFormData({
@@ -3065,7 +3234,7 @@ Severity: ${task.severity}`;
                         className="flex-1 px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         required
                       >
-                        <option value="new">+ Add New Associate</option>
+                        <option value="">Select Associate</option>
                         {associates.map((assoc, idx) => (
                           <option key={idx} value={assoc.name}>
                             {assoc.name}{assoc.company ? ` (${assoc.company})` : ''}
