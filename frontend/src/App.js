@@ -41,6 +41,9 @@ const TaskManagementSystem = () => {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [editingProject, setEditingProject] = useState(null);
+  const [associates, setAssociates] = useState([]);
+  const [showAssociateModal, setShowAssociateModal] = useState(false);
+  const [selectedAssociate, setSelectedAssociate] = useState('new');
   
   // App state
   const [currentView, setCurrentView] = useState('my-tasks');
@@ -93,6 +96,7 @@ const TaskManagementSystem = () => {
       loadUsers();
       loadNotifications();
       loadProjects();
+      loadAssociates();
       // Poll for new notifications every 30 seconds
       const interval = setInterval(loadNotifications, 30000);
       return () => clearInterval(interval);
@@ -165,6 +169,38 @@ const TaskManagementSystem = () => {
       setProjects(response.data); // Store full project objects with _id
     } catch (error) {
       console.error('Error loading projects:', error);
+    }
+  };
+
+  const loadAssociates = () => {
+    try {
+      const savedAssociates = localStorage.getItem('associates');
+      if (savedAssociates) {
+        setAssociates(JSON.parse(savedAssociates));
+      }
+    } catch (error) {
+      console.error('Error loading associates:', error);
+    }
+  };
+
+  const saveAssociateToList = (associateData) => {
+    try {
+      const existingIndex = associates.findIndex(a => a.name === associateData.name);
+      let updatedAssociates;
+      
+      if (existingIndex >= 0) {
+        // Update existing associate
+        updatedAssociates = [...associates];
+        updatedAssociates[existingIndex] = associateData;
+      } else {
+        // Add new associate
+        updatedAssociates = [...associates, associateData];
+      }
+      
+      setAssociates(updatedAssociates);
+      localStorage.setItem('associates', JSON.stringify(updatedAssociates));
+    } catch (error) {
+      console.error('Error saving associate:', error);
     }
   };
 
@@ -313,12 +349,18 @@ const TaskManagementSystem = () => {
       status: 'Pending'
     });
     setEditingTask(null);
+    setSelectedAssociate('new');
   };
 
   const handleSubmit = async () => {
     if (!formData.project || !formData.title || !formData.inDate || !formData.outDate || !formData.assignedTo) {
       alert('Please fill in all required fields including Assigned To');
       return;
+    }
+    
+    // Save associate to list if it's a new associate
+    if (formData.isAssociate && selectedAssociate === 'new' && formData.associateDetails.name) {
+      saveAssociateToList(formData.associateDetails);
     }
     
     try {
@@ -1255,9 +1297,7 @@ Severity: ${task.severity}`;
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Project</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Task Title</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Time In</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Time Out</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Time</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Due Date</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned By</th>
                 {showActions && (
@@ -1267,10 +1307,6 @@ Severity: ${task.severity}`;
             </thead>
             <tbody className="divide-y divide-gray-200">
               {tasks.map((task, index) => {
-                const timeIn = task.inDate ? formatTime(task.inDate) : '-';
-                const timeOut = task.outDate ? formatTime(task.outDate) : '-';
-                const totalTime = task.inDate && task.outDate ? 
-                  Math.round((new Date(task.outDate) - new Date(task.inDate)) / (1000 * 60 * 60 * 24)) + ' days' : '-';
                 const assignedUser = users.find(u => u.username === task.assignedTo);
                 
                 return (
@@ -1307,9 +1343,9 @@ Severity: ${task.severity}`;
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {formatDate(task.inDate || task.createdAt)}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{timeIn}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{timeOut}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{totalTime}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {task.outDate ? formatDate(task.outDate) : '-'}
+                    </td>
                     <td className="px-4 py-3">{getStatusBadge(task)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -2826,6 +2862,75 @@ Severity: ${task.severity}`;
         </div>
       )}
 
+      {/* Associate Modal */}
+      {showAssociateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-purple-900">Manage Associates</h2>
+              <button onClick={() => setShowAssociateModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              {/* Associate List */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-gray-700">Saved Associates ({associates.length})</h3>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  {associates.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      No associates saved yet. They will be automatically saved when you assign tasks.
+                    </div>
+                  ) : (
+                    associates.map((assoc, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 hover:border-purple-300 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <User className="w-5 h-5 text-purple-600" />
+                            <span className="font-semibold text-gray-900">{assoc.name}</span>
+                            {assoc.company && (
+                              <span className="text-sm text-gray-500">({assoc.company})</span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                            {assoc.email && (
+                              <div className="flex items-center gap-1">
+                                <Mail className="w-4 h-4" />
+                                {assoc.email}
+                              </div>
+                            )}
+                            {assoc.phone && (
+                              <div className="flex items-center gap-1">
+                                <MessageCircle className="w-4 h-4" />
+                                {assoc.phone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const updatedAssociates = associates.filter((_, i) => i !== index);
+                            setAssociates(updatedAssociates);
+                            localStorage.setItem('associates', JSON.stringify(updatedAssociates));
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete associate"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Task Modal */}
       {showTaskModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -2863,10 +2968,63 @@ Severity: ${task.severity}`;
                 </select>
               </div>
 
-              {/* Associate Details Form - shown only when Associate is selected */}
+              {/* Associate Selection - shown only when Associate is selected */}
               {formData.isAssociate && (
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-purple-900 mb-2">Associate Details</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-purple-900 mb-2">Select Associate *</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={selectedAssociate}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSelectedAssociate(value);
+                          if (value !== 'new') {
+                            const assoc = associates.find(a => a.name === value);
+                            if (assoc) {
+                              setFormData({
+                                ...formData,
+                                associateDetails: {
+                                  name: assoc.name,
+                                  company: assoc.company || '',
+                                  email: assoc.email || '',
+                                  phone: assoc.phone || ''
+                                }
+                              });
+                            }
+                          } else {
+                            setFormData({
+                              ...formData,
+                              associateDetails: { name: '', company: '', email: '', phone: '' }
+                            });
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        required
+                      >
+                        <option value="new">+ Add New Associate</option>
+                        {associates.map((assoc, idx) => (
+                          <option key={idx} value={assoc.name}>
+                            {assoc.name}{assoc.company ? ` (${assoc.company})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowAssociateModal(true)}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 whitespace-nowrap"
+                        title="Manage associates"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Associate Details Form - shown when New Associate is selected */}
+                  {selectedAssociate === 'new' && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-semibold text-purple-900 mb-2">Associate Details</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Name *</label>
@@ -2922,6 +3080,8 @@ Severity: ${task.severity}`;
                       />
                     </div>
                   </div>
+                    </div>
+                  )}
                 </div>
               )}
 
