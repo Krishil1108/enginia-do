@@ -8,6 +8,7 @@ import 'jspdf-autotable';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './datepicker-styles.css';
+import './pwa-styles.css';
 import notificationService from './services/notificationService';
 
 // Server optimization for render.com deployment
@@ -118,6 +119,11 @@ const TaskManagementSystem = () => {
   const [overdueReason, setOverdueReason] = useState('');
   const [showTaskDetailsModal, setShowTaskDetailsModal] = useState(false);
   const [taskDetails, setTaskDetails] = useState(null);
+  
+  // PWA Installation states
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmDialogData, setConfirmDialogData] = useState({ title: '', message: '', onConfirm: null });
   
@@ -203,6 +209,79 @@ const TaskManagementSystem = () => {
       }
     };
   }, [currentUser]);
+
+  // PWA Installation handling
+  useEffect(() => {
+    // Check if already installed
+    const checkInstalled = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isInWebAppiOS = window.navigator.standalone === true;
+      setIsInstalled(isStandalone || isInWebAppiOS);
+    };
+
+    checkInstalled();
+
+    // Listen for beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e) => {
+      console.log('💾 PWA install prompt available');
+      e.preventDefault();
+      setDeferredPrompt(e);
+      
+      // Show install prompt after a delay if not installed
+      if (!isInstalled) {
+        setTimeout(() => {
+          setShowInstallPrompt(true);
+        }, 3000);
+      }
+    };
+
+    // Listen for successful app installation
+    const handleAppInstalled = () => {
+      console.log('✅ PWA installed successfully');
+      setIsInstalled(true);
+      setShowInstallPrompt(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, [isInstalled]);
+
+  // Handle PWA installation
+  const handleInstallPWA = async () => {
+    if (!deferredPrompt) {
+      console.log('No install prompt available');
+      return;
+    }
+
+    try {
+      console.log('🚀 Triggering PWA install prompt');
+      const result = await deferredPrompt.prompt();
+      console.log('Install prompt result:', result.outcome);
+      
+      if (result.outcome === 'accepted') {
+        console.log('✅ User accepted PWA installation');
+        setShowInstallPrompt(false);
+      } else {
+        console.log('❌ User dismissed PWA installation');
+        // Show again after some time
+        setTimeout(() => {
+          if (!isInstalled) {
+            setShowInstallPrompt(true);
+          }
+        }, 300000); // 5 minutes
+      }
+      
+      setDeferredPrompt(null);
+    } catch (error) {
+      console.error('PWA installation failed:', error);
+    }
+  };
 
 
   // Helper function to safely get project name
@@ -2605,6 +2684,131 @@ Project: ${task.project}`;
             </div>
           </div>
         </div>
+
+        {/* PWA Installation Section */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2L2 7v10c0 5.55 3.84 9.95 9 11 5.16-1.05 9-5.45 9-11V7l-10-5z"/>
+            </svg>
+            Install App
+          </h3>
+          
+          <div className="space-y-4">
+            {/* Installation Status */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h4 className="font-medium text-gray-900">App Status</h4>
+                <p className="text-sm text-gray-600">
+                  {isInstalled ? 'TriDo is installed as an app on your device' : 'TriDo can be installed as a native app'}
+                </p>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                isInstalled ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+              }`}>
+                {isInstalled ? '✅ Installed' : '📱 Available'}
+              </div>
+            </div>
+
+            {!isInstalled && (
+              <div className="space-y-3">
+                {/* Install Button */}
+                {deferredPrompt && (
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Install TriDo App</h4>
+                      <p className="text-sm text-gray-600">
+                        Get offline access, push notifications, and home screen icon
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleInstallPWA}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium pwa-pulse"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Install App
+                    </button>
+                  </div>
+                )}
+
+                {/* Features List */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">Offline Access</p>
+                      <p className="text-xs text-gray-600">Work without internet</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Bell className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">Push Notifications</p>
+                      <p className="text-xs text-gray-600">Never miss updates</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">Fast Loading</p>
+                      <p className="text-xs text-gray-600">Native app speed</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v0" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">Home Screen Icon</p>
+                      <p className="text-xs text-gray-600">Easy access</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Manual Installation Instructions */}
+                <div className="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+                  <h4 className="font-medium text-gray-900 mb-2">Manual Installation</h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><strong>Chrome/Edge:</strong> Click the install icon (📥) in the address bar</p>
+                    <p><strong>Safari (iOS):</strong> Tap Share → "Add to Home Screen"</p>
+                    <p><strong>Firefox:</strong> Menu → "Install this site as an app"</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isInstalled && (
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center install-success-check">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-green-900">TriDo is installed!</p>
+                    <p className="text-sm text-green-700">You can now use TriDo as a native app with offline access and push notifications.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   };
@@ -4756,6 +4960,40 @@ Project: ${task.project}`;
           </button>
         </div>
       </div>
+
+      {/* PWA Installation Prompt */}
+      {showInstallPrompt && !isInstalled && (
+        <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-80 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl shadow-2xl z-50 p-4 animate-slide-up">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7v10c0 5.55 3.84 9.95 9 11 5.16-1.05 9-5.45 9-11V7l-10-5z"/>
+                <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" fill="none"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-lg mb-1">Install TriDo App</h3>
+              <p className="text-blue-100 text-sm mb-3">
+                Get the full app experience with offline access, push notifications, and home screen icon!
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleInstallPWA}
+                  className="flex-1 bg-white text-blue-600 font-semibold py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  📱 Install App
+                </button>
+                <button
+                  onClick={() => setShowInstallPrompt(false)}
+                  className="px-3 py-2 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
