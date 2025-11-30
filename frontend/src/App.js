@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Calendar, Users, Bell, MessageCircle, Mic, Plus, Edit2, Trash2, MoreVertical, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban } from 'lucide-react';
+import { Calendar, Users, Bell, MessageCircle, Mic, Plus, Edit2, Trash2, MoreVertical, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus } from 'lucide-react';
 import API_URL from './config';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -4181,7 +4181,7 @@ Project: ${task.project}`;
         {currentView === 'all-tasks' && <AllTasksView />}
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
         {currentView === 'associate-tasks' && <AssociateTasksView />}
-        {currentView === 'admin-reports' && isAdmin() && <AdminReportsView />}
+        {currentView === 'admin-reports' && currentUser?.name === 'Ketul Lathia' && <AdminReportsView />}
         {currentView === 'settings' && <NotificationSettingsView />}
       </div>
 
@@ -4952,14 +4952,14 @@ Project: ${task.project}`;
 
       {/* Mobile Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-30">
-        <div className="grid grid-cols-5 gap-1 px-2 py-2">
+        <div className={`grid gap-1 px-1 py-2 ${currentUser?.name === 'Ketul Lathia' ? 'grid-cols-7' : 'grid-cols-6'}`}>
           <button
             onClick={() => setCurrentView('my-tasks')}
             className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-colors ${
               currentView === 'my-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
             }`}
           >
-            <User className="w-5 h-5 mb-1" />
+            <User className="w-4 h-4 mb-1" />
             <span className="text-xs font-medium">My Tasks</span>
           </button>
           <button
@@ -4968,18 +4968,17 @@ Project: ${task.project}`;
               currentView === 'all-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
             }`}
           >
-            <LayoutGrid className="w-5 h-5 mb-1" />
+            <LayoutGrid className="w-4 h-4 mb-1" />
             <span className="text-xs font-medium">All Tasks</span>
           </button>
           <button
-            onClick={() => {
-              setFormData({...formData, assignedBy: currentUser.username});
-              setShowTaskModal(true);
-            }}
-            className="flex flex-col items-center justify-center py-2 px-1 bg-blue-600 text-white rounded-lg"
+            onClick={() => setCurrentView('assigned-by-me')}
+            className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-colors ${
+              currentView === 'assigned-by-me' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+            }`}
           >
-            <Plus className="w-6 h-6 mb-1" />
-            <span className="text-xs font-medium">Add Task</span>
+            <UserPlus className="w-4 h-4 mb-1" />
+            <span className="text-xs font-medium">Assigned</span>
           </button>
           <button
             onClick={() => setCurrentView('associate-tasks')}
@@ -4987,8 +4986,29 @@ Project: ${task.project}`;
               currentView === 'associate-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
             }`}
           >
-            <Users className="w-5 h-5 mb-1" />
+            <Users className="w-4 h-4 mb-1" />
             <span className="text-xs font-medium">Associates</span>
+          </button>
+          {currentUser?.name === 'Ketul Lathia' && (
+            <button
+              onClick={() => setCurrentView('admin-reports')}
+              className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-colors ${
+                currentView === 'admin-reports' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4 mb-1" />
+              <span className="text-xs font-medium">Reports</span>
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setFormData({...formData, assignedBy: currentUser.username});
+              setShowTaskModal(true);
+            }}
+            className="flex flex-col items-center justify-center py-2 px-1 bg-blue-600 text-white rounded-lg"
+          >
+            <Plus className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">Add</span>
           </button>
           <button
             onClick={() => setCurrentView('settings')}
@@ -4996,7 +5016,7 @@ Project: ${task.project}`;
               currentView === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
             }`}
           >
-            <Bell className="w-5 h-5 mb-1" />
+            <Bell className="w-4 h-4 mb-1" />
             <span className="text-xs font-medium">Settings</span>
           </button>
         </div>
