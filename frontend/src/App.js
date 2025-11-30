@@ -964,16 +964,11 @@ const TaskManagementSystem = () => {
       : task.assignedTo;
 
     const taskInfo = `To: ${assignedToInfo}
-
 Task Name: ${task.title}
-
 Description: ${task.description || 'No description'}
-
-Timeline: ${new Date(task.startDate || task.inDate).toLocaleDateString()} - ${new Date(task.dueDate || task.outDate).toLocaleDateString()}
-
+Target Date: ${new Date(task.dueDate || task.outDate).toLocaleDateString()}
 Priority: ${task.priority}
-
-Severity: ${task.severity}`;
+Project: ${task.project}`;
     
     navigator.clipboard.writeText(taskInfo).then(() => {
       setCopiedTaskData(taskInfo);
@@ -990,16 +985,11 @@ Severity: ${task.severity}`;
       : task.assignedTo;
 
     const taskInfo = `To: ${assignedToInfo}
-
 Task Name: ${task.title}
-
 Description: ${task.description || 'No description'}
-
-Timeline: ${new Date(task.startDate || task.inDate).toLocaleDateString()} - ${new Date(task.dueDate || task.outDate).toLocaleDateString()}
-
+Target Date: ${new Date(task.dueDate || task.outDate).toLocaleDateString()}
 Priority: ${task.priority}
-
-Severity: ${task.severity}`;
+Project: ${task.project}`;
     
     const phoneNumber = task.isAssociate && task.associateDetails?.phone 
       ? task.associateDetails.phone.replace(/\D/g, '')
@@ -1027,21 +1017,12 @@ Severity: ${task.severity}`;
         : task.assignedTo;
 
       return `To: ${assignedToInfo}
-
 Task Name: ${task.title}
-
 Description: ${task.description || 'No description'}
-
-Timeline: ${new Date(task.startDate || task.inDate).toLocaleDateString()} - ${new Date(task.dueDate || task.outDate).toLocaleDateString()}
-
+Target Date: ${new Date(task.dueDate || task.outDate).toLocaleDateString()}
 Priority: ${task.priority}
-
-Severity: ${task.severity}
-
-Project: ${task.project}
-
-Status: ${task.status}`;
-    }).filter(Boolean).join('\n\n' + '='.repeat(50) + '\n\n');
+Project: ${task.project}`;
+    }).filter(Boolean).join('\n' + '='.repeat(49) + '\n');
 
     navigator.clipboard.writeText(tasksInfo).then(() => {
       alert(`${selectedAssociateTasks.length} tasks copied to clipboard!`);
