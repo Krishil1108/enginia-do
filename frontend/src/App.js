@@ -768,28 +768,6 @@ const TaskManagementSystem = () => {
         userId,
         taskData,
         type,
-
-  // Database Migration Function
-  const runDatabaseMigration = async () => {
-    try {
-      setLoading(true);
-      showInfo('Running database migration... This may take a few moments.', 'Migration Started');
-      
-      const response = await axios.post(`${API_URL}/migration/fix-indexes`);
-      
-      if (response.data.success) {
-        const message = `${response.data.message}\n\n${response.data.steps.join('\n')}\n\n📊 Summary:\n- Total associates: ${response.data.summary.total}\n- With email: ${response.data.summary.withEmail}\n- Without email: ${response.data.summary.withoutEmail}`;
-        showSuccess(message, 'Migration Successful');
-      } else {
-        showError('Migration failed: ' + response.data.message);
-      }
-    } catch (error) {
-      console.error('Migration error:', error);
-      showError('Failed to run migration: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setLoading(false);
-    }
-  };
         pushNotificationsEnabled
       });
       
@@ -926,6 +904,28 @@ const TaskManagementSystem = () => {
         return `Reminder: ${taskData.title} is due soon`;
       default:
         return `Update for task: ${taskData.title}`;
+    }
+  };
+
+  // Database Migration Function
+  const runDatabaseMigration = async () => {
+    try {
+      setLoading(true);
+      showInfo('Running database migration... This may take a few moments.', 'Migration Started');
+      
+      const response = await axios.post(`${API_URL}/migration/fix-indexes`);
+      
+      if (response.data.success) {
+        const message = `${response.data.message}\n\n${response.data.steps.join('\n')}\n\n📊 Summary:\n- Total associates: ${response.data.summary.total}\n- With email: ${response.data.summary.withEmail}\n- Without email: ${response.data.summary.withoutEmail}`;
+        showSuccess(message, 'Migration Successful');
+      } else {
+        showError('Migration failed: ' + response.data.message);
+      }
+    } catch (error) {
+      console.error('Migration error:', error);
+      showError('Failed to run migration: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
     }
   };
 
