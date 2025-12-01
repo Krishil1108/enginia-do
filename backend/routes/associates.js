@@ -51,10 +51,13 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // Check if associate with this email already exists for this user (only if email is provided)
-    if (email) {
+    // Clean email - convert empty strings to undefined
+    const cleanEmail = email && email.trim() ? email.trim().toLowerCase() : undefined;
+    
+    // Check if associate with this email already exists for this user (only if email is provided and not empty)
+    if (cleanEmail) {
       const existingAssociate = await Associate.findOne({ 
-        email: email.toLowerCase(),
+        email: cleanEmail,
         createdBy: createdBy,
         isActive: true
       });
@@ -68,9 +71,9 @@ router.post('/', async (req, res) => {
     
     const associate = new Associate({
       name: name.trim(),
-      company: company ? company.trim() : '',
-      email: email ? email.toLowerCase().trim() : '',
-      phone: phone ? phone.trim() : '',
+      company: company && company.trim() ? company.trim() : undefined,
+      email: cleanEmail,
+      phone: phone && phone.trim() ? phone.trim() : undefined,
       createdBy: createdBy
     });
     
@@ -104,10 +107,13 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Associate not found' });
     }
     
+    // Clean email - convert empty strings to undefined
+    const cleanEmail = email && email.trim() ? email.trim().toLowerCase() : undefined;
+    
     // Check if email is being changed to one that already exists
-    if (email && email.toLowerCase() !== associate.email) {
+    if (cleanEmail && cleanEmail !== associate.email) {
       const existingAssociate = await Associate.findOne({ 
-        email: email.toLowerCase(),
+        email: cleanEmail,
         createdBy: associate.createdBy,
         isActive: true,
         _id: { $ne: associate._id }
@@ -120,11 +126,11 @@ router.put('/:id', async (req, res) => {
       }
     }
     
-    // Update fields
+    // Update fields - use undefined for empty values
     if (name) associate.name = name.trim();
-    if (company) associate.company = company.trim();
-    if (email) associate.email = email.toLowerCase().trim();
-    if (phone !== undefined) associate.phone = phone.trim();
+    associate.company = company && company.trim() ? company.trim() : undefined;
+    associate.email = cleanEmail;
+    associate.phone = phone && phone.trim() ? phone.trim() : undefined;
     
     const updatedAssociate = await associate.save();
     
