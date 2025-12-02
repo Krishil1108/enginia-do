@@ -4781,15 +4781,17 @@ Priority: ${task.priority}`;
                   <option value="ASSOCIATE">📋 Associate (External Partner)</option>
                   {users
                     .filter(user => {
-                      // Studio team members only visible to Ketul Lathia and Piyush Diwan
+                      // Ketul Lathia and Piyush Diwan can see everyone
+                      if (currentUser?.username === 'ketul.lathia' || currentUser?.username === 'piyush.diwan') {
+                        return true;
+                      }
+                      // For other users (like Vraj, Kinjal):
+                      // - Hide Studio Team members (Ankit, Happy, Darshit)
+                      // - Show Studio Team - Manager (Piyush Diwan)
                       if (user.department === 'Studio Team') {
-                        return currentUser?.username === 'ketul.lathia' || currentUser?.username === 'piyush.diwan';
+                        return false; // Hide studio team members
                       }
-                      // Piyush Diwan visible to everyone except his own team members
-                      if (user.username === 'piyush.diwan') {
-                        return !currentUser?.manager || currentUser?.manager !== 'piyush.diwan';
-                      }
-                      return true;
+                      return true; // Show everyone else including Studio Team - Manager
                     })
                     .map(user => (
                       <option key={user._id} value={user.username}>

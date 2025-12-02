@@ -12,13 +12,20 @@ async function createStudioTeam() {
     await mongoose.connect(MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
-    // First, verify Piyush Diwan exists
+    // First, verify Piyush Diwan exists and update his department
     const piyush = await User.findOne({ username: 'piyush.diwan' });
     if (!piyush) {
       console.log('❌ Piyush Diwan user not found. Please create this user first.');
       process.exit(1);
     }
     console.log('✅ Found Piyush Diwan:', piyush.name);
+    
+    // Update Piyush Diwan's department to Studio Team - Manager
+    await User.updateOne(
+      { username: 'piyush.diwan' },
+      { $set: { department: 'Studio Team - Manager' } }
+    );
+    console.log('✅ Updated Piyush Diwan department to: Studio Team - Manager\n');
 
     // Studio team members to create
     const teamMembers = [
