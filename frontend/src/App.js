@@ -70,6 +70,15 @@ const STATUS_COLORS = {
 
 const TaskManagementSystem = () => {
   
+  // Search debounce configuration
+  const SEARCH_DEBOUNCE_DELAY = 300; // milliseconds - adjust this value to change debounce timing
+  // 📝 DEBOUNCE TIMING GUIDE:
+  // - 100ms: Very fast, may cause too many searches
+  // - 300ms: Good balance (current setting)  
+  // - 500ms: Slower but reduces server load
+  // - 1000ms: Very slow but minimal server requests
+  // Check browser console for detailed timing logs
+  
   // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -1394,8 +1403,15 @@ Priority: ${task.priority}`;
 
   // Search functionality
   const handleSearchChange = useCallback((viewName, term) => {
+    console.log(`🔄 [Search State Update] ${viewName}:`);
+    console.log(`   📝 Setting search term: "${term}"`);
+    console.log(`   🔄 Resetting to page 1`);
+    console.log(`   ⏰ Update time: ${new Date().toLocaleTimeString()}.${Date.now() % 1000}`);
+    
     setSearchTerms(prev => ({ ...prev, [viewName]: term }));
     setCurrentPages(prev => ({ ...prev, [viewName]: 1 })); // Reset to first page on search
+    
+    console.log(`   ✅ Search state updated for ${viewName}`);
   }, []);
 
   const filterTasksBySearch = useCallback((tasks, searchTerm) => {
@@ -1429,6 +1445,7 @@ Priority: ${task.priority}`;
   const SearchInput = React.memo(({ viewName, placeholder, searchValue, onSearchChange }) => {
     const [localValue, setLocalValue] = useState(searchValue);
     const timeoutRef = useRef(null);
+    const lastTypingTimeRef = useRef(null);
 
     // Update local value when external search value changes (like when cleared)
     useEffect(() => {
@@ -1437,25 +1454,48 @@ Priority: ${task.priority}`;
 
     const handleInputChange = useCallback((e) => {
       const value = e.target.value;
+      const currentTime = Date.now();
+      const timeSinceLastType = lastTypingTimeRef.current ? currentTime - lastTypingTimeRef.current : 0;
+      
+      lastTypingTimeRef.current = currentTime;
       setLocalValue(value);
+      
+      console.log(`🔍 [Search Debounce] ${viewName}:`);
+      console.log(`   📝 Input: "${value}" (length: ${value.length})`);
+      console.log(`   ⏰ Time: ${new Date().toLocaleTimeString()}.${currentTime % 1000}`);
+      console.log(`   ⚡ Gap since last keystroke: ${timeSinceLastType}ms`);
       
       // Clear previous timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        console.log(`   🚫 Previous debounce timer cleared`);
       }
       
       // Set new timeout for debounced search
       timeoutRef.current = setTimeout(() => {
+        const actualDebounceTime = Date.now() - currentTime;
+        console.log(`🎯 [Search Execute] ${viewName}:`);
+        console.log(`   📊 Search term: "${value}"`);
+        console.log(`   ⏱️  Actual debounce time: ${actualDebounceTime}ms (target: ${SEARCH_DEBOUNCE_DELAY}ms)`);
+        console.log(`   🕐 Executed at: ${new Date().toLocaleTimeString()}.${Date.now() % 1000}`);
+        console.log(`   📈 Performance: ${actualDebounceTime <= SEARCH_DEBOUNCE_DELAY + 10 ? '✅ Good' : '⚠️ Slow'}`);
         onSearchChange(viewName, value);
-      }, 300);
-    }, [viewName, onSearchChange]);
+      }, SEARCH_DEBOUNCE_DELAY);
+      
+      console.log(`   ⏳ New debounce timer set for ${SEARCH_DEBOUNCE_DELAY}ms`);
+      console.log(`   ────────────────────────────────────────`);
+    }, [viewName, onSearchChange, SEARCH_DEBOUNCE_DELAY]);
 
     const handleClear = useCallback(() => {
+      console.log(`🗑️  [Search Clear] ${viewName}: Clearing search input`);
       setLocalValue('');
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        console.log(`   ⏹️  Debounce timer cancelled due to clear`);
       }
+      lastTypingTimeRef.current = null;
       onSearchChange(viewName, '');
+      console.log(`   ✅ Search cleared and filters reset`);
     }, [viewName, onSearchChange]);
 
     // Cleanup timeout on unmount
