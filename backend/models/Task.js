@@ -80,6 +80,19 @@ const taskSchema = new mongoose.Schema({
   },
   completedAt: {
     type: Date
+  },
+  parentTask: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Task',
+    default: null
+  },
+  subtasks: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Task'
+  }],
+  isSubtask: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

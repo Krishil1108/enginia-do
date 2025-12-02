@@ -90,6 +90,8 @@ const TaskManagementSystem = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [copiedTaskData, setCopiedTaskData] = useState('');
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showSubtaskModal, setShowSubtaskModal] = useState(false);
+  const [parentTaskForSubtask, setParentTaskForSubtask] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [filters, setFilters] = useState({});
@@ -481,6 +483,15 @@ const TaskManagementSystem = () => {
   const isAdmin = useCallback(() => {
     return currentUser && currentUser.username === 'ketul.lathia';
   }, [currentUser]);
+
+  const isTeamMember = useCallback(() => {
+    return currentUser && currentUser.manager;
+  }, [currentUser]);
+
+  const getMyTeamMembers = useCallback(() => {
+    if (!currentUser) return [];
+    return users.filter(u => u.manager === currentUser.username && u.isActive);
+  }, [currentUser, users]);
 
   const loadTasks = async () => {
     try {
@@ -1191,6 +1202,49 @@ const TaskManagementSystem = () => {
       onConfirm: () => performDeleteTask(id)
     });
     setShowConfirmDialog(true);
+  };
+
+  const createSubtask = async (parentTask, subtaskData) => {
+    try {
+      setLoading(true);
+      
+      const newSubtask = {
+        ...subtaskData,
+        parentTask: parentTask._id,
+        isSubtask: true,
+        project: parentTask.project,
+        assignedBy: currentUser.username
+      };
+      
+      const response = await axios.post(`${API_URL}/tasks`, newSubtask);
+      const savedSubtask = response.data;
+      
+      // Update parent task with subtask reference
+      await axios.put(`${API_URL}/tasks/${parentTask._id}`, {
+        ...parentTask,
+        subtasks: [...(parentTask.subtasks || []), savedSubtask._id]
+      });
+      
+      // Notify assigned user
+      await createNotification(
+        savedSubtask._id,
+        subtaskData.assignedTo,
+        `New subtask "${subtaskData.title}" assigned from task "${parentTask.title}" by ${currentUser.name}`,
+        'task_assigned',
+        currentUser.username
+      );
+      
+      await loadTasks();
+      setShowSubtaskModal(false);
+      setParentTaskForSubtask(null);
+      resetForm();
+      showSuccess('Subtask created successfully');
+    } catch (error) {
+      console.error('Error creating subtask:', error);
+      showError('Failed to create subtask: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const performDeleteTask = async (id) => {
@@ -2311,6 +2365,28 @@ Priority: ${task.priority}`;
                                   <Edit2 className="w-3.5 h-3.5" />
                                   Edit
                                 </button>
+                                
+                                {/* Create Subtask option for tasks assigned to me with team members */}
+                                {task.assignedTo === currentUser?.username && getMyTeamMembers().length > 0 && (
+                                  <button
+                                    onClick={() => {
+                                      setParentTaskForSubtask(task);
+                                      setFormData({
+                                        ...formData,
+                                        project: task.project,
+                                        assignedBy: currentUser.username,
+                                        inDate: task.inDate,
+                                        outDate: task.outDate
+                                      });
+                                      setShowSubtaskModal(true);
+                                      document.getElementById(`menu-${task._id}`).style.display = 'none';
+                                    }}
+                                    className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-purple-600 text-sm"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    Create Subtask
+                                  </button>
+                                )}
                                 
                                 {(currentUser?.role === 'Admin' || task.assignedBy === currentUser?.username) && (
                                   <button
@@ -4370,30 +4446,35 @@ Priority: ${task.priority}`;
               >
                 My Tasks
               </button>
-              <button
-                onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                All Tasks
-              </button>
-              <button
-                onClick={() => { setCurrentView('assigned-by-me'); setShowAdvancedMenu(false); }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Assigned By Me
-              </button>
-              <button
-                onClick={() => { setCurrentView('associate-tasks'); setShowAdvancedMenu(false); }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentView === 'associate-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                Associate Tasks
-              </button>
+              
+              {!isTeamMember() && (
+                <>
+                  <button
+                    onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    All Tasks
+                  </button>
+                  <button
+                    onClick={() => { setCurrentView('assigned-by-me'); setShowAdvancedMenu(false); }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    Assigned By Me
+                  </button>
+                  <button
+                    onClick={() => { setCurrentView('associate-tasks'); setShowAdvancedMenu(false); }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentView === 'associate-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    Associate Tasks
+                  </button>
+                </>
+              )}
               
               {isAdmin() && (
                 <button
@@ -4903,6 +4984,142 @@ Priority: ${task.priority}`;
         </div>
       )}
 
+      {/* Subtask Modal */}
+      {showSubtaskModal && parentTaskForSubtask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl max-w-2xl w-full h-[95vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold">Create Subtask</h2>
+                <p className="text-sm text-gray-600 mt-1">From: {parentTaskForSubtask.title}</p>
+              </div>
+              <button onClick={() => { setShowSubtaskModal(false); setParentTaskForSubtask(null); resetForm(); }} className="text-gray-400 hover:text-gray-600 p-1">
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6 space-y-4 pb-20 sm:pb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Assign To *</label>
+                <select
+                  value={formData.assignedTo}
+                  onChange={(e) => setFormData({...formData, assignedTo: e.target.value})}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  required
+                >
+                  <option value="">Select Team Member</option>
+                  {getMyTeamMembers().map(user => (
+                    <option key={user._id} value={user.username}>
+                      {user.name} - {user.department}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <input
+                  type="text"
+                  value={parentTaskForSubtask.project}
+                  disabled
+                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm sm:text-base"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Task Name *</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  placeholder="Enter subtask name"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Enter task description"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  rows="3"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Severity *</label>
+                  <select
+                    value={formData.severity}
+                    onChange={(e) => setFormData({...formData, severity: e.target.value})}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  >
+                    <option value="Minor">Minor</option>
+                    <option value="Major">Major</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                  <input
+                    type="date"
+                    value={formData.inDate}
+                    onChange={(e) => setFormData({...formData, inDate: e.target.value})}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Date *</label>
+                  <input
+                    type="date"
+                    value={formData.outDate}
+                    onChange={(e) => setFormData({...formData, outDate: e.target.value})}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 sticky bottom-0 bg-white border-t border-gray-100 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
+                <button
+                  onClick={() => { setShowSubtaskModal(false); setParentTaskForSubtask(null); resetForm(); }}
+                  className="flex-1 px-4 py-2.5 sm:py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-sm sm:text-base font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => createSubtask(parentTaskForSubtask, formData)}
+                  disabled={loading || !formData.title || !formData.assignedTo || !formData.inDate || !formData.outDate}
+                  className="flex-1 px-4 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Creating...' : 'Create Subtask'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Complete Task Modal */}
       {showCompleteModal && selectedTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -5212,43 +5429,49 @@ Priority: ${task.priority}`;
             <User className="w-4 h-4 mb-1" />
             <span className="text-xs font-medium whitespace-nowrap">My Tasks</span>
           </button>
-          <button
-            onClick={() => setCurrentView('all-tasks')}
-            className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-              currentView === 'all-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4 mb-1" />
-            <span className="text-xs font-medium whitespace-nowrap">All Tasks</span>
-          </button>
-          <button
-            onClick={() => {
-              setFormData({...formData, assignedBy: currentUser.username});
-              setShowTaskModal(true);
-            }}
-            className="flex flex-col items-center justify-center py-2 px-3 bg-blue-600 text-white rounded-lg min-w-max"
-          >
-            <Plus className="w-4 h-4 mb-1" />
-            <span className="text-xs font-medium whitespace-nowrap">Add</span>
-          </button>
-          <button
-            onClick={() => setCurrentView('assigned-by-me')}
-            className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-              currentView === 'assigned-by-me' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-            }`}
-          >
-            <UserPlus className="w-4 h-4 mb-1" />
-            <span className="text-xs font-medium whitespace-nowrap">Assigned by Me</span>
-          </button>
-          <button
-            onClick={() => setCurrentView('associate-tasks')}
-            className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-              currentView === 'associate-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-            }`}
-          >
-            <Users className="w-4 h-4 mb-1" />
-            <span className="text-xs font-medium whitespace-nowrap">Associates</span>
-          </button>
+          
+          {!isTeamMember() && (
+            <>
+              <button
+                onClick={() => setCurrentView('all-tasks')}
+                className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                  currentView === 'all-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4 mb-1" />
+                <span className="text-xs font-medium whitespace-nowrap">All Tasks</span>
+              </button>
+              <button
+                onClick={() => {
+                  setFormData({...formData, assignedBy: currentUser.username});
+                  setShowTaskModal(true);
+                }}
+                className="flex flex-col items-center justify-center py-2 px-3 bg-blue-600 text-white rounded-lg min-w-max"
+              >
+                <Plus className="w-4 h-4 mb-1" />
+                <span className="text-xs font-medium whitespace-nowrap">Add</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('assigned-by-me')}
+                className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                  currentView === 'assigned-by-me' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+                }`}
+              >
+                <UserPlus className="w-4 h-4 mb-1" />
+                <span className="text-xs font-medium whitespace-nowrap">Assigned by Me</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('associate-tasks')}
+                className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                  currentView === 'associate-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+                }`}
+              >
+                <Users className="w-4 h-4 mb-1" />
+                <span className="text-xs font-medium whitespace-nowrap">Associates</span>
+              </button>
+            </>
+          )}
+          
           {currentUser?.name === 'Ketul Lathia' && (
             <button
               onClick={() => setCurrentView('admin-reports')}

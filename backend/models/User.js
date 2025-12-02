@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  manager: {
+    type: String,
+    default: null,
+    ref: 'User'
+  },
   isActive: {
     type: Boolean,
     default: true
