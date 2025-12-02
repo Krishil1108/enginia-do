@@ -4551,8 +4551,8 @@ Priority: ${task.priority}`;
                     Assigned By Me
                   </button>
                   
-                  {/* Team Subtasks - only for managers with team members */}
-                  {getMyTeamMembers().length > 0 && (
+                  {/* Team Subtasks - for Ketul and managers with team members */}
+                  {(currentUser?.username === 'ketul.lathia' || getMyTeamMembers().length > 0) && (
                     <button
                       onClick={() => { setCurrentView('team-subtasks'); setShowAdvancedMenu(false); }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -5120,8 +5120,8 @@ Priority: ${task.priority}`;
                   className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   required
                 >
-                  <option value="">Select Team Member</option>
-                  {getMyTeamMembers().map(user => (
+                  <option value="">{currentUser?.username === 'ketul.lathia' ? 'Select User' : 'Select Team Member'}</option>
+                  {(currentUser?.username === 'ketul.lathia' ? users : getMyTeamMembers()).map(user => (
                     <option key={user._id} value={user.username}>
                       {user.name} - {user.department}
                     </option>
@@ -5575,8 +5575,8 @@ Priority: ${task.priority}`;
                 <span className="text-xs font-medium whitespace-nowrap">Assigned by Me</span>
               </button>
               
-              {/* Team Subtasks - only for managers with team members */}
-              {getMyTeamMembers().length > 0 && (
+              {/* Team Subtasks - for managers with team members and Ketul */}
+              {(currentUser?.username === 'ketul.lathia' || getMyTeamMembers().length > 0) && (
                 <button
                   onClick={() => setCurrentView('team-subtasks')}
                   className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
