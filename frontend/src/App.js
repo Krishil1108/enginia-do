@@ -2366,8 +2366,8 @@ Priority: ${task.priority}`;
                                   Edit
                                 </button>
                                 
-                                {/* Create Subtask option for tasks assigned to me with team members */}
-                                {task.assignedTo === currentUser?.username && getMyTeamMembers().length > 0 && (
+                                {/* Create Subtask option for tasks assigned to me - for Ketul and managers with team members */}
+                                {task.assignedTo === currentUser?.username && (currentUser?.username === 'ketul.lathia' || getMyTeamMembers().length > 0) && (
                                   <button
                                     onClick={() => {
                                       setParentTaskForSubtask(task);
