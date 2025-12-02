@@ -4779,11 +4779,20 @@ Priority: ${task.priority}`;
                 >
                   <option value="">Select User</option>
                   <option value="ASSOCIATE">📋 Associate (External Partner)</option>
-                  {users.map(user => (
-                    <option key={user._id} value={user.username}>
-                      {user.name} - {user.department}
-                    </option>
-                  ))}
+                  {users
+                    .filter(user => {
+                      // Studio team members only visible to Ketul Lathia and Piyush Diwan
+                      if (user.department === 'Studio Team') {
+                        return currentUser?.username === 'ketul.lathia' || currentUser?.username === 'piyush.diwan';
+                      }
+                      return true;
+                    })
+                    .map(user => (
+                      <option key={user._id} value={user.username}>
+                        {user.name} - {user.department}
+                      </option>
+                    ))
+                  }
                 </select>
               </div>
 
