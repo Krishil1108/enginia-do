@@ -3867,7 +3867,7 @@ Priority: ${task.priority}`;
 
         {/* Subtasks Table */}
         {viewMode === 'table' ? (
-          <TaskTable tasks={mySubtasks} showActions={true} />
+          <TableView tasks={mySubtasks} />
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {mySubtasks.map(task => (
