@@ -3806,6 +3806,91 @@ Priority: ${task.priority}`;
     );
   };
 
+  // Team Subtasks View
+  const SubtasksView = () => {
+    // Get subtasks created by current user
+    const mySubtasks = tasks.filter(task => task.isSubtask && task.assignedBy === currentUser?.username);
+    
+    // Calculate stats
+    const pendingSubtasks = mySubtasks.filter(t => t.status === 'Pending');
+    const inProgressSubtasks = mySubtasks.filter(t => t.status === 'In Progress');
+    const completedSubtasks = mySubtasks.filter(t => t.status === 'Completed');
+    const overdueSubtasks = mySubtasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Team Subtasks</h2>
+          <p className="text-gray-600">Subtasks assigned to your team members</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                <p className="text-4xl font-bold mt-2">{pendingSubtasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                <p className="text-4xl font-bold mt-2">{inProgressSubtasks.length}</p>
+              </div>
+              <Users className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-4xl font-bold mt-2">{completedSubtasks.length}</p>
+              </div>
+              <CheckCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">Overdue</p>
+                <p className="text-4xl font-bold mt-2">{overdueSubtasks.length}</p>
+              </div>
+              <AlertCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+        </div>
+
+        {/* Subtasks Table */}
+        {viewMode === 'table' ? (
+          <TaskTable tasks={mySubtasks} showActions={true} />
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {mySubtasks.map(task => (
+              <HorizontalTaskCard key={task._id} task={task} showActions={true} />
+            ))}
+          </div>
+        )}
+
+        {mySubtasks.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="text-gray-400 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Subtasks Yet</h3>
+            <p className="text-gray-600">Create subtasks from your assigned tasks to delegate work to your team members</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Associate Tasks View
   const AssociateTasksView = () => {
     let associateTasks = tasks.filter(task => task.isAssociate === true);
@@ -4465,6 +4550,19 @@ Priority: ${task.priority}`;
                   >
                     Assigned By Me
                   </button>
+                  
+                  {/* Team Subtasks - only for managers with team members */}
+                  {getMyTeamMembers().length > 0 && (
+                    <button
+                      onClick={() => { setCurrentView('team-subtasks'); setShowAdvancedMenu(false); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'team-subtasks' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
+                      }`}
+                    >
+                      Team Subtasks
+                    </button>
+                  )}
+                  
                   <button
                     onClick={() => { setCurrentView('associate-tasks'); setShowAdvancedMenu(false); }}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -4511,6 +4609,7 @@ Priority: ${task.priority}`;
         {currentView === 'my-tasks' && <MyTasksDashboard />}
         {currentView === 'all-tasks' && <AllTasksView />}
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
+        {currentView === 'team-subtasks' && <SubtasksView />}
         {currentView === 'associate-tasks' && <AssociateTasksView />}
         {currentView === 'admin-reports' && currentUser?.name === 'Ketul Lathia' && <AdminReportsView />}
         {currentView === 'settings' && <NotificationSettingsView />}
@@ -5475,6 +5574,22 @@ Priority: ${task.priority}`;
                 <UserPlus className="w-4 h-4 mb-1" />
                 <span className="text-xs font-medium whitespace-nowrap">Assigned by Me</span>
               </button>
+              
+              {/* Team Subtasks - only for managers with team members */}
+              {getMyTeamMembers().length > 0 && (
+                <button
+                  onClick={() => setCurrentView('team-subtasks')}
+                  className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                    currentView === 'team-subtasks' ? 'bg-purple-50 text-purple-600' : 'text-gray-600'
+                  }`}
+                >
+                  <svg className="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  <span className="text-xs font-medium whitespace-nowrap">Subtasks</span>
+                </button>
+              )}
+              
               <button
                 onClick={() => setCurrentView('associate-tasks')}
                 className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
