@@ -1719,6 +1719,22 @@ Priority: ${task.priority}`;
   };
 
   const handleStatusChange = async (task, newStatus) => {
+    // If changing to Completed, show completion modal
+    if (newStatus === 'Completed') {
+      setSelectedTask(task);
+      setCompletionReason('');
+      setShowCompleteModal(true);
+      return;
+    }
+
+    // If changing to Overdue, show overdue modal
+    if (newStatus === 'Overdue') {
+      setSelectedTask(task);
+      setOverdueReason('');
+      setShowOverdueModal(true);
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -1746,11 +1762,6 @@ Priority: ${task.priority}`;
       // Only include reminder if it's a valid date
       if (task.reminder && task.reminder !== '') {
         taskUpdateData.reminder = task.reminder;
-      }
-      
-      // Add completedAt for completed status
-      if (newStatus === 'Completed') {
-        taskUpdateData.completedAt = new Date().toISOString();
       }
       
       console.log('Sending task update:', taskUpdateData);
@@ -2770,10 +2781,6 @@ Priority: ${task.priority}`;
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-xs mb-3">
-          <div>
-            <span className="text-gray-500">Team:</span>
-            <span className="ml-1 font-medium text-gray-900">{task.team}</span>
-          </div>
           <div>
             <span className="text-gray-500">Assigned To:</span>
             <span className="ml-1 font-medium text-gray-900">
