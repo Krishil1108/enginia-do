@@ -4796,7 +4796,6 @@ Priority: ${task.priority}`;
                           className="rounded border-gray-300" 
                         />
                       </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned To</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Project</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Task Title</th>
@@ -4817,9 +4816,6 @@ Priority: ${task.priority}`;
                           onChange={() => toggleTaskSelection(task._id)}
                           className="rounded border-gray-300" 
                         />
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {String(index + 1).padStart(6, '0')}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
@@ -5196,7 +5192,7 @@ Priority: ${task.priority}`;
                 My Tasks
               </button>
               
-              {!isTeamMember() && (
+              {!isTeamMember() && !['vraj', 'kinjal'].includes(currentUser?.username) && (
                 <>
                   <button
                     onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
@@ -6208,7 +6204,7 @@ Priority: ${task.priority}`;
             <span className="text-xs font-medium whitespace-nowrap">My Tasks</span>
           </button>
           
-          {!isTeamMember() && (
+          {!isTeamMember() && !['vraj', 'kinjal'].includes(currentUser?.username) && (
             <>
               <button
                 onClick={() => setCurrentView('all-tasks')}
