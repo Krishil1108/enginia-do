@@ -5192,7 +5192,7 @@ Priority: ${task.priority}`;
                 My Tasks
               </button>
               
-              {!isTeamMember() && !['vraj', 'kinjal'].includes(currentUser?.username) && (
+              {!isTeamMember() && !['Kinjal Solanki', 'Vraj Patel'].includes(currentUser?.name) && (
                 <>
                   <button
                     onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
@@ -6204,7 +6204,7 @@ Priority: ${task.priority}`;
             <span className="text-xs font-medium whitespace-nowrap">My Tasks</span>
           </button>
           
-          {!isTeamMember() && !['vraj', 'kinjal'].includes(currentUser?.username) && (
+          {!isTeamMember() && !['Kinjal Solanki', 'Vraj Patel'].includes(currentUser?.name) && (
             <>
               <button
                 onClick={() => setCurrentView('all-tasks')}
