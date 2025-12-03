@@ -63,6 +63,7 @@ const SEVERITY_BADGES = {
 const STATUS_COLORS = {
   'Pending': 'bg-yellow-50 border-yellow-200 text-yellow-800',
   'In Progress': 'bg-blue-50 border-blue-200 text-blue-800',
+  'In Checking': 'bg-pink-50 border-pink-200 text-pink-800',
   'Completed': 'bg-green-50 border-green-200 text-green-800',
   'Overdue': 'bg-red-50 border-red-200 text-red-800'
 };
@@ -430,6 +431,7 @@ const TaskManagementSystem = () => {
     const colors = {
       'Pending': 'bg-yellow-100 text-yellow-700',
       'In Progress': 'bg-blue-100 text-blue-700',
+      'In Checking': 'bg-pink-100 text-pink-700',
       'Completed': 'bg-green-100 text-green-700',
       'Overdue': 'bg-red-100 text-red-700'
     };
@@ -451,6 +453,7 @@ const TaskManagementSystem = () => {
     const statusColors = {
       'Pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
       'In Progress': 'bg-blue-100 text-blue-700 border-blue-200',
+      'In Checking': 'bg-pink-100 text-pink-700 border-pink-200',
       'Completed': 'bg-green-100 text-green-700 border-green-200',
       'Overdue': 'bg-red-100 text-red-700 border-red-200'
     };
@@ -464,6 +467,7 @@ const TaskManagementSystem = () => {
       >
         <option value="Pending">Pending</option>
         <option value="In Progress">In Progress</option>
+        <option value="In Checking">In Checking</option>
         <option value="Completed">Completed</option>
         <option value="Overdue">Overdue</option>
       </select>
@@ -2987,6 +2991,7 @@ Priority: ${task.priority}`;
                 <option value="">All</option>
                 <option value="Pending">Pending</option>
                 <option value="In Progress">In Progress</option>
+                <option value="In Checking">In Checking</option>
                 <option value="Completed">Completed</option>
                 <option value="Overdue">Overdue</option>
               </select>
@@ -4010,6 +4015,7 @@ Priority: ${task.priority}`;
                 <option value="">All</option>
                 <option value="Pending">Pending</option>
                 <option value="In Progress">In Progress</option>
+                <option value="In Checking">In Checking</option>
                 <option value="Completed">Completed</option>
                 <option value="Overdue">Overdue</option>
               </select>
@@ -4232,6 +4238,7 @@ Priority: ${task.priority}`;
                 <option value="">All</option>
                 <option value="Pending">Pending</option>
                 <option value="In Progress">In Progress</option>
+                <option value="In Checking">In Checking</option>
                 <option value="Completed">Completed</option>
                 <option value="Overdue">Overdue</option>
               </select>
@@ -4693,6 +4700,7 @@ Priority: ${task.priority}`;
                 <option value="">All</option>
                 <option value="Pending">Pending</option>
                 <option value="In Progress">In Progress</option>
+                <option value="In Checking">In Checking</option>
                 <option value="Completed">Completed</option>
                 <option value="Overdue">Overdue</option>
               </select>
@@ -5737,6 +5745,7 @@ Priority: ${task.priority}`;
                 >
                   <option value="Pending">Pending</option>
                   <option value="In Progress">In Progress</option>
+                  <option value="In Checking">In Checking</option>
                   <option value="Completed">Completed</option>
                   <option value="Overdue">Overdue</option>
                 </select>
@@ -6042,6 +6051,7 @@ Priority: ${task.priority}`;
                   <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
                     taskDetails.status === 'Completed' ? 'bg-green-100 text-green-700' :
                     taskDetails.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                    taskDetails.status === 'In Checking' ? 'bg-pink-100 text-pink-700' :
                     taskDetails.status === 'Overdue' ? 'bg-red-100 text-red-700' :
                     'bg-yellow-100 text-yellow-700'
                   }`}>
