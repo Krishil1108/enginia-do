@@ -5192,16 +5192,20 @@ Priority: ${task.priority}`;
                 My Tasks
               </button>
               
-              {!isTeamMember() && !['Kinjal Solanki', 'Vraj Patel'].includes(currentUser?.name) && (
+              {!isTeamMember() && (
                 <>
-                  <button
-                    onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    All Tasks
-                  </button>
+                  {/* All Tasks - hidden from Kinjal and Vraj */}
+                  {!['Kinjal Solanki', 'Vraj Patel'].includes(currentUser?.name) && (
+                    <button
+                      onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      All Tasks
+                    </button>
+                  )}
+                  
                   <button
                     onClick={() => { setCurrentView('assigned-by-me'); setShowAdvancedMenu(false); }}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -6204,52 +6208,58 @@ Priority: ${task.priority}`;
             <span className="text-xs font-medium whitespace-nowrap">My Tasks</span>
           </button>
           
+          {/* All Tasks - hidden from Kinjal Solanki and Vraj Patel */}
           {!isTeamMember() && !['Kinjal Solanki', 'Vraj Patel'].includes(currentUser?.name) && (
-            <>
-              <button
-                onClick={() => setCurrentView('all-tasks')}
-                className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-                  currentView === 'all-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4 mb-1" />
-                <span className="text-xs font-medium whitespace-nowrap">All Tasks</span>
-              </button>
-              <button
-                onClick={() => setCurrentView('assigned-by-me')}
-                className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-                  currentView === 'assigned-by-me' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-                }`}
-              >
-                <UserPlus className="w-4 h-4 mb-1" />
-                <span className="text-xs font-medium whitespace-nowrap">Assigned by Me</span>
-              </button>
-              
-              {/* Team Subtasks - for managers with team members and Ketul */}
-              {(currentUser?.username === 'ketul.lathia' || getMyTeamMembers().length > 0) && (
-                <button
-                  onClick={() => setCurrentView('team-subtasks')}
-                  className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-                    currentView === 'team-subtasks' ? 'bg-purple-50 text-purple-600' : 'text-gray-600'
-                  }`}
-                >
-                  <svg className="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                  <span className="text-xs font-medium whitespace-nowrap">Subtasks</span>
-                </button>
-              )}
-              
-              <button
-                onClick={() => setCurrentView('associate-tasks')}
-                className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-                  currentView === 'associate-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-                }`}
-              >
-                <Users className="w-4 h-4 mb-1" />
-                <span className="text-xs font-medium whitespace-nowrap">Associates</span>
-              </button>
-            </>
+            <button
+              onClick={() => setCurrentView('all-tasks')}
+              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                currentView === 'all-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4 mb-1" />
+              <span className="text-xs font-medium whitespace-nowrap">All Tasks</span>
+            </button>
+          )}
+
+          {/* Assigned by Me - available to non-team members */}
+          {!isTeamMember() && (
+            <button
+              onClick={() => setCurrentView('assigned-by-me')}
+              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                currentView === 'assigned-by-me' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+              }`}
+            >
+              <UserPlus className="w-4 h-4 mb-1" />
+              <span className="text-xs font-medium whitespace-nowrap">Assigned by Me</span>
+            </button>
+          )}
+
+          {/* Team Subtasks - for managers with team members and Ketul */}
+          {!isTeamMember() && (currentUser?.username === 'ketul.lathia' || getMyTeamMembers().length > 0) && (
+            <button
+              onClick={() => setCurrentView('team-subtasks')}
+              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                currentView === 'team-subtasks' ? 'bg-purple-50 text-purple-600' : 'text-gray-600'
+              }`}
+            >
+              <svg className="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <span className="text-xs font-medium whitespace-nowrap">Subtasks</span>
+            </button>
+          )}
+
+          {/* Associate Tasks - available to non-team members */}
+          {!isTeamMember() && (
+            <button
+              onClick={() => setCurrentView('associate-tasks')}
+              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                currentView === 'associate-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+              }`}
+            >
+              <Users className="w-4 h-4 mb-1" />
+              <span className="text-xs font-medium whitespace-nowrap">Associates</span>
+            </button>
           )}
           
           {currentUser?.name === 'Ketul Lathia' && (
