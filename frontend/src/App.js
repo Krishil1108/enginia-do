@@ -120,14 +120,16 @@ const TaskManagementSystem = () => {
     'all-tasks': '',
     'assigned-by-me': '',
     'team-subtasks': '',
-    'associate-tasks': ''
+    'associate-tasks': '',
+    'confidential-tasks': ''
   });
   const [currentPages, setCurrentPages] = useState({
     'my-tasks': 1,
     'all-tasks': 1,
     'assigned-by-me': 1,
     'team-subtasks': 1,
-    'associate-tasks': 1
+    'associate-tasks': 1,
+    'confidential-tasks': 1
   });
   const [itemsPerPage] = useState(20);
   
@@ -1798,8 +1800,40 @@ Priority: ${task.priority}`;
     }
   };
 
+  // Toggle task confidential status
+  const toggleTaskConfidential = async (task) => {
+    try {
+      setLoading(true);
+      const newConfidentialStatus = !task.isConfidential;
+      
+      await axios.put(`${API_URL}/tasks/${task._id}`, {
+        isConfidential: newConfidentialStatus
+      });
+      
+      // Notify about confidential status change
+      await createNotification(
+        task._id,
+        task.assignedBy,
+        `Task "${task.title}" ${newConfidentialStatus ? 'marked as confidential' : 'removed from confidential'} by ${currentUser.name}`,
+        'task_updated',
+        currentUser.username
+      );
+      
+      await loadTasks();
+      
+      showSuccess(`Task ${newConfidentialStatus ? 'hidden from All Tasks view' : 'restored to All Tasks view'}`);
+    } catch (error) {
+      console.error('Error updating task confidential status:', error);
+      showError('Failed to update task visibility');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getFilteredTasks = () => {
     return tasks.filter(task => {
+      // Filter out confidential tasks from All Tasks view
+      if (task.isConfidential) return false;
       // Filter out subtasks if the filter is set to 'false'
       if (filters.showSubtasks === 'false' && task.isSubtask) return false;
       if (filters.project && task.project !== filters.project) return false;
@@ -2590,6 +2624,30 @@ Priority: ${task.priority}`;
                               <Eye className="w-4 h-4" />
                             </button>
 
+                            {/* Hide/Show Confidential Button - Only for task creators */}
+                            {task.assignedBy === currentUser?.username && (
+                              <button
+                                onClick={() => toggleTaskConfidential(task)}
+                                className={`p-1.5 rounded transition-colors ${
+                                  task.isConfidential 
+                                    ? 'text-orange-600 hover:text-orange-800 hover:bg-orange-50' 
+                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                }`}
+                                title={task.isConfidential ? 'Show in All Tasks' : 'Hide from All Tasks'}
+                              >
+                                {task.isConfidential ? (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                                  </svg>
+                                )}
+                              </button>
+                            )}
+
                             {/* Quick Actions for assigned users on incomplete tasks - regular tasks only */}
                             {!showCopyButton && task.assignedTo === currentUser?.username && task.status !== 'Completed' && (
                               <>
@@ -2768,6 +2826,30 @@ Priority: ${task.priority}`;
                     <XCircle className="w-5 h-5" />
                   </button>
                 </>
+              )}
+              
+              {/* Hide/Show Confidential Button - Only for task creators */}
+              {task.assignedBy === currentUser?.username && (
+                <button
+                  onClick={() => toggleTaskConfidential(task)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    task.isConfidential 
+                      ? 'text-orange-600 hover:text-orange-800 hover:bg-orange-50' 
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                  }`}
+                  title={task.isConfidential ? 'Show in All Tasks' : 'Hide from All Tasks'}
+                >
+                  {task.isConfidential ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                    </svg>
+                  )}
+                </button>
               )}
               
               <button
@@ -5030,6 +5112,172 @@ Priority: ${task.priority}`;
     );
   };
 
+  // Confidential Tasks View - Only tasks created by current user that are marked confidential
+  const ConfidentialTasksView = () => {
+    // Get only confidential tasks created by the current user
+    const confidentialTasks = tasks.filter(task => 
+      task.isConfidential && task.assignedBy === currentUser?.username
+    );
+
+    // Apply search to confidential tasks
+    const searchedConfidentialTasks = filterTasksBySearch(confidentialTasks, searchTerms['confidential-tasks']);
+
+    // Apply pagination to searched confidential tasks
+    const paginatedConfidentialTasks = paginateTasks(searchedConfidentialTasks, currentPages['confidential-tasks']);
+
+    // Calculate stats from searched confidential tasks (before pagination)
+    const pendingTasks = searchedConfidentialTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = searchedConfidentialTasks.filter(t => t.status === 'In Progress');
+    const inCheckingTasks = searchedConfidentialTasks.filter(t => t.status === 'In Checking');
+    const completedTasks = searchedConfidentialTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = searchedConfidentialTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+
+    return (
+      <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-pink-400 to-pink-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-pink-100 text-sm font-medium">In Checking</p>
+                <p className="text-4xl font-bold mt-2">{inCheckingTasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+              </div>
+              <CheckCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">Overdue</p>
+                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+              </div>
+              <AlertCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <SearchInput 
+          viewName="confidential-tasks"
+          placeholder="Search confidential tasks..."
+          searchValue={searchTerms['confidential-tasks']}
+          onSearchChange={handleSearchChange}
+        />
+
+        {/* Export and View Toggle */}
+        <div className="flex justify-end items-center gap-4">
+          {/* Export Button */}
+          <button
+            onClick={() => exportTaskList(searchedConfidentialTasks, 'excel', 'confidential_tasks')}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Export Excel
+          </button>
+          
+          {/* View Toggle */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Cards View
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'table' ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              <List className="w-4 h-4" />
+              Table View
+            </button>
+          </div>
+        </div>
+
+        {searchedConfidentialTasks.length > 0 ? (
+          <>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 bg-orange-50">
+                <h3 className="text-lg font-semibold text-orange-800 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Confidential Tasks ({searchedConfidentialTasks.length})
+                </h3>
+              </div>
+
+              {viewMode === 'table' ? (
+                <TableView tasks={paginatedConfidentialTasks} showConfidentialActions={true} />
+              ) : (
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {paginatedConfidentialTasks.map(task => (
+                      <HorizontalTaskCard key={task._id} task={task} showConfidentialActions={true} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {searchTerms['confidential-tasks'] && searchedConfidentialTasks.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No confidential tasks match your search</p>
+                <button 
+                  onClick={() => handleSearchChange('confidential-tasks', '')}
+                  className="mt-2 px-4 py-2 text-orange-600 hover:text-orange-800 text-sm font-medium"
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            <PaginationControls 
+              viewName="confidential-tasks"
+              totalTasks={searchedConfidentialTasks}
+              currentPage={currentPages['confidential-tasks']}
+            />
+          </>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+            <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <p className="text-gray-500 mb-2">No confidential tasks found</p>
+            <p className="text-sm text-gray-400">Tasks marked as confidential will appear here</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Notifications Panel
   const NotificationsPanel = () => (
     <div className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-96 bg-white shadow-2xl border-l border-gray-200 z-40 overflow-y-auto">
@@ -5243,6 +5491,20 @@ Priority: ${task.priority}`;
                   >
                     Associate Tasks
                   </button>
+
+                  <button
+                    onClick={() => { setCurrentView('confidential-tasks'); setShowAdvancedMenu(false); }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      Confidential Tasks
+                    </div>
+                  </button>
                 </>
               )}
               
@@ -5283,6 +5545,7 @@ Priority: ${task.priority}`;
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
         {currentView === 'team-subtasks' && <SubtasksView />}
         {currentView === 'associate-tasks' && <AssociateTasksView />}
+        {currentView === 'confidential-tasks' && <ConfidentialTasksView />}
         {currentView === 'admin-reports' && currentUser?.name === 'Ketul Lathia' && <AdminReportsView />}
         {currentView === 'settings' && <NotificationSettingsView />}
       </div>
@@ -6269,6 +6532,21 @@ Priority: ${task.priority}`;
             >
               <Users className="w-4 h-4 mb-1" />
               <span className="text-xs font-medium whitespace-nowrap">Associates</span>
+            </button>
+          )}
+
+          {/* Confidential Tasks - available to non-team members */}
+          {!isTeamMember() && (
+            <button
+              onClick={() => setCurrentView('confidential-tasks')}
+              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                currentView === 'confidential-tasks' ? 'bg-orange-50 text-orange-600' : 'text-gray-600'
+              }`}
+            >
+              <svg className="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span className="text-xs font-medium whitespace-nowrap">Confidential</span>
             </button>
           )}
           

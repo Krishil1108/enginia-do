@@ -70,6 +70,10 @@ const taskSchema = new mongoose.Schema({
     enum: ['Pending', 'In Progress', 'In Checking', 'Completed', 'Overdue'],
     default: 'Pending'
   },
+  isConfidential: {
+    type: Boolean,
+    default: false
+  },
   completionReason: {
     type: String,
     default: ''
