@@ -1145,7 +1145,8 @@ const TaskManagementSystem = () => {
     },
     reminder: '',
     whatsapp: false,
-    status: 'Pending'
+    status: 'Pending',
+    isConfidential: false
   });
 
   const resetForm = () => {
@@ -1170,7 +1171,8 @@ const TaskManagementSystem = () => {
       },
       reminder: '',
       whatsapp: false,
-      status: 'Pending'
+      status: 'Pending',
+      isConfidential: false
     });
     setEditingTask(null);
     setSelectedAssociate('');
@@ -1800,35 +1802,7 @@ Priority: ${task.priority}`;
     }
   };
 
-  // Toggle task confidential status
-  const toggleTaskConfidential = async (task) => {
-    try {
-      setLoading(true);
-      const newConfidentialStatus = !task.isConfidential;
-      
-      await axios.put(`${API_URL}/tasks/${task._id}`, {
-        isConfidential: newConfidentialStatus
-      });
-      
-      // Notify about confidential status change
-      await createNotification(
-        task._id,
-        task.assignedBy,
-        `Task "${task.title}" ${newConfidentialStatus ? 'marked as confidential' : 'removed from confidential'} by ${currentUser.name}`,
-        'task_updated',
-        currentUser.username
-      );
-      
-      await loadTasks();
-      
-      showSuccess(`Task ${newConfidentialStatus ? 'hidden from All Tasks view' : 'restored to All Tasks view'}`);
-    } catch (error) {
-      console.error('Error updating task confidential status:', error);
-      showError('Failed to update task visibility');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const getFilteredTasks = () => {
     return tasks.filter(task => {
@@ -2624,29 +2598,7 @@ Priority: ${task.priority}`;
                               <Eye className="w-4 h-4" />
                             </button>
 
-                            {/* Hide/Show Confidential Button - Only for task creators */}
-                            {task.assignedBy === currentUser?.username && (
-                              <button
-                                onClick={() => toggleTaskConfidential(task)}
-                                className={`p-1.5 rounded transition-colors ${
-                                  task.isConfidential 
-                                    ? 'text-orange-600 hover:text-orange-800 hover:bg-orange-50' 
-                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                                }`}
-                                title={task.isConfidential ? 'Show in All Tasks' : 'Hide from All Tasks'}
-                              >
-                                {task.isConfidential ? (
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                  </svg>
-                                ) : (
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                                  </svg>
-                                )}
-                              </button>
-                            )}
+
 
                             {/* Quick Actions for assigned users on incomplete tasks - regular tasks only */}
                             {!showCopyButton && task.assignedTo === currentUser?.username && task.status !== 'Completed' && (
@@ -2828,29 +2780,7 @@ Priority: ${task.priority}`;
                 </>
               )}
               
-              {/* Hide/Show Confidential Button - Only for task creators */}
-              {task.assignedBy === currentUser?.username && (
-                <button
-                  onClick={() => toggleTaskConfidential(task)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    task.isConfidential 
-                      ? 'text-orange-600 hover:text-orange-800 hover:bg-orange-50' 
-                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                  }`}
-                  title={task.isConfidential ? 'Show in All Tasks' : 'Hide from All Tasks'}
-                >
-                  {task.isConfidential ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    </svg>
-                  )}
-                </button>
-              )}
+
               
               <button
                 onClick={() => editTask(task)}
@@ -5112,12 +5042,10 @@ Priority: ${task.priority}`;
     );
   };
 
-  // Confidential Tasks View - Only tasks created by current user that are marked confidential
+  // Confidential Tasks View - All confidential tasks (only accessible to Ketul Lathia)
   const ConfidentialTasksView = () => {
-    // Get only confidential tasks created by the current user
-    const confidentialTasks = tasks.filter(task => 
-      task.isConfidential && task.assignedBy === currentUser?.username
-    );
+    // Get all confidential tasks
+    const confidentialTasks = tasks.filter(task => task.isConfidential);
 
     // Apply search to confidential tasks
     const searchedConfidentialTasks = filterTasksBySearch(confidentialTasks, searchTerms['confidential-tasks']);
@@ -5492,19 +5420,22 @@ Priority: ${task.priority}`;
                     Associate Tasks
                   </button>
 
-                  <button
-                    onClick={() => { setCurrentView('confidential-tasks'); setShowAdvancedMenu(false); }}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      Confidential Tasks
-                    </div>
-                  </button>
+                  {/* Confidential Tasks - Only for Ketul Lathia */}
+                  {currentUser?.name === 'Ketul Lathia' && (
+                    <button
+                      onClick={() => { setCurrentView('confidential-tasks'); setShowAdvancedMenu(false); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Confidential Tasks
+                      </div>
+                    </button>
+                  )}
                 </>
               )}
               
@@ -5545,7 +5476,7 @@ Priority: ${task.priority}`;
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
         {currentView === 'team-subtasks' && <SubtasksView />}
         {currentView === 'associate-tasks' && <AssociateTasksView />}
-        {currentView === 'confidential-tasks' && <ConfidentialTasksView />}
+        {currentView === 'confidential-tasks' && currentUser?.name === 'Ketul Lathia' && <ConfidentialTasksView />}
         {currentView === 'admin-reports' && currentUser?.name === 'Ketul Lathia' && <AdminReportsView />}
         {currentView === 'settings' && <NotificationSettingsView />}
       </div>
@@ -6013,6 +5944,27 @@ Priority: ${task.priority}`;
                   <option value="Overdue">Overdue</option>
                 </select>
               </div>
+
+              {/* Confidential Toggle - Only for Ketul Lathia */}
+              {currentUser?.name === 'Ketul Lathia' && (
+                <div>
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={formData.isConfidential || false}
+                      onChange={(e) => setFormData({...formData, isConfidential: e.target.checked})}
+                      className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
+                    />
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <span className="text-sm font-medium text-gray-700">Assign as Confidential Task</span>
+                    </div>
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1 ml-7">Task will only be visible in the assigned user's My Tasks view</p>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-4">
                 <button
@@ -6535,8 +6487,8 @@ Priority: ${task.priority}`;
             </button>
           )}
 
-          {/* Confidential Tasks - available to non-team members */}
-          {!isTeamMember() && (
+          {/* Confidential Tasks - Only for Ketul Lathia */}
+          {currentUser?.name === 'Ketul Lathia' && (
             <button
               onClick={() => setCurrentView('confidential-tasks')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
