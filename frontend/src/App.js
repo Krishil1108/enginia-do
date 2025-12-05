@@ -4549,8 +4549,20 @@ Priority: ${task.priority}`;
 
   // Team Subtasks View
   const SubtasksView = () => {
-    // Get subtasks created by current user
-    const mySubtasks = tasks.filter(task => task.isSubtask && task.assignedBy === currentUser?.username);
+    // Get team members under current user
+    const teamMembers = getMyTeamMembers();
+    const teamMemberUsernames = teamMembers.map(member => member.username);
+    
+    // Get subtasks assigned to team members OR created by current user
+    const mySubtasks = tasks.filter(task => {
+      if (!task.isSubtask) return false;
+      
+      // Show subtasks if:
+      // 1. Assigned to any of current user's team members, OR
+      // 2. Created by current user (for Ketul and managers)
+      return teamMemberUsernames.includes(task.assignedTo) || 
+             task.assignedBy === currentUser?.username;
+    });
     
     // Apply search to subtasks
     const searchedSubtasks = filterTasksBySearch(mySubtasks, searchTerms['team-subtasks']);
