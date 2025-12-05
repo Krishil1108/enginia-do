@@ -148,6 +148,9 @@ const TaskManagementSystem = () => {
   const [reportType, setReportType] = useState('alltime'); // 'alltime', 'quarterly', 'halfyearly', 'yearly', 'custom'
   const [reportData, setReportData] = useState(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [selectedQuarter, setSelectedQuarter] = useState(Math.floor((new Date().getMonth() + 3) / 3));
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [reportDateFilter, setReportDateFilter] = useState({ start: null, end: null });
   
   // Modals for task actions
   const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -1867,26 +1870,25 @@ Priority: ${task.priority}`;
           endDate = currentDate;
           break;
         case 'quarterly':
-          const currentQuarter = Math.floor((currentDate.getMonth() + 3) / 3);
-          startDate = new Date(currentDate.getFullYear(), (currentQuarter - 1) * 3, 1);
-          endDate = new Date(currentDate.getFullYear(), currentQuarter * 3, 0);
+          startDate = new Date(selectedYear, (selectedQuarter - 1) * 3, 1);
+          endDate = new Date(selectedYear, selectedQuarter * 3, 0);
           reportTasks = tasks.filter(task => {
             const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
             return taskDate >= startDate && taskDate <= endDate;
           });
           break;
         case 'halfyearly':
-          const currentHalf = currentDate.getMonth() >= 6 ? 2 : 1;
-          startDate = new Date(currentDate.getFullYear(), (currentHalf - 1) * 6, 1);
-          endDate = new Date(currentDate.getFullYear(), currentHalf * 6, 0);
+          const selectedHalf = selectedQuarter <= 2 ? 1 : 2; // Q1-Q2 = H1, Q3-Q4 = H2
+          startDate = new Date(selectedYear, (selectedHalf - 1) * 6, 1);
+          endDate = new Date(selectedYear, selectedHalf * 6, 0);
           reportTasks = tasks.filter(task => {
             const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
             return taskDate >= startDate && taskDate <= endDate;
           });
           break;
         case 'yearly':
-          startDate = new Date(currentDate.getFullYear(), 0, 1);
-          endDate = new Date(currentDate.getFullYear(), 11, 31);
+          startDate = new Date(selectedYear, 0, 1);
+          endDate = new Date(selectedYear, 11, 31);
           reportTasks = tasks.filter(task => {
             const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
             return taskDate >= startDate && taskDate <= endDate;
@@ -2005,7 +2007,7 @@ Priority: ${task.priority}`;
     } finally {
       setLoadingReport(false);
     }
-  }, [tasks, users, reportType, reportDateRange]);
+  }, [tasks, users, reportType, reportDateRange, selectedYear, selectedQuarter, projects]);
 
   // Export Functions
   const exportToExcel = useCallback((data, filename = 'task_report') => {
@@ -3531,8 +3533,6 @@ Priority: ${task.priority}`;
 
   // Admin Reports View
   const AdminReportsView = () => {
-    const [selectedQuarter, setSelectedQuarter] = useState(Math.floor((new Date().getMonth() + 3) / 3));
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
     const getQuarterDates = (quarter, year) => {
       const startMonth = (quarter - 1) * 3;
@@ -3558,14 +3558,74 @@ Priority: ${task.priority}`;
           {reportData && (
             <div className="flex gap-3">
               <button
-                onClick={() => exportToExcel(reportData, 'admin_report')}
+                onClick={() => {
+                  // Use filtered data if date filters are active
+                  const dataToExport = (reportDateFilter.start || reportDateFilter.end) ? 
+                    (() => {
+                      // Filter and recalculate data for export
+                      const filteredTasks = tasks.filter(task => {
+                        const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
+                        if (reportDateFilter.start && taskDate < reportDateFilter.start) return false;
+                        if (reportDateFilter.end && taskDate > reportDateFilter.end) return false;
+                        return true;
+                      });
+                      
+                      return {
+                        ...reportData,
+                        summary: {
+                          totalTasks: filteredTasks.length,
+                          completed: filteredTasks.filter(t => t.status === 'Completed').length,
+                          pending: filteredTasks.filter(t => t.status === 'Pending').length,
+                          inProgress: filteredTasks.filter(t => t.status === 'In Progress').length,
+                          overdue: filteredTasks.filter(t => {
+                            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+                            return isOverdue || t.status === 'Overdue';
+                          }).length
+                        },
+                        completionRate: filteredTasks.length > 0 ? 
+                          (filteredTasks.filter(t => t.status === 'Completed').length / filteredTasks.length * 100).toFixed(2) : 0
+                      };
+                    })() : reportData;
+                  
+                  exportToExcel(dataToExport, 'admin_report');
+                }}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Export Excel
               </button>
               <button
-                onClick={() => exportToPDF(reportData, 'admin_report')}
+                onClick={() => {
+                  // Use filtered data if date filters are active
+                  const dataToExport = (reportDateFilter.start || reportDateFilter.end) ? 
+                    (() => {
+                      // Filter and recalculate data for export
+                      const filteredTasks = tasks.filter(task => {
+                        const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
+                        if (reportDateFilter.start && taskDate < reportDateFilter.start) return false;
+                        if (reportDateFilter.end && taskDate > reportDateFilter.end) return false;
+                        return true;
+                      });
+                      
+                      return {
+                        ...reportData,
+                        summary: {
+                          totalTasks: filteredTasks.length,
+                          completed: filteredTasks.filter(t => t.status === 'Completed').length,
+                          pending: filteredTasks.filter(t => t.status === 'Pending').length,
+                          inProgress: filteredTasks.filter(t => t.status === 'In Progress').length,
+                          overdue: filteredTasks.filter(t => {
+                            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+                            return isOverdue || t.status === 'Overdue';
+                          }).length
+                        },
+                        completionRate: filteredTasks.length > 0 ? 
+                          (filteredTasks.filter(t => t.status === 'Completed').length / filteredTasks.length * 100).toFixed(2) : 0
+                      };
+                    })() : reportData;
+                  
+                  exportToPDF(dataToExport, 'admin_report');
+                }}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <FileText className="w-4 h-4" />
@@ -3621,12 +3681,27 @@ Priority: ${task.priority}`;
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                 className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                {[...Array(5)].map((_, i) => {
-                  const year = new Date().getFullYear() - 2 + i;
+                {[...Array(8)].map((_, i) => {
+                  const year = new Date().getFullYear() - 4 + i;
                   return <option key={year} value={year}>{year}</option>;
                 })}
               </select>
             </div>
+
+            {/* Half Selection (for half-yearly reports) */}
+            {reportType === 'halfyearly' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Half</label>
+                <select
+                  value={selectedQuarter <= 2 ? 1 : 2}
+                  onChange={(e) => setSelectedQuarter(parseInt(e.target.value) === 1 ? 1 : 3)}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value={1}>H1 (Jan-Jun)</option>
+                  <option value={2}>H2 (Jul-Dec)</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Custom Date Range */}
@@ -3667,18 +3742,139 @@ Priority: ${task.priority}`;
           </button>
         </div>
 
-        {/* Report Results */}
+        {/* Additional Date Filters for Generated Report */}
         {reportData && (
-          <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-600 text-sm font-medium">Total Tasks</p>
-                    <p className="text-2xl font-bold text-blue-800">{reportData.summary.totalTasks}</p>
-                  </div>
-                  <CheckCircle className="w-8 h-8 text-blue-600" />
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Report Data by Date Range</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Filter From Date</label>
+                <DatePicker
+                  selected={reportDateFilter.start}
+                  onChange={(date) => setReportDateFilter(prev => ({ ...prev, start: date }))}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholderText="Select start date"
+                  dateFormat="dd/MM/yyyy"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Filter To Date</label>
+                <DatePicker
+                  selected={reportDateFilter.end}
+                  onChange={(date) => setReportDateFilter(prev => ({ ...prev, end: date }))}
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholderText="Select end date"
+                  dateFormat="dd/MM/yyyy"
+                />
+              </div>
+              <div className="flex items-end gap-2">
+                <button
+                  onClick={() => setReportDateFilter({ start: null, end: null })}
+                  className="px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+            {(reportDateFilter.start || reportDateFilter.end) && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  <strong>Active Date Filter:</strong> {reportDateFilter.start ? reportDateFilter.start.toLocaleDateString() : 'All dates'} to {reportDateFilter.end ? reportDateFilter.end.toLocaleDateString() : 'All dates'}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Report Results */}
+        {reportData && (() => {
+          // Filter report data based on date filter if applied
+          let filteredReportData = reportData;
+          
+          if (reportDateFilter.start || reportDateFilter.end) {
+            // Get all tasks and filter by date range
+            const filteredTasks = tasks.filter(task => {
+              const taskDate = new Date(task.createdDate || task.assignedDate || task.inDate || Date.now());
+              
+              if (reportDateFilter.start && taskDate < reportDateFilter.start) return false;
+              if (reportDateFilter.end && taskDate > reportDateFilter.end) return false;
+              
+              return true;
+            });
+            
+            // Recalculate summary with filtered tasks
+            const filteredSummary = {
+              totalTasks: filteredTasks.length,
+              completed: filteredTasks.filter(t => t.status === 'Completed').length,
+              pending: filteredTasks.filter(t => t.status === 'Pending').length,
+              inProgress: filteredTasks.filter(t => t.status === 'In Progress').length,
+              overdue: filteredTasks.filter(t => {
+                const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+                return isOverdue || t.status === 'Overdue';
+              }).length
+            };
+            
+            // Recalculate byUser data
+            const filteredByUser = {};
+            users.forEach(user => {
+              const userTasks = filteredTasks.filter(t => !t.isAssociate && t.assignedTo === user.username);
+              if (userTasks.length > 0) {
+                filteredByUser[user.name] = {
+                  total: userTasks.length,
+                  completed: userTasks.filter(t => t.status === 'Completed').length,
+                  pending: userTasks.filter(t => t.status === 'Pending').length,
+                  inProgress: userTasks.filter(t => t.status === 'In Progress').length,
+                  overdue: userTasks.filter(t => {
+                    const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+                    return isOverdue || t.status === 'Overdue';
+                  }).length,
+                  completionRate: userTasks.length > 0 ? 
+                    (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : 0
+                };
+              }
+            });
+            
+            // Recalculate byProject data
+            const filteredByProject = {};
+            projects.forEach(project => {
+              const projectTasks = filteredTasks.filter(t => t.project === project);
+              if (projectTasks.length > 0) {
+                filteredByProject[project] = {
+                  total: projectTasks.length,
+                  completed: projectTasks.filter(t => t.status === 'Completed').length,
+                  pending: projectTasks.filter(t => t.status === 'Pending').length,
+                  inProgress: projectTasks.filter(t => t.status === 'In Progress').length,
+                  overdue: projectTasks.filter(t => {
+                    const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+                    return isOverdue || t.status === 'Overdue';
+                  }).length,
+                  completionRate: projectTasks.length > 0 ? 
+                    (projectTasks.filter(t => t.status === 'Completed').length / projectTasks.length * 100).toFixed(2) : 0
+                };
+              }
+            });
+            
+            filteredReportData = {
+              ...reportData,
+              summary: filteredSummary,
+              byUser: filteredByUser,
+              byProject: filteredByProject,
+              completionRate: filteredTasks.length > 0 ? 
+                (filteredTasks.filter(t => t.status === 'Completed').length / filteredTasks.length * 100).toFixed(2) : 0
+            };
+          }
+          
+          return (
+            <div className="space-y-6">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-600 text-sm font-medium">Total Tasks</p>
+                      <p className="text-2xl font-bold text-blue-800">{filteredReportData.summary.totalTasks}</p>
+                    </div>
+                    <CheckCircle className="w-8 h-8 text-blue-600" />
                 </div>
               </div>
               
@@ -3686,7 +3882,7 @@ Priority: ${task.priority}`;
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-600 text-sm font-medium">Completed</p>
-                    <p className="text-2xl font-bold text-green-800">{reportData.summary.completed}</p>
+                    <p className="text-2xl font-bold text-green-800">{filteredReportData.summary.completed}</p>
                   </div>
                   <Check className="w-8 h-8 text-green-600" />
                 </div>
@@ -3696,7 +3892,7 @@ Priority: ${task.priority}`;
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-yellow-600 text-sm font-medium">Pending</p>
-                    <p className="text-2xl font-bold text-yellow-800">{reportData.summary.pending}</p>
+                    <p className="text-2xl font-bold text-yellow-800">{filteredReportData.summary.pending}</p>
                   </div>
                   <Clock className="w-8 h-8 text-yellow-600" />
                 </div>
@@ -3706,7 +3902,7 @@ Priority: ${task.priority}`;
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-600 text-sm font-medium">In Progress</p>
-                    <p className="text-2xl font-bold text-purple-800">{reportData.summary.inProgress}</p>
+                    <p className="text-2xl font-bold text-purple-800">{filteredReportData.summary.inProgress}</p>
                   </div>
                   <Users className="w-8 h-8 text-purple-600" />
                 </div>
@@ -3716,7 +3912,7 @@ Priority: ${task.priority}`;
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-red-600 text-sm font-medium">Overdue</p>
-                    <p className="text-2xl font-bold text-red-800">{reportData.summary.overdue}</p>
+                    <p className="text-2xl font-bold text-red-800">{filteredReportData.summary.overdue}</p>
                   </div>
                   <AlertCircle className="w-8 h-8 text-red-600" />
                 </div>
@@ -3729,9 +3925,9 @@ Priority: ${task.priority}`;
               <div className="w-full bg-gray-200 rounded-full h-8">
                 <div 
                   className="bg-gradient-to-r from-green-500 to-green-600 h-8 rounded-full flex items-center justify-center text-white font-medium"
-                  style={{ width: `${reportData.completionRate}%` }}
+                  style={{ width: `${filteredReportData.completionRate}%` }}
                 >
-                  {reportData.completionRate}%
+                  {filteredReportData.completionRate}%
                 </div>
               </div>
             </div>
@@ -3753,7 +3949,7 @@ Priority: ${task.priority}`;
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(reportData.byUser)
+                    {Object.entries(filteredReportData.byUser)
                       .filter(([_, stats]) => stats.total > 0)
                       .sort(([, a], [, b]) => parseFloat(b.completionRate) - parseFloat(a.completionRate))
                       .map(([user, stats]) => (
@@ -3797,7 +3993,7 @@ Priority: ${task.priority}`;
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(reportData.byProject)
+                    {Object.entries(filteredReportData.byProject)
                       .filter(([_, stats]) => stats.total > 0)
                       .sort(([, a], [, b]) => parseFloat(b.completionRate) - parseFloat(a.completionRate))
                       .map(([project, stats]) => (
@@ -3825,7 +4021,7 @@ Priority: ${task.priority}`;
             </div>
 
             {/* Associate Analysis */}
-            {Object.keys(reportData.byAssociate).length > 0 && (
+            {Object.keys(filteredReportData.byAssociate || {}).length > 0 && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Associate Performance</h4>
                 <div className="overflow-x-auto">
@@ -3870,7 +4066,9 @@ Priority: ${task.priority}`;
               </div>
             )}
           </div>
-        )}
+        );
+      })()}
+
       </div>
     );
   };
