@@ -5,7 +5,21 @@ const Project = require('../models/Project');
 // Get all projects
 router.get('/', async (req, res) => {
   try {
-    const projects = await Project.find().sort({ name: 1 });
+    const { username } = req.query;
+    let filter = {};
+    
+    if (username) {
+      // Check if user is demo user
+      const User = require('../models/User');
+      const user = await User.findOne({ username });
+      if (user && user.isDemo) {
+        filter.isDemo = true; // Demo users only see demo projects
+      } else {
+        filter.isDemo = { $ne: true }; // Regular users don't see demo projects
+      }
+    }
+    
+    const projects = await Project.find(filter).sort({ name: 1 });
     res.json(projects);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -15,7 +29,7 @@ router.get('/', async (req, res) => {
 // Create a new project
 router.post('/', async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, username } = req.body;
     
     // Check if project already exists
     const existingProject = await Project.findOne({ name: name.trim() });
@@ -23,7 +37,18 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Project already exists' });
     }
 
-    const project = new Project({ name: name.trim() });
+    const projectData = { name: name.trim() };
+    
+    // Check if the user creating the project is a demo user
+    if (username) {
+      const User = require('../models/User');
+      const user = await User.findOne({ username });
+      if (user && user.isDemo) {
+        projectData.isDemo = true; // Mark project as demo if created by demo user
+      }
+    }
+
+    const project = new Project(projectData);
     const savedProject = await project.save();
     res.status(201).json(savedProject);
   } catch (error) {

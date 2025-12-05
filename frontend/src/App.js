@@ -519,7 +519,8 @@ const TaskManagementSystem = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await axios.get(`${API_URL}/users`);
+      const params = currentUser?.username ? { requestingUser: currentUser.username } : {};
+      const response = await axios.get(`${API_URL}/users`, { params });
       setUsers(response.data);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -543,7 +544,8 @@ const TaskManagementSystem = () => {
   const loadTasks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/tasks`);
+      const params = currentUser?.username ? { username: currentUser.username } : {};
+      const response = await axios.get(`${API_URL}/tasks`, { params });
       setTasks(response.data);
     } catch (error) {
       console.error('Error loading tasks:', error);
@@ -566,7 +568,8 @@ const TaskManagementSystem = () => {
 
   const loadProjects = async () => {
     try {
-      const response = await axios.get(`${API_URL}/projects`);
+      const params = currentUser?.username ? { username: currentUser.username } : {};
+      const response = await axios.get(`${API_URL}/projects`, { params });
       setProjects(response.data); // Store full project objects with _id
     } catch (error) {
       console.error('Error loading projects:', error);
@@ -1010,7 +1013,10 @@ const TaskManagementSystem = () => {
           setEditingProject(null);
         } else {
           // Adding new project
-          await axios.post(`${API_URL}/projects`, { name: projectName });
+          await axios.post(`${API_URL}/projects`, { 
+            name: projectName, 
+            username: currentUser?.username 
+          });
           await loadProjects();
           setFormData({...formData, project: projectName}); // Auto-select the new project
         }

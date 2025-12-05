@@ -5,7 +5,21 @@ const Task = require('../models/Task');
 // Get all tasks
 router.get('/', async (req, res) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    const { username } = req.query;
+    let filter = {};
+    
+    if (username) {
+      // Check if user is demo user
+      const User = require('../models/User');
+      const user = await User.findOne({ username });
+      if (user && user.isDemo) {
+        filter.isDemo = true; // Demo users only see demo tasks
+      } else {
+        filter.isDemo = { $ne: true }; // Regular users don't see demo tasks
+      }
+    }
+    
+    const tasks = await Task.find(filter).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -34,6 +48,15 @@ router.post('/', async (req, res) => {
     // Handle empty reminder field
     if (taskData.reminder === '' || taskData.reminder === null) {
       delete taskData.reminder;
+    }
+    
+    // Check if the user creating the task is a demo user
+    if (taskData.assignedBy) {
+      const User = require('../models/User');
+      const user = await User.findOne({ username: taskData.assignedBy });
+      if (user && user.isDemo) {
+        taskData.isDemo = true; // Mark task as demo if created by demo user
+      }
     }
     
     const task = new Task(taskData);

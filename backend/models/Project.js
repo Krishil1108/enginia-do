@@ -6,6 +6,10 @@ const projectSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true
+  },
+  isDemo: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

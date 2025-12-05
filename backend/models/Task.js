@@ -97,6 +97,10 @@ const taskSchema = new mongoose.Schema({
   isSubtask: {
     type: Boolean,
     default: false
+  },
+  isDemo: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

@@ -6,7 +6,20 @@ const User = require('../models/User');
 // Get all users
 router.get('/', async (req, res) => {
   try {
-    const users = await User.find({ isActive: true }).select('-password');
+    const { requestingUser } = req.query;
+    let filter = { isActive: true };
+    
+    if (requestingUser) {
+      // Check if requesting user is demo user
+      const user = await User.findOne({ username: requestingUser });
+      if (user && user.isDemo) {
+        filter.isDemo = true; // Demo users only see other demo users
+      } else {
+        filter.isDemo = { $ne: true }; // Regular users don't see demo users
+      }
+    }
+    
+    const users = await User.find(filter).select('-password');
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
