@@ -4566,14 +4566,6 @@ Priority: ${task.priority}`;
           )}
         </div>
         
-        {/* Search Bar */}
-        <SearchInput 
-          viewName="assigned-by-me"
-          placeholder="Search tasks assigned by you..."
-          searchValue={searchTerms['assigned-by-me']}
-          onSearchChange={handleSearchChange}
-        />
-        
         {/* Export and View Toggle */}
         <div className="flex justify-end items-center gap-4">
           {/* Export Button */}
@@ -4734,14 +4726,6 @@ Priority: ${task.priority}`;
             </div>
           </div>
         </div>
-
-        {/* Search Bar */}
-        <SearchInput 
-          viewName="team-subtasks"
-          placeholder="Search subtasks..."
-          searchValue={searchTerms['team-subtasks']}
-          onSearchChange={handleSearchChange}
-        />
 
         {/* Subtasks Table */}
         {viewMode === 'table' ? (
@@ -5663,28 +5647,6 @@ Priority: ${task.priority}`;
           </div>
           
           {/* Collapsible Search Bar */}
-          {showSearchBar && (
-            <div className="mt-3 pb-3 border-t pt-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3 px-4">
-                <Search className="w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder={`Search ${currentView === 'my-tasks' ? 'my' : currentView === 'all-tasks' ? 'all' : currentView === 'assigned-by-me' ? 'assigned by me' : currentView === 'associate-tasks' ? 'associate' : currentView === 'confidential-tasks' ? 'confidential' : ''} tasks...`}
-                  value={searchTerms[currentView] || ''}
-                  onChange={(e) => handleSearchChange(currentView, e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  autoFocus
-                />
-                <button
-                  onClick={() => setShowSearchBar(false)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Collapsible Search Bar */}
           {showSearchBar && (
             <div className="mt-3 pb-3 border-t pt-3 bg-gray-50 rounded-lg">
