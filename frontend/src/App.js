@@ -550,7 +550,7 @@ const TaskManagementSystem = () => {
 
   // Check if current user is admin - Vaishal and Nirali (Enginia owners)
   const isAdmin = useCallback(() => {
-    return currentUser && currentUser.username === 'ketul.lathia';
+    return currentUser && ['vaishal', 'nirali'].includes(currentUser.username);
   }, [currentUser]);
 
   const isTeamMember = useCallback(() => {

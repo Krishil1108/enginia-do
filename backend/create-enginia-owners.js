@@ -64,7 +64,8 @@ async function createEnginiaOwners() {
                     password: hashedPassword,
                     role: owner.role,
                     team: owner.team,
-                    name: owner.name
+                    name: owner.name,
+                    position: 'Owner'
                 });
                 
                 console.log(`✅ Updated: ${owner.username}`);
@@ -81,7 +82,8 @@ async function createEnginiaOwners() {
                     password: hashedPassword,
                     role: owner.role,
                     team: owner.team,
-                    name: owner.name
+                    name: owner.name,
+                    position: 'Owner'
                 });
 
                 await newUser.save();
