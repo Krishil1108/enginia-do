@@ -2595,7 +2595,7 @@ Priority: ${task.priority}`;
                             const isOverdue = new Date() > dueDate;
                             
                             return (
-                              <>
+                              <React.Fragment>
                                 <div className={`text-sm ${
                                   // Red if current time > due date end of day (23:59:59)
                                   isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700'
@@ -2618,10 +2618,9 @@ Priority: ${task.priority}`;
                                     ? 'Overdue'
                                     : task.status || 'Pending'}
                                 </div>
-                              </>
+                              </React.Fragment>
                             );
                           })()}
-                          </div>
                         </div>
                       ) : (
                         <div>
@@ -5206,7 +5205,7 @@ Priority: ${task.priority}`;
                               const isOverdue = new Date() > dueDate;
                               
                               return (
-                                <>
+                                <React.Fragment>
                                   <div className={`text-sm ${
                                     // Red if current time > due date end of day (23:59:59)
                                     isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700'
@@ -5229,7 +5228,7 @@ Priority: ${task.priority}`;
                                       ? 'Overdue'
                                       : task.status || 'Pending'}
                                   </div>
-                                </>
+                                </React.Fragment>
                               );
                             })()}
                           </div>
