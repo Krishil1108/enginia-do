@@ -456,7 +456,9 @@ const TaskManagementSystem = () => {
     const dueDate = new Date(task.outDate);
     dueDate.setHours(23, 59, 59, 999); // Set to 11:59:59.999 PM
     const isPastDue = new Date() > dueDate && task.status !== 'Completed';
-    const currentStatus = isPastDue ? 'Overdue' : task.status;
+    
+    // Use actual task status in dropdown, not computed status
+    const currentStatus = task.status || 'Pending';
     
     const statusColors = {
       'Pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -466,11 +468,14 @@ const TaskManagementSystem = () => {
       'Overdue': 'bg-red-100 text-red-700 border-red-200'
     };
     
+    // If task is past due but not completed, add visual indication with red border
+    const borderClass = isPastDue ? 'ring-2 ring-red-300' : '';
+    
     return (
       <select
         value={currentStatus}
         onChange={(e) => handleStatusChange(task, e.target.value)}
-        className={`px-3 py-1.5 rounded text-xs font-medium border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusColors[currentStatus]}`}
+        className={`px-3 py-1.5 rounded text-xs font-medium border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusColors[currentStatus]} ${borderClass}`}
         onClick={(e) => e.stopPropagation()}
       >
         <option value="Pending">Pending</option>
@@ -1681,8 +1686,7 @@ Priority: ${task.priority}`;
         ...selectedTask,
         status: 'Completed',
         completionReason: completionReason,
-        completedAt: new Date().toISOString(),
-        completedDate: new Date().toISOString()
+        completedAt: new Date().toISOString()
       };
       
       await axios.put(`${API_URL}/tasks/${selectedTask._id}`, updatedTask);
@@ -2594,7 +2598,7 @@ Priority: ${task.priority}`;
                           <div className={`text-xs mt-1 ${
                             // If current date > due date and task is not completed before due date
                             new Date() > new Date(task.outDate) && 
-                            (task.status !== 'Completed' || (task.completedDate && new Date(task.completedDate) > new Date(task.outDate)))
+                            (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > new Date(task.outDate)))
                               ? 'text-red-600 font-semibold' 
                               : task.status === 'Completed' 
                                 ? 'text-green-600' 
@@ -2602,7 +2606,7 @@ Priority: ${task.priority}`;
                           }`}>
                             {/* Show status based on conditions */}
                             {new Date() > new Date(task.outDate) && 
-                             (task.status !== 'Completed' || (task.completedDate && new Date(task.completedDate) > new Date(task.outDate)))
+                             (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > new Date(task.outDate)))
                               ? 'Overdue'
                               : task.status || 'Pending'}
                           </div>
@@ -2617,9 +2621,9 @@ Priority: ${task.priority}`;
                     <td className="px-4 py-3">{getStatusDropdown(task)}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {/* Completion Date - only show when status is Completed */}
-                      {task.status === 'Completed' && task.completedDate ? (
+                      {task.status === 'Completed' && task.completedAt ? (
                         <div className="text-sm text-green-600">
-                          {formatDate(task.completedDate)}
+                          {formatDate(task.completedAt)}
                         </div>
                       ) : (
                         <div className="text-sm text-gray-400">-</div>
@@ -5193,7 +5197,7 @@ Priority: ${task.priority}`;
                             <div className={`text-xs mt-1 ${
                               // If current date > due date and task is not completed before due date
                               new Date() > new Date(task.outDate) && 
-                              (task.status !== 'Completed' || (task.completedDate && new Date(task.completedDate) > new Date(task.outDate)))
+                              (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > new Date(task.outDate)))
                                 ? 'text-red-600 font-semibold' 
                                 : task.status === 'Completed' 
                                   ? 'text-green-600' 
@@ -5201,7 +5205,7 @@ Priority: ${task.priority}`;
                             }`}>
                               {/* Show status based on conditions */}
                               {new Date() > new Date(task.outDate) && 
-                               (task.status !== 'Completed' || (task.completedDate && new Date(task.completedDate) > new Date(task.outDate)))
+                               (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > new Date(task.outDate)))
                                 ? 'Overdue'
                                 : task.status || 'Pending'}
                             </div>
@@ -5216,9 +5220,9 @@ Priority: ${task.priority}`;
                       <td className="px-4 py-3">{getStatusDropdown(task)}</td>
                       <td className="px-4 py-3 text-sm text-gray-700">
                         {/* Completion Date - only show when status is Completed */}
-                        {task.status === 'Completed' && task.completedDate ? (
+                        {task.status === 'Completed' && task.completedAt ? (
                           <div className="text-sm text-green-600">
-                            {formatDate(task.completedDate)}
+                            {formatDate(task.completedAt)}
                           </div>
                         ) : (
                           <div className="text-sm text-gray-400">-</div>
