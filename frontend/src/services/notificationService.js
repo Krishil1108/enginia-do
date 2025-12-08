@@ -340,7 +340,7 @@ class NotificationService {
     }
 
     console.log('🚀 Showing test notification...');
-    const result = await this.showLocalNotification('🔔 TriDo Notification Test', {
+    const result = await this.showLocalNotification('🔔 Enginia-do Notification Test', {
       body: '📱 This is a test push notification! If you see this, notifications are working perfectly.',
       requireInteraction: true, // Stay visible like WhatsApp
       silent: false,

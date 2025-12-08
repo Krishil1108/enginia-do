@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection with optimized settings for production
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/taskmanagement', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/enginia-to-do', {
   serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
   socketTimeoutMS: 45000, // Socket timeout
   family: 4 // Use IPv4, skip trying IPv6

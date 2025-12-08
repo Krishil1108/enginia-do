@@ -1,6 +1,6 @@
 {
-  "short_name": "TriDo",
-  "name": "TriDo - Task Management",
+  "short_name": "Enginia-do",
+  "name": "Enginia-do - Task Management",
   "description": "Professional task management with push notifications, team collaboration, and mobile-first design",
   "icons": [
     {
@@ -122,11 +122,11 @@
   ],
   "screenshots": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'%3E%3Crect width='390' height='844' fill='%23f8fafc'/%3E%3Crect x='20' y='60' width='350' height='80' rx='12' fill='%236366f1'/%3E%3Ctext x='40' y='110' fill='white' font-family='Arial' font-size='24' font-weight='bold'%3ETriDo - Task Manager%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'%3E%3Crect width='390' height='844' fill='%23f8fafc'/%3E%3Crect x='20' y='60' width='350' height='80' rx='12' fill='%236366f1'/%3E%3Ctext x='40' y='110' fill='white' font-family='Arial' font-size='24' font-weight='bold'%3EEnginia-do - Task Manager%3C/text%3E%3C/svg%3E",
       "sizes": "390x844",
       "type": "image/svg+xml",
       "form_factor": "narrow",
-      "label": "TriDo Task Management - Mobile View"
+      "label": "Enginia-do Task Management - Mobile View"
     }
   ]
 }

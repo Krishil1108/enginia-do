@@ -1,7 +1,7 @@
 {
-  "name": "task-management-mern",
+  "name": "enginia-do",
   "version": "1.0.0",
-  "description": "Complete MERN Stack Task Management System",
+  "description": "Enginia-do - Complete Task Management System",
   "scripts": {
     "install-all": "cd backend && npm install && cd ../frontend && npm install",
     "start-backend": "cd backend && npm start",

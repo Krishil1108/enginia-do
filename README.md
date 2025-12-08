@@ -1,4 +1,4 @@
-# Task Management System - MERN Stack with Authentication
+# Enginia-do - Task Management System
 
 A complete, production-ready Task Management System with authentication, role-based access, and real-time notifications built with MongoDB, Express, React, and Node.js.
 

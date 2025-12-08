@@ -395,7 +395,7 @@ const TaskManagementSystem = () => {
 
     if (isIOSSafari) {
       // iOS Safari manual installation instructions
-      showInfo('To install TriDo on iOS:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nTriDo will then appear as an app icon on your home screen!', 'Install TriDo on iOS');
+      showInfo('To install Enginia-do on iOS:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nEnginia-do will then appear as an app icon on your home screen!', 'Install Enginia-do on iOS');
       setShowInstallPrompt(false);
       return;
     }
@@ -2235,7 +2235,7 @@ Priority: ${task.priority}`;
 
     // Summary Sheet
     const summaryData = [
-      ['TriDo Report'],
+      ['Enginia-do Report'],
       ['Period', data.period.label],
       ['Report Type', data.period.type.toUpperCase()],
       ['Generated On', new Date().toLocaleDateString()],
@@ -2285,7 +2285,7 @@ Priority: ${task.priority}`;
     // Title
     doc.setFontSize(20);
     doc.setFont(undefined, 'bold');
-    doc.text('TriDo Report', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('Enginia-do Report', pageWidth / 2, yPosition, { align: 'center' });
     yPosition += 15;
 
     // Period Info
@@ -2447,7 +2447,7 @@ Priority: ${task.priority}`;
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
               <Users className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">TriDo</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Enginia-do</h1>
             <p className="text-gray-600 mt-2">
               {isRegistering ? 'Create your account' : 'Sign in to continue'}
             </p>
@@ -3571,7 +3571,7 @@ Priority: ${task.priority}`;
               <div>
                 <h4 className="font-medium text-gray-900">App Status</h4>
                 <p className="text-sm text-gray-600">
-                  {isInstalled ? 'TriDo is installed as an app on your device' : 'TriDo can be installed as a native app'}
+                  {isInstalled ? 'Enginia-do is installed as an app on your device' : 'Enginia-do can be installed as a native app'}
                 </p>
               </div>
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -3587,7 +3587,7 @@ Priority: ${task.priority}`;
                 {deferredPrompt && (
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                     <div>
-                      <h4 className="font-medium text-gray-900">Install TriDo App</h4>
+                      <h4 className="font-medium text-gray-900">Install Enginia-do App</h4>
                       <p className="text-sm text-gray-600">
                         Get offline access, push notifications, and home screen icon
                       </p>
@@ -3672,8 +3672,8 @@ Priority: ${task.priority}`;
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-green-900">TriDo is installed!</p>
-                    <p className="text-sm text-green-700">You can now use TriDo as a native app with offline access and push notifications.</p>
+                    <p className="font-medium text-green-900">Enginia-do is installed!</p>
+                    <p className="text-sm text-green-700">You can now use Enginia-do as a native app with offline access and push notifications.</p>
                   </div>
                 </div>
               </div>
@@ -6464,7 +6464,7 @@ Priority: ${task.priority}`;
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">TriDo</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enginia-do</h1>
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-lg">
                 <User className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900">{currentUser.name}</span>
@@ -8044,9 +8044,9 @@ Priority: ${task.priority}`;
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Add TriDo to Home Screen</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Add Enginia-do to Home Screen</h2>
               <p className="text-gray-600 text-sm">
-                Install TriDo for the best mobile experience with offline access and notifications
+                Install Enginia-do for the best mobile experience with offline access and notifications
               </p>
             </div>
 

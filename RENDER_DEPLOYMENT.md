@@ -1,6 +1,6 @@
-# Backend Deployment Guide for Render
+# Enginia-do Backend Deployment Guide for Render
 
-This guide will help you deploy your MERN Task Management backend to Render.
+This guide will help you deploy your Enginia-do Task Management backend to Render.
 
 ## Prerequisites
 
@@ -74,7 +74,7 @@ const PORT = process.env.PORT || 5000;
    - Select "Connect your application"
    - Copy the connection string (looks like `mongodb+srv://username:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority`)
    - Replace `<password>` with your actual password
-   - Add your database name after `.net/`: `mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/taskmanager?retryWrites=true&w=majority`
+   - Add your database name after `.net/`: `mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/enginia-to-do?retryWrites=true&w=majority`
 
 ## Step 3: Deploy Backend on Render
 
@@ -95,7 +95,7 @@ const PORT = process.env.PORT || 5000;
 Fill in the following details:
 
 **Basic Settings:**
-- **Name**: `todo-backend` (or your preferred name)
+- **Name**: `enginia-do-backend` (or your preferred name)
 - **Region**: Choose closest to your users
 - **Branch**: `main`
 - **Root Directory**: `backend`
@@ -124,7 +124,7 @@ Click "Advanced" and add environment variables:
 1. Click "Create Web Service"
 2. Render will automatically build and deploy your backend
 3. Wait for deployment to complete (usually 2-5 minutes)
-4. You'll see a URL like: `https://todo-backend.onrender.com`
+4. You'll see a URL like: `https://enginia-do-backend.onrender.com`
 
 ## Step 4: Verify Deployment
 
@@ -133,8 +133,8 @@ Click "Advanced" and add environment variables:
 Use your browser or Postman to test:
 
 ```
-GET https://todo-backend.onrender.com/api/health
-GET https://todo-backend.onrender.com/api/tasks
+GET https://enginia-do-backend.onrender.com/api/health
+GET https://enginia-do-backend.onrender.com/api/tasks
 ```
 
 ### 4.2 Check Logs
@@ -154,7 +154,7 @@ Update your frontend to use the Render backend URL:
 const API_BASE_URL = 'http://localhost:5000';
 
 // To:
-const API_BASE_URL = 'https://todo-backend.onrender.com';
+const API_BASE_URL = 'https://enginia-do-backend.onrender.com';
 ```
 
 Or use environment variables:
@@ -175,8 +175,8 @@ const cors = require('cors');
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://your-frontend-domain.netlify.app',
-    'https://your-frontend-domain.vercel.app'
+    'https://enginia-do-frontend.netlify.app',
+    'https://enginia-do-frontend.vercel.app'
   ],
   credentials: true
 }));
@@ -286,8 +286,8 @@ Render automatically deploys when you push to the `main` branch:
 - [ ] Frontend updated with backend URL
 - [ ] CORS configured properly
 
-**Your Backend URL:** `https://todo-backend.onrender.com` (replace with your actual URL)
+**Your Backend URL:** `https://enginia-do-backend.onrender.com` (replace with your actual URL)
 
 ---
 
-*Last Updated: November 24, 2025*
+*Last Updated: December 8, 2025*

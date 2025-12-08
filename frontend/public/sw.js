@@ -152,7 +152,7 @@ self.addEventListener('push', (event) => {
   console.log('Push data available:', !!event.data);
   
   let notificationData = {
-    title: 'TriDo - Task Management',
+    title: 'Enginia-do - Task Management',
     body: 'You have a new notification',
     icon: '/favicon.ico',
     badge: '/favicon.ico',
@@ -278,7 +278,7 @@ self.addEventListener('push', (event) => {
     // Fallback: try showing a very basic notification
     console.log('🔄 Attempting fallback notification...');
     return self.registration.showNotification(
-      'TriDo Notification',
+      'Enginia-do Notification',
       {
         body: 'You have a new notification',
         icon: '/favicon.ico',
