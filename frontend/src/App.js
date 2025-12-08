@@ -543,6 +543,14 @@ const TaskManagementSystem = () => {
       const params = currentUser?.username ? { requestingUser: currentUser.username } : {};
       const response = await axios.get(`${API_URL}/users`, { params });
       setUsers(response.data);
+      
+      // Update current user data if it exists in the loaded users
+      if (currentUser && currentUser.username) {
+        const updatedCurrentUser = response.data.find(user => user.username === currentUser.username);
+        if (updatedCurrentUser) {
+          setCurrentUser(updatedCurrentUser);
+        }
+      }
     } catch (error) {
       console.error('Error loading users:', error);
     }
