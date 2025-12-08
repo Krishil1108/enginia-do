@@ -2856,7 +2856,7 @@ Priority: ${task.priority}`;
                             </button>
                             
                             {/* Create Subtask button - for assigned tasks where user can create subtasks */}
-                            {task.assignedTo === currentUser?.username && (currentUser?.username === 'ketul.lathia' || getMyTeamMembers().length > 0) && (
+                            {task.assignedTo === currentUser?.username && (isAdmin() || getMyTeamMembers().length > 0) && (
                               <button
                                 onClick={() => {
                                   setParentTaskForSubtask(task);
@@ -2952,7 +2952,7 @@ Priority: ${task.priority}`;
               </button>
               
               {/* Create Subtask button - for tasks where user can create subtasks */}
-              {task.assignedTo === currentUser?.username && (currentUser?.username === 'ketul.lathia' || getMyTeamMembers().length > 0) && (
+              {task.assignedTo === currentUser?.username && (isAdmin() || getMyTeamMembers().length > 0) && (
                 <button
                   onClick={() => {
                     setParentTaskForSubtask(task);
@@ -4676,7 +4676,7 @@ Priority: ${task.priority}`;
     // Apply filters to assigned by me tasks
     const filteredTasks = assignedByMeTasks.filter(task => {
       // Apply subtask filter (only for Piyush and Ketul)
-      if (['piyush.diwan', 'ketul.lathia'].includes(currentUser?.username)) {
+      if (['piyush.diwan'].includes(currentUser?.username) || isAdmin()) {
         if (subtaskFilter === 'subtasks-only' && !task.isSubtask) return false;
         if (subtaskFilter === 'tasks-only' && task.isSubtask) return false;
         // 'all' shows both tasks and subtasks
@@ -4826,7 +4826,7 @@ Priority: ${task.priority}`;
             </div>
 
             {/* Subtask Filter - Only for Piyush and Ketul */}
-            {['piyush.diwan', 'ketul.lathia'].includes(currentUser?.username) && (
+            {(['piyush.diwan'].includes(currentUser?.username) || isAdmin()) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Task Type</label>
                 <select
@@ -7195,7 +7195,7 @@ Priority: ${task.priority}`;
                   {users
                     .filter(user => {
                       // Vaishal, Nirali and Piyush Diwan can see everyone
-                      if (currentUser?.username === 'ketul.lathia' || currentUser?.username === 'piyush.diwan') {
+                      if (isAdmin() || currentUser?.username === 'piyush.diwan') {
                         return true;
                       }
                       // For other users (like Vraj, Kinjal):
@@ -7208,7 +7208,7 @@ Priority: ${task.priority}`;
                     })
                     .map(user => (
                       <option key={user._id} value={user.username}>
-                        {user.name} - {user.department}
+                        {user.name} - {user.position || user.department}
                       </option>
                     ))
                   }
@@ -7515,10 +7515,10 @@ Priority: ${task.priority}`;
                   className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   required
                 >
-                  <option value="">{currentUser?.username === 'ketul.lathia' ? 'Select User' : 'Select Team Member'}</option>
-                  {(currentUser?.username === 'ketul.lathia' ? users : getMyTeamMembers()).map(user => (
+                  <option value="">{isAdmin() ? 'Select User' : 'Select Team Member'}</option>
+                  {(isAdmin() ? users : getMyTeamMembers()).map(user => (
                     <option key={user._id} value={user.username}>
-                      {user.name} - {user.department}
+                      {user.name} - {user.position || user.department}
                     </option>
                   ))}
                 </select>
