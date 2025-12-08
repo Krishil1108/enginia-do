@@ -152,6 +152,7 @@ const TaskManagementSystem = () => {
   const [selectedQuarter, setSelectedQuarter] = useState(Math.floor((new Date().getMonth() + 3) / 3));
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [reportDateFilter, setReportDateFilter] = useState({ start: null, end: null });
+  const [selectedReportUser, setSelectedReportUser] = useState('all'); // 'all' or specific username
   
   // Modals for task actions
   const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -1870,6 +1871,7 @@ Priority: ${task.priority}`;
       let startDate, endDate;
       let reportTasks;
 
+      // First apply date filtering
       switch (reportType) {
         case 'alltime':
           reportTasks = tasks; // Include all tasks
@@ -1915,14 +1917,30 @@ Priority: ${task.priority}`;
           endDate = currentDate;
       }
 
+      // Apply user filtering if specific user is selected
+      if (selectedReportUser !== 'all') {
+        reportTasks = reportTasks.filter(task => 
+          task.assignedTo === selectedReportUser || task.assignedBy === selectedReportUser
+        );
+      }
+
       // Debug logs (commented out to reduce console noise)
       // console.log('Total tasks available:', tasks.length);
       // console.log('Filtered tasks for report:', reportTasks.length);
       // console.log('Report type:', reportType);
       // console.log('Date range:', startDate, 'to', endDate);
 
+      // Get user information for the report
+      const selectedUser = selectedReportUser === 'all' ? null : users.find(u => u.username === selectedReportUser);
+      
       // Generate comprehensive report data
       const report = {
+        user: {
+          isSpecificUser: selectedReportUser !== 'all',
+          username: selectedReportUser,
+          name: selectedUser ? selectedUser.name : 'All Users',
+          role: selectedUser ? selectedUser.role : 'System-wide'
+        },
         period: {
           type: reportType,
           startDate,
@@ -3699,6 +3717,26 @@ Priority: ${task.priority}`;
             )}
           </div>
 
+          {/* User Selection */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">User Performance</label>
+            <select
+              value={selectedReportUser}
+              onChange={(e) => setSelectedReportUser(e.target.value)}
+              className="w-full md:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Users (System-wide Report)</option>
+              {users.filter(user => user.isActive).map(user => (
+                <option key={user.username} value={user.username}>
+                  {user.name} ({user.username}) - {user.role}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-sm text-gray-600">
+              Select a specific user to generate their individual performance report, or choose "All Users" for system-wide analysis
+            </p>
+          </div>
+
           {/* Custom Date Range */}
           {reportType === 'custom' && (
             <div className="space-y-4">
@@ -3857,6 +3895,30 @@ Priority: ${task.priority}`;
           
           return (
             <div className="space-y-6">
+              {/* Report Header */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6">
+                <div className="flex items-center gap-3">
+                  <User className="w-6 h-6 text-blue-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {filteredReportData.user.isSpecificUser 
+                        ? `User Performance Report: ${filteredReportData.user.name}` 
+                        : 'System-wide Performance Report'
+                      }
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {filteredReportData.user.isSpecificUser 
+                        ? `Role: ${filteredReportData.user.role} | Username: ${filteredReportData.user.username}` 
+                        : 'All users and associates across the system'
+                      }
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Period: {filteredReportData.period.label}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
