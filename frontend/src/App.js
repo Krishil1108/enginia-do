@@ -2588,27 +2588,39 @@ Priority: ${task.priority}`;
                       {/* Due Date with conditional red color */}
                       {task.outDate ? (
                         <div>
-                          <div className={`text-sm ${
-                            // Red if current date > due date (regardless of completion status)
-                            new Date() > new Date(task.outDate) ? 'text-red-600 font-semibold' : 'text-gray-700'
-                          }`}>
-                            {formatDate(task.outDate)}
-                          </div>
-                          {/* Status line below due date */}
-                          <div className={`text-xs mt-1 ${
-                            // If current date > due date and task is not completed before due date
-                            new Date() > new Date(task.outDate) && 
-                            (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > new Date(task.outDate)))
-                              ? 'text-red-600 font-semibold' 
-                              : task.status === 'Completed' 
-                                ? 'text-green-600' 
-                                : 'text-gray-500'
-                          }`}>
-                            {/* Show status based on conditions */}
-                            {new Date() > new Date(task.outDate) && 
-                             (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > new Date(task.outDate)))
-                              ? 'Overdue'
-                              : task.status || 'Pending'}
+                          {(() => {
+                            // Create due date at end of day (23:59:59) for proper comparison
+                            const dueDate = new Date(task.outDate);
+                            dueDate.setHours(23, 59, 59, 999);
+                            const isOverdue = new Date() > dueDate;
+                            
+                            return (
+                              <>
+                                <div className={`text-sm ${
+                                  // Red if current time > due date end of day (23:59:59)
+                                  isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700'
+                                }`}>
+                                  {formatDate(task.outDate)}
+                                </div>
+                                {/* Status line below due date */}
+                                <div className={`text-xs mt-1 ${
+                                  // If current time > due date end of day and task is not completed before due date
+                                  isOverdue && 
+                                  (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > dueDate))
+                                    ? 'text-red-600 font-semibold' 
+                                    : task.status === 'Completed' 
+                                      ? 'text-green-600' 
+                                      : 'text-gray-500'
+                                }`}>
+                                  {/* Show status based on conditions */}
+                                  {isOverdue && 
+                                   (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > dueDate))
+                                    ? 'Overdue'
+                                    : task.status || 'Pending'}
+                                </div>
+                              </>
+                            );
+                          })()}
                           </div>
                         </div>
                       ) : (
@@ -5187,28 +5199,39 @@ Priority: ${task.priority}`;
                         {/* Due Date with conditional red color */}
                         {task.outDate ? (
                           <div>
-                            <div className={`text-sm ${
-                              // Red if current date > due date (regardless of completion status)
-                              new Date() > new Date(task.outDate) ? 'text-red-600 font-semibold' : 'text-gray-700'
-                            }`}>
-                              {formatDate(task.outDate)}
-                            </div>
-                            {/* Status line below due date */}
-                            <div className={`text-xs mt-1 ${
-                              // If current date > due date and task is not completed before due date
-                              new Date() > new Date(task.outDate) && 
-                              (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > new Date(task.outDate)))
-                                ? 'text-red-600 font-semibold' 
-                                : task.status === 'Completed' 
-                                  ? 'text-green-600' 
-                                  : 'text-gray-500'
-                            }`}>
-                              {/* Show status based on conditions */}
-                              {new Date() > new Date(task.outDate) && 
-                               (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > new Date(task.outDate)))
-                                ? 'Overdue'
-                                : task.status || 'Pending'}
-                            </div>
+                            {(() => {
+                              // Create due date at end of day (23:59:59) for proper comparison
+                              const dueDate = new Date(task.outDate);
+                              dueDate.setHours(23, 59, 59, 999);
+                              const isOverdue = new Date() > dueDate;
+                              
+                              return (
+                                <>
+                                  <div className={`text-sm ${
+                                    // Red if current time > due date end of day (23:59:59)
+                                    isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700'
+                                  }`}>
+                                    {formatDate(task.outDate)}
+                                  </div>
+                                  {/* Status line below due date */}
+                                  <div className={`text-xs mt-1 ${
+                                    // If current time > due date end of day and task is not completed before due date
+                                    isOverdue && 
+                                    (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > dueDate))
+                                      ? 'text-red-600 font-semibold' 
+                                      : task.status === 'Completed' 
+                                        ? 'text-green-600' 
+                                        : 'text-gray-500'
+                                  }`}>
+                                    {/* Show status based on conditions */}
+                                    {isOverdue && 
+                                     (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > dueDate))
+                                      ? 'Overdue'
+                                      : task.status || 'Pending'}
+                                  </div>
+                                </>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <div>
