@@ -1917,12 +1917,8 @@ Priority: ${task.priority}`;
           endDate = currentDate;
       }
 
-      // Apply user filtering if specific user is selected
-      if (selectedReportUser !== 'all') {
-        reportTasks = reportTasks.filter(task => 
-          task.assignedTo === selectedReportUser || task.assignedBy === selectedReportUser
-        );
-      }
+      // For user filtering, we keep all tasks in the date range and filter later in byUser and byAssociate sections
+      // This allows us to have different filtering logic for Individual Performance vs Associate Performance
 
       // Debug logs (commented out to reduce console noise)
       // console.log('Total tasks available:', tasks.length);
@@ -1948,11 +1944,11 @@ Priority: ${task.priority}`;
           label: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
         },
         summary: {
-          totalTasks: reportTasks.length,
-          completed: reportTasks.filter(t => t.status === 'Completed').length,
-          pending: reportTasks.filter(t => t.status === 'Pending').length,
-          inProgress: reportTasks.filter(t => t.status === 'In Progress').length,
-          overdue: reportTasks.filter(t => {
+          totalTasks: userTasks.length,
+          completed: userTasks.filter(t => t.status === 'Completed').length,
+          pending: userTasks.filter(t => t.status === 'Pending').length,
+          inProgress: userTasks.filter(t => t.status === 'In Progress').length,
+          overdue: userTasks.filter(t => {
             const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
             return isOverdue || t.status === 'Overdue';
           }).length
@@ -1960,12 +1956,12 @@ Priority: ${task.priority}`;
         byUser: {},
         byAssociate: {},
         byPriority: {
-          High: reportTasks.filter(t => t.priority === 'High').length,
-          Medium: reportTasks.filter(t => t.priority === 'Medium').length,
-          Low: reportTasks.filter(t => t.priority === 'Low').length
+          High: userTasks.filter(t => t.priority === 'High').length,
+          Medium: userTasks.filter(t => t.priority === 'Medium').length,
+          Low: userTasks.filter(t => t.priority === 'Low').length
         },
-        completionRate: reportTasks.length > 0 ? 
-          (reportTasks.filter(t => t.status === 'Completed').length / reportTasks.length * 100).toFixed(2) : 0
+        completionRate: userTasks.length > 0 ? 
+          (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : 0
       };
 
       // Group by user - only include selected user if specific user is chosen
@@ -1988,22 +1984,24 @@ Priority: ${task.priority}`;
           }
         });
       } else {
-        // Only show the selected user's data
+        // Only show the selected user's data - use tasks assigned TO the user only for Individual Performance
         const selectedUser = users.find(u => u.username === selectedReportUser);
         if (selectedUser) {
           const userTasks = reportTasks.filter(t => !t.isAssociate && t.assignedTo === selectedUser.username);
-          report.byUser[selectedUser.name] = {
-            total: userTasks.length,
-            completed: userTasks.filter(t => t.status === 'Completed').length,
-            pending: userTasks.filter(t => t.status === 'Pending').length,
-            inProgress: userTasks.filter(t => t.status === 'In Progress').length,
-            overdue: userTasks.filter(t => {
-              const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
-              return isOverdue || t.status === 'Overdue';
-            }).length,
-            completionRate: userTasks.length > 0 ? 
-              (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : 0
-          };
+          if (userTasks.length > 0) {
+            report.byUser[selectedUser.name] = {
+              total: userTasks.length,
+              completed: userTasks.filter(t => t.status === 'Completed').length,
+              pending: userTasks.filter(t => t.status === 'Pending').length,
+              inProgress: userTasks.filter(t => t.status === 'In Progress').length,
+              overdue: userTasks.filter(t => {
+                const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+                return isOverdue || t.status === 'Overdue';
+              }).length,
+              completionRate: userTasks.length > 0 ? 
+                (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : 0
+            };
+          }
         }
       }
 
