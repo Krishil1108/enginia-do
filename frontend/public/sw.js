@@ -313,7 +313,7 @@ self.addEventListener('notificationclick', (event) => {
         .then((clientList) => {
           // Try to focus existing window first
           for (const client of clientList) {
-            if (client.url.includes('trido-pm78.onrender.com') || client.url.includes('localhost')) {
+            if (client.url.includes('enginia-do.onrender.com') || client.url.includes('localhost')) {
               console.log('🎯 Focusing existing window');
               return client.focus();
             }

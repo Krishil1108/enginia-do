@@ -548,7 +548,7 @@ const TaskManagementSystem = () => {
     }
   };
 
-  // Check if current user is admin - only Ketul Lathia
+  // Check if current user is admin - Vaishal and Nirali (Enginia owners)
   const isAdmin = useCallback(() => {
     return currentUser && currentUser.username === 'ketul.lathia';
   }, [currentUser]);
@@ -6207,7 +6207,7 @@ Priority: ${task.priority}`;
     );
   };
 
-  // Confidential Tasks View - All confidential tasks (only accessible to Ketul Lathia)
+  // Confidential Tasks View - All confidential tasks (only accessible to Enginia owners: Vaishal and Nirali)
   const ConfidentialTasksView = () => {
     // Get all confidential tasks
     const confidentialTasks = tasks.filter(task => task.isConfidential);
@@ -6613,8 +6613,8 @@ Priority: ${task.priority}`;
                     </button>
                   )}
 
-                  {/* Confidential Tasks - Only for Ketul Lathia */}
-                  {currentUser?.name === 'Ketul Lathia' && (
+                  {/* Confidential Tasks - Only for Owners */}
+                  {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
                     <button
                       onClick={() => { setCurrentView('confidential-tasks'); }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -6721,8 +6721,8 @@ Priority: ${task.priority}`;
                     </button>
                   )}
 
-                  {/* Confidential Tasks - Only for Ketul Lathia */}
-                  {currentUser?.name === 'Ketul Lathia' && (
+                  {/* Confidential Tasks - Only for Owners */}
+                  {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
                     <button
                       onClick={() => { setCurrentView('confidential-tasks'); setShowAdvancedMenu(false); }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -6777,8 +6777,8 @@ Priority: ${task.priority}`;
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
         {currentView === 'associate-tasks' && <AssociateTasksView />}
         {currentView === 'external-tasks' && <ExternalTasksView />}
-        {currentView === 'confidential-tasks' && currentUser?.name === 'Ketul Lathia' && <ConfidentialTasksView />}
-        {currentView === 'admin-reports' && currentUser?.name === 'Ketul Lathia' && <AdminReportsView />}
+        {currentView === 'confidential-tasks' && ['Vaishal', 'Nirali'].includes(currentUser?.name) && <ConfidentialTasksView />}
+        {currentView === 'admin-reports' && ['Vaishal', 'Nirali'].includes(currentUser?.name) && <AdminReportsView />}
         {currentView === 'settings' && <NotificationSettingsView />}
       </div>
 
@@ -7194,7 +7194,7 @@ Priority: ${task.priority}`;
                   <option value="EXTERNAL_USER">👤 External User</option>
                   {users
                     .filter(user => {
-                      // Ketul Lathia and Piyush Diwan can see everyone
+                      // Vaishal, Nirali and Piyush Diwan can see everyone
                       if (currentUser?.username === 'ketul.lathia' || currentUser?.username === 'piyush.diwan') {
                         return true;
                       }
@@ -7452,8 +7452,8 @@ Priority: ${task.priority}`;
                 </select>
               </div>
 
-              {/* Confidential Toggle - Only for Ketul Lathia */}
-              {currentUser?.name === 'Ketul Lathia' && (
+              {/* Confidential Toggle - Only for Owners */}
+              {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
                 <div>
                   <label className="flex items-center gap-3">
                     <input
@@ -7994,8 +7994,8 @@ Priority: ${task.priority}`;
             </button>
           )}
 
-          {/* Confidential Tasks - Only for Ketul Lathia */}
-          {currentUser?.name === 'Ketul Lathia' && (
+          {/* Confidential Tasks - Only for Owners */}
+          {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
             <button
               onClick={() => setCurrentView('confidential-tasks')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
@@ -8009,7 +8009,7 @@ Priority: ${task.priority}`;
             </button>
           )}
           
-          {currentUser?.name === 'Ketul Lathia' && (
+          {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
             <button
               onClick={() => setCurrentView('admin-reports')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
