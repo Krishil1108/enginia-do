@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  position: {
+    type: String,
+    default: ''
+  },
   manager: {
     type: String,
     default: null,
