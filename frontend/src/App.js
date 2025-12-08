@@ -6469,7 +6469,7 @@ Priority: ${task.priority}`;
                 <User className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900">{currentUser.name}</span>
                 <span className="text-xs text-blue-600 px-2 py-0.5 bg-blue-100 rounded">
-                  {currentUser.department}
+                  {currentUser.position || currentUser.department}
                 </span>
               </div>
               {/* Mobile user info */}
