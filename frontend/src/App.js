@@ -5989,47 +5989,55 @@ Priority: ${task.priority}`;
                         {formatDate(task.inDate || task.createdAt)}
                       </td>
                       <td className="px-4 py-3">
+                        {/* Due Date with status line below */}
                         {task.outDate ? (
-                          <div className={`text-sm ${
-                            (() => {
-                              const dueDate = new Date(task.outDate);
-                              dueDate.setHours(23, 59, 59, 999);
-                              const isOverdue = new Date() > dueDate && task.status !== 'Completed';
-                              return isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700';
-                            })()
-                          }`}>
-                            {formatDate(task.outDate)}
+                          <div>
                             {(() => {
+                              // Create due date at end of day (23:59:59) for proper comparison
                               const dueDate = new Date(task.outDate);
                               dueDate.setHours(23, 59, 59, 999);
-                              const isOverdue = new Date() > dueDate && task.status !== 'Completed';
-                              return isOverdue ? <div className="text-xs text-red-600">Overdue</div> : null;
+                              const isOverdue = new Date() > dueDate;
+                              
+                              return (
+                                <React.Fragment>
+                                  <div className={`text-sm ${
+                                    // Red if current time > due date end of day (23:59:59)
+                                    isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700'
+                                  }`}>
+                                    {formatDate(task.outDate)}
+                                  </div>
+                                  {/* Status line below due date */}
+                                  <div className={`text-xs mt-1 ${
+                                    // If current time > due date end of day and task is not completed before due date
+                                    isOverdue && 
+                                    (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > dueDate))
+                                      ? 'text-red-600 font-semibold' 
+                                      : task.status === 'Completed' 
+                                        ? 'text-green-600' 
+                                        : 'text-gray-500'
+                                  }`}>
+                                    {/* Show status based on conditions */}
+                                    {isOverdue && 
+                                     (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > dueDate))
+                                      ? 'Overdue'
+                                      : task.status === 'Completed' 
+                                        ? 'Completed'
+                                        : 'Pending'}
+                                  </div>
+                                </React.Fragment>
+                              );
                             })()}
                           </div>
                         ) : (
-                          <span className="text-gray-400">No due date</span>
+                          <div>
+                            <div className="text-sm text-gray-700">-</div>
+                            <div className="text-xs text-gray-500 mt-1">{task.status === 'Completed' ? 'Completed' : 'Pending'}</div>
+                          </div>
                         )}
                       </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={task.status}
-                          onChange={(e) => {
-                            // Update task status inline
-                            const updatedTasks = tasks.map(t => 
-                              t._id === task._id ? {...t, status: e.target.value} : t
-                            );
-                            setTasks(updatedTasks);
-                            // Here you could also make an API call to update the backend
-                          }}
-                          className="text-sm border border-gray-200 rounded px-2 py-1 bg-yellow-50 text-yellow-800"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="In Checking">In Checking</option>
-                          <option value="Completed">Completed</option>
-                        </select>
-                      </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3">{getStatusDropdown(task)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {/* Completion Date - only show when status is Completed */}
                         {task.status === 'Completed' && task.completedAt ? (
                           <div className="text-sm text-green-600">
                             {formatDate(task.completedAt)}
