@@ -21,7 +21,15 @@ const UpdateChecker = () => {
         if (event.data && event.data.type === 'SW_UPDATED') {
           console.log('✨ New version detected:', event.data.version);
           setUpdateAvailable(true);
-          // Auto-reload immediately
+          
+          // Force clear caches and reload
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'FORCE_UPDATE'
+            });
+          }
+          
+          // Auto-reload with cache busting
           setTimeout(() => {
             window.location.reload(true);
           }, 500);

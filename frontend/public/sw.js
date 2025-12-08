@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.1.3-' + Date.now(); // Unique timestamp for each deployment
+const CACHE_VERSION = 'v1.2.0-' + Date.now(); // Unique timestamp for each deployment
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'
@@ -11,6 +11,28 @@ console.log('⏰ Timestamp:', Date.now());
 
 // IMMEDIATELY skip waiting - don't wait for old SW to close
 self.skipWaiting();
+
+// Force clear all old caches on startup
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'FORCE_UPDATE') {
+    console.log('🔄 Force cache update requested');
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheName !== CACHE_NAME) {
+              console.log('🗑️ Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }).then(() => {
+        console.log('✅ All old caches cleared');
+        return self.clients.claim();
+      })
+    );
+  }
+});
 
 // Install Service Worker
 self.addEventListener('install', (event) => {

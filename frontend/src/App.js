@@ -1937,26 +1937,64 @@ Priority: ${task.priority}`;
       // console.log('Date range:', startDate, 'to', endDate);
 
       // Get user information for the report
-      const selectedUser = selectedReportUser === 'all' ? null : users.find(u => u.username === selectedReportUser);
+      const selectedUserObj = selectedReportUser === 'all' ? null : users.find(u => u.username === selectedReportUser);
+      
+      // Debug logging for troubleshooting
+      console.log('🔍 Report Generation Debug:');
+      console.log('- Report Type:', reportType);
+      console.log('- Selected User:', selectedReportUser);
+      console.log('- Total Tasks Available:', tasks.length);
+      console.log('- Filtered Tasks by Date:', reportTasks.length);
+      console.log('- Date Range:', startDate, 'to', endDate);
       
       // Define userTasks based on selection - for summary statistics
-      const userTasks = selectedReportUser === 'all' ? 
-        reportTasks : 
-        reportTasks.filter(t => !t.isAssociate && t.assignedTo === selectedReportUser);
+      // For 'all' users: show all non-associate tasks in date range
+      // For specific user: show only tasks assigned to that user in date range
+      let userTasks;
+      if (selectedReportUser === 'all') {
+        userTasks = reportTasks.filter(t => !t.isAssociate);
+      } else {
+        userTasks = reportTasks.filter(t => !t.isAssociate && t.assignedTo === selectedReportUser);
+      }
+      
+      console.log('- User-filtered Tasks:', userTasks.length);
+      
+      // Generate proper report period label based on type
+      let periodLabel;
+      switch (reportType) {
+        case 'alltime':
+          periodLabel = 'All Time (Complete History)';
+          break;
+        case 'quarterly':
+          periodLabel = `Q${selectedQuarter} ${selectedYear} (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`;
+          break;
+        case 'halfyearly':
+          const half = selectedQuarter <= 2 ? 'H1' : 'H2';
+          periodLabel = `${half} ${selectedYear} (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`;
+          break;
+        case 'yearly':
+          periodLabel = `Year ${selectedYear} (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`;
+          break;
+        case 'custom':
+          periodLabel = `Custom Range (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`;
+          break;
+        default:
+          periodLabel = `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`;
+      }
       
       // Generate comprehensive report data
       const report = {
         user: {
           isSpecificUser: selectedReportUser !== 'all',
           username: selectedReportUser,
-          name: selectedUser ? selectedUser.name : 'All Users',
-          role: selectedUser ? selectedUser.role : 'System-wide'
+          name: selectedUserObj ? selectedUserObj.name : 'All Users',
+          role: selectedUserObj ? selectedUserObj.role : 'System-wide'
         },
         period: {
           type: reportType,
           startDate,
           endDate,
-          label: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
+          label: periodLabel
         },
         summary: {
           totalTasks: userTasks.length,
@@ -1964,7 +2002,9 @@ Priority: ${task.priority}`;
           pending: userTasks.filter(t => t.status === 'Pending').length,
           inProgress: userTasks.filter(t => t.status === 'In Progress').length,
           overdue: userTasks.filter(t => {
-            const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
+            const dueDate = new Date(t.outDate);
+            dueDate.setHours(23, 59, 59, 999);
+            const isOverdue = new Date() > dueDate && t.status !== 'Completed';
             return isOverdue || t.status === 'Overdue';
           }).length
         },
@@ -1976,7 +2016,7 @@ Priority: ${task.priority}`;
           Low: userTasks.filter(t => t.priority === 'Low').length
         },
         completionRate: userTasks.length > 0 ? 
-          (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : 0
+          (userTasks.filter(t => t.status === 'Completed').length / userTasks.length * 100).toFixed(2) : '0'
       };
 
       // Group by user - only include selected user if specific user is chosen
@@ -2020,45 +2060,38 @@ Priority: ${task.priority}`;
         }
       }
 
-      // Group by associate - only show associates if 'all' users selected or associates assigned by selected user
+      // Group by associate - properly filter based on user selection and date range
+      let associateTasksForReport;
       if (selectedReportUser === 'all') {
-        const associateTasks = reportTasks.filter(t => t.isAssociate);
-        const uniqueAssociates = [...new Set(associateTasks.map(t => t.associateDetails?.name).filter(Boolean))];
-        uniqueAssociates.forEach(associateName => {
-          const assocTasks = associateTasks.filter(t => t.associateDetails?.name === associateName);
-          report.byAssociate[associateName] = {
-            total: assocTasks.length,
-            completed: assocTasks.filter(t => t.status === 'Completed').length,
-            pending: assocTasks.filter(t => t.status === 'Pending').length,
-            inProgress: assocTasks.filter(t => t.status === 'In Progress').length,
-            overdue: assocTasks.filter(t => {
-              const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
-              return isOverdue || t.status === 'Overdue';
-            }).length,
-            completionRate: assocTasks.length > 0 ? 
-              (assocTasks.filter(t => t.status === 'Completed').length / assocTasks.length * 100).toFixed(2) : 0
-          };
-        });
+        // Show all associates in the date range
+        associateTasksForReport = reportTasks.filter(t => t.isAssociate);
       } else {
-        // Only show associates assigned by the selected user
-        const associateTasks = reportTasks.filter(t => t.isAssociate && t.assignedBy === selectedReportUser);
-        const uniqueAssociates = [...new Set(associateTasks.map(t => t.associateDetails?.name).filter(Boolean))];
-        uniqueAssociates.forEach(associateName => {
-          const assocTasks = associateTasks.filter(t => t.associateDetails?.name === associateName);
-          report.byAssociate[associateName] = {
-            total: assocTasks.length,
-            completed: assocTasks.filter(t => t.status === 'Completed').length,
-            pending: assocTasks.filter(t => t.status === 'Pending').length,
-            inProgress: assocTasks.filter(t => t.status === 'In Progress').length,
-            overdue: assocTasks.filter(t => {
-              const isOverdue = new Date(t.outDate) < new Date() && t.status !== 'Completed';
-              return isOverdue || t.status === 'Overdue';
-            }).length,
-            completionRate: assocTasks.length > 0 ? 
-              (assocTasks.filter(t => t.status === 'Completed').length / assocTasks.length * 100).toFixed(2) : 0
-          };
-        });
+        // Only show associates assigned by the selected user in the date range
+        associateTasksForReport = reportTasks.filter(t => t.isAssociate && t.assignedBy === selectedReportUser);
       }
+      
+      console.log('- Associate Tasks:', associateTasksForReport.length);
+      
+      const uniqueAssociates = [...new Set(associateTasksForReport.map(t => t.associateDetails?.name).filter(Boolean))];
+      uniqueAssociates.forEach(associateName => {
+        const assocTasks = associateTasksForReport.filter(t => t.associateDetails?.name === associateName);
+        report.byAssociate[associateName] = {
+          total: assocTasks.length,
+          completed: assocTasks.filter(t => t.status === 'Completed').length,
+          pending: assocTasks.filter(t => t.status === 'Pending').length,
+          inProgress: assocTasks.filter(t => t.status === 'In Progress').length,
+          overdue: assocTasks.filter(t => {
+            const dueDate = new Date(t.outDate);
+            dueDate.setHours(23, 59, 59, 999);
+            const isOverdue = new Date() > dueDate && t.status !== 'Completed';
+            return isOverdue || t.status === 'Overdue';
+          }).length,
+          completionRate: assocTasks.length > 0 ? 
+            (assocTasks.filter(t => t.status === 'Completed').length / assocTasks.length * 100).toFixed(2) : '0'
+        };
+      });
+      
+      console.log('- Unique Associates Found:', uniqueAssociates.length, uniqueAssociates);
 
 
 
@@ -2081,7 +2114,7 @@ Priority: ${task.priority}`;
     } finally {
       setLoadingReport(false);
     }
-  }, [tasks, users, reportType, reportDateRange, selectedYear, selectedQuarter]);
+  }, [tasks, users, reportType, reportDateRange, selectedYear, selectedQuarter, selectedReportUser, showSuccess, showError]);
 
   // Export Functions
   const exportToExcel = useCallback((data, filename = 'task_report') => {
