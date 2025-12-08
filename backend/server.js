@@ -40,6 +40,7 @@ const userRoutes = require('./routes/users');
 const { router: notificationRoutes } = require('./routes/notifications');
 const projectRoutes = require('./routes/projects');
 const associateRoutes = require('./routes/associates');
+const externalUserRoutes = require('./routes/externalUsers');
 const migrationRoutes = require('./routes/migration');
 
 app.use('/api/tasks', taskRoutes);
@@ -47,6 +48,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/associates', associateRoutes);
+app.use('/api/external-users', externalUserRoutes);
 app.use('/api/migration', migrationRoutes);
 
 // Health check endpoints for keep-alive

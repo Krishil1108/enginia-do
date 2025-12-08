@@ -58,6 +58,18 @@ const taskSchema = new mongoose.Schema({
     phone: { type: String, default: '' },
     company: { type: String, default: '' }
   },
+  isExternalUser: {
+    type: Boolean,
+    default: false
+  },
+  externalUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ExternalUser'
+  },
+  externalUserDetails: {
+    name: { type: String, default: '' },
+    _id: { type: mongoose.Schema.Types.ObjectId }
+  },
   reminder: {
     type: Date
   },

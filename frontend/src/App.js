@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search } from 'lucide-react';
+import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical } from 'lucide-react';
 import API_URL from './config';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -97,6 +97,12 @@ const TaskManagementSystem = () => {
   const [selectedAssociate, setSelectedAssociate] = useState('new');
   const [newAssociate, setNewAssociate] = useState({ name: '', company: '', email: '', phone: '' });
   
+  // External Users management
+  const [externalUsers, setExternalUsers] = useState([]);
+  const [showExternalUserModal, setShowExternalUserModal] = useState(false);
+  const [newExternalUserName, setNewExternalUserName] = useState('');
+  const [editingExternalUser, setEditingExternalUser] = useState(null);
+  
   // App state
   const [currentView, setCurrentView] = useState('my-tasks');
   const [tasks, setTasks] = useState([]);
@@ -115,6 +121,11 @@ const TaskManagementSystem = () => {
   const [associateDateRange, setAssociateDateRange] = useState({ from: '', to: '' });
   const [selectedAssociateTasks, setSelectedAssociateTasks] = useState([]);
   
+  // External Users filters
+  const [externalFilters, setExternalFilters] = useState({});
+  const [externalDateRange, setExternalDateRange] = useState({ from: '', to: '' });
+  const [selectedExternalTasks, setSelectedExternalTasks] = useState([]);
+  
   // Search and pagination states for all views
   const [searchTerms, setSearchTerms] = useState({
     'my-tasks': '',
@@ -122,7 +133,8 @@ const TaskManagementSystem = () => {
     'assigned-by-me': '',
     'team-subtasks': '',
     'associate-tasks': '',
-    'confidential-tasks': ''
+    'confidential-tasks': '',
+    'external-tasks': ''
   });
   const [currentPages, setCurrentPages] = useState({
     'my-tasks': 1,
@@ -130,7 +142,8 @@ const TaskManagementSystem = () => {
     'assigned-by-me': 1,
     'team-subtasks': 1,
     'associate-tasks': 1,
-    'confidential-tasks': 1
+    'confidential-tasks': 1,
+    'external-tasks': 1
   });
   const [itemsPerPage] = useState(20);
   
@@ -234,6 +247,7 @@ const TaskManagementSystem = () => {
       loadNotifications();
       loadProjects();
       loadAssociates();
+      loadExternalUsers();
       // Poll for new notifications every 30 seconds
       const interval = setInterval(loadNotifications, 30000);
       return () => clearInterval(interval);
@@ -669,6 +683,91 @@ const TaskManagementSystem = () => {
     } catch (error) {
       console.error('❌ Error saving associate:', error);
       showError('Failed to save associate: ' + error.message);
+    }
+  };
+
+  // External Users Management Functions
+  const loadExternalUsers = async () => {
+    try {
+      if (!currentUser?.username) return;
+      
+      const response = await axios.get(`${API_URL}/external-users`, {
+        params: { createdBy: currentUser.username }
+      });
+      setExternalUsers(response.data);
+      console.log('📋 Fetched external users from database:', response.data);
+    } catch (error) {
+      console.error('Error loading external users:', error);
+      // Fallback to localStorage for backward compatibility
+      try {
+        const savedExternalUsers = localStorage.getItem(`externalUsers_${currentUser?.username}`);
+        if (savedExternalUsers) {
+          setExternalUsers(JSON.parse(savedExternalUsers));
+        }
+      } catch (localError) {
+        console.error('Error loading external users from localStorage:', localError);
+      }
+    }
+  };
+
+  const saveExternalUser = async (userData) => {
+    try {
+      if (!currentUser?.username) {
+        showError('Please log in to save external users', 'Login Required');
+        return;
+      }
+
+      const externalUserData = {
+        name: userData.name.trim(),
+        createdBy: currentUser.username,
+        createdAt: new Date().toISOString()
+      };
+
+      let response;
+      if (userData._id) {
+        // Update existing external user
+        response = await axios.put(`${API_URL}/external-users/${userData._id}`, externalUserData);
+      } else {
+        // Create new external user
+        response = await axios.post(`${API_URL}/external-users`, externalUserData);
+      }
+
+      // Refresh external users list
+      await loadExternalUsers();
+      
+      console.log('✅ External user saved to database:', response.data);
+      return response.data;
+      
+    } catch (error) {
+      console.error('Error saving external user:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to save external user';
+      throw new Error(errorMessage);
+    }
+  };
+
+  const deleteExternalUser = async (userId) => {
+    try {
+      await axios.delete(`${API_URL}/external-users/${userId}`);
+      
+      // Refresh external users list
+      await loadExternalUsers();
+      
+      console.log('✅ External user deleted from database');
+      
+    } catch (error) {
+      console.error('Error deleting external user:', error);
+      throw new Error(error.response?.data?.message || 'Failed to delete external user');
+    }
+  };
+
+  const saveExternalUserToList = async (userData) => {
+    try {
+      await saveExternalUser(userData);
+      console.log('✅ External user saved successfully');
+      showSuccess('External user saved successfully!');
+    } catch (error) {
+      console.error('❌ Error saving external user:', error);
+      showError('Failed to save external user: ' + error.message);
     }
   };
 
@@ -1160,6 +1259,9 @@ const TaskManagementSystem = () => {
       phone: '',
       company: ''
     },
+    isExternalUser: false,
+    externalUserId: '',
+    externalUserDetails: null,
     reminder: '',
     whatsapp: false,
     status: 'Pending',
@@ -1186,6 +1288,9 @@ const TaskManagementSystem = () => {
         phone: '',
         company: ''
       },
+      isExternalUser: false,
+      externalUserId: '',
+      externalUserDetails: null,
       reminder: '',
       whatsapp: false,
       status: 'Pending',
@@ -1204,6 +1309,12 @@ const TaskManagementSystem = () => {
     // Check if associate is selected when isAssociate is true
     if (formData.isAssociate && !selectedAssociate) {
       showError('Please select an associate from the dropdown or add a new one using the Add button', 'Associate Required');
+      return;
+    }
+    
+    // Check if external user is selected when isExternalUser is true
+    if (formData.isExternalUser && !formData.externalUserId) {
+      showError('Please select an external user from the dropdown or add a new one using the Add button', 'External User Required');
       return;
     }
     
@@ -5550,6 +5661,536 @@ Priority: ${task.priority}`;
     );
   };
 
+  // External Users Tasks View
+  const ExternalTasksView = () => {
+    let externalTasks = tasks.filter(task => task.isExternalUser === true);
+    
+    // Apply filters
+    if (externalFilters.project) {
+      externalTasks = externalTasks.filter(t => t.project === externalFilters.project);
+    }
+    if (externalFilters.externalUser) {
+      externalTasks = externalTasks.filter(t => t.externalUserDetails?.name === externalFilters.externalUser);
+    }
+    if (externalFilters.priority) {
+      externalTasks = externalTasks.filter(t => t.priority === externalFilters.priority);
+    }
+    if (externalFilters.severity) {
+      externalTasks = externalTasks.filter(t => t.severity === externalFilters.severity);
+    }
+    if (externalFilters.status) {
+      externalTasks = externalTasks.filter(t => t.status === externalFilters.status);
+    }
+    if (externalFilters.assignedBy) {
+      externalTasks = externalTasks.filter(t => t.assignedBy === externalFilters.assignedBy);
+    }
+    
+    // Apply date range filter
+    if (externalDateRange.from) {
+      externalTasks = externalTasks.filter(t => new Date(t.outDate) >= new Date(externalDateRange.from));
+    }
+    if (externalDateRange.to) {
+      externalTasks = externalTasks.filter(t => new Date(t.outDate) <= new Date(externalDateRange.to));
+    }
+    
+    // Apply search to filtered external tasks
+    const searchedExternalTasks = filterTasksBySearch(externalTasks, searchTerms['external-tasks']);
+    
+    // Apply pagination to searched external tasks
+    const paginatedExternalTasks = paginateTasks(searchedExternalTasks, currentPages['external-tasks']);
+    
+    // Calculate stats from searched tasks (before pagination)
+    const pendingTasks = searchedExternalTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = searchedExternalTasks.filter(t => t.status === 'In Progress');
+    const completedTasks = searchedExternalTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = searchedExternalTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+    
+    // Get unique external user names for filter
+    const uniqueExternalUsers = [...new Set(tasks.filter(t => t.isExternalUser && t.externalUserDetails?.name).map(t => t.externalUserDetails.name))];
+
+    return (
+      <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+              </div>
+              <Clock className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+              </div>
+              <Users className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+              </div>
+              <CheckCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">Overdue</p>
+                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+              </div>
+              <AlertCircle className="w-12 h-12 opacity-50" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Export and View Toggle */}
+        <div className="flex justify-end items-center gap-4">
+          {/* Export Button */}
+          <button
+            onClick={() => exportTaskList(searchedExternalTasks, 'excel', 'external_tasks')}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Export Excel
+          </button>
+          
+          {/* View Toggle */}
+          <div className="flex gap-2">
+            <button
+            onClick={() => setViewMode('cards')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Cards View
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            <List className="w-4 h-4" />
+            Table View
+            </button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-xl"
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              Filters
+            </h3>
+            <svg 
+              className={`w-5 h-5 transform transition-transform ${showFilters ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showFilters && (
+            <div className="px-6 pb-6 pt-2 border-t border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {/* Project Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                  <select
+                    value={externalFilters.project || ''}
+                    onChange={(e) => setExternalFilters({...externalFilters, project: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">All Projects</option>
+                    {projects.map((p, idx) => {
+                      const projectName = typeof p === 'string' ? p : p?.name || '';
+                      const projectKey = typeof p === 'object' ? p?._id : idx;
+                      return <option key={projectKey} value={projectName}>{projectName}</option>;
+                    })}
+                  </select>
+                </div>
+                
+                {/* External User Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">External User</label>
+                  <select
+                    value={externalFilters.externalUser || ''}
+                    onChange={(e) => setExternalFilters({...externalFilters, externalUser: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">All External Users</option>
+                    {uniqueExternalUsers.map(user => (
+                      <option key={user} value={user}>{user}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Priority Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                  <select
+                    value={externalFilters.priority || ''}
+                    onChange={(e) => setExternalFilters({...externalFilters, priority: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">All Priorities</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                {/* Severity Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Severity</label>
+                  <select
+                    value={externalFilters.severity || ''}
+                    onChange={(e) => setExternalFilters({...externalFilters, severity: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">All Severities</option>
+                    <option value="Minor">Minor</option>
+                    <option value="Major">Major</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select
+                    value={externalFilters.status || ''}
+                    onChange={(e) => setExternalFilters({...externalFilters, status: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="In Checking">In Checking</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Overdue">Overdue</option>
+                  </select>
+                </div>
+
+                {/* Assigned By Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Assigned By</label>
+                  <select
+                    value={externalFilters.assignedBy || ''}
+                    onChange={(e) => setExternalFilters({...externalFilters, assignedBy: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">All Assigners</option>
+                    {users.map(user => (
+                      <option key={user._id} value={user.username}>{user.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Date Range Filters */}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Date From</label>
+                  <input
+                    type="date"
+                    value={externalDateRange.from || ''}
+                    onChange={(e) => setExternalDateRange({...externalDateRange, from: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Date To</label>
+                  <input
+                    type="date"
+                    value={externalDateRange.to || ''}
+                    onChange={(e) => setExternalDateRange({...externalDateRange, to: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Clear Filters Button */}
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    setExternalFilters({});
+                    setExternalDateRange({});
+                  }}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Table View */}
+        {viewMode === 'table' ? (
+          <>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">External User</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedExternalTasks.map(task => (
+                    <tr key={task._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-semibold">
+                            {task.externalUserDetails?.name?.charAt(0).toUpperCase() || 'E'}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {task.externalUserDetails?.name || task.assignedTo}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-900">{getProjectName(task.project)}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                        <div className="text-xs text-gray-500">{task.description || 'No description'}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {formatDate(task.inDate || task.createdAt)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {/* Due Date with conditional red color */}
+                        {task.outDate ? (
+                          <div>
+                            {(() => {
+                              // Create due date at end of day (23:59:59) for proper comparison
+                              const dueDate = new Date(task.outDate);
+                              dueDate.setHours(23, 59, 59, 999);
+                              const isOverdue = new Date() > dueDate;
+                              
+                              return (
+                                <React.Fragment>
+                                  <div className={`text-sm ${
+                                    // Red if current time > due date end of day (23:59:59)
+                                    isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700'
+                                  }`}>
+                                    {formatDate(task.outDate)}
+                                  </div>
+                                  {/* Status line below due date */}
+                                  <div className={`text-xs mt-1 ${
+                                    // If current time > due date end of day and task is not completed before due date
+                                    isOverdue && 
+                                    (task.status !== 'Completed' || (task.completedAt && new Date(task.completedAt) > dueDate))
+                                      ? 'text-red-600 font-semibold' 
+                                      : task.status === 'Completed' 
+                                        ? 'text-green-600' 
+                                        : 'text-gray-600'
+                                  }`}>
+                                    {task.status === 'Completed' 
+                                      ? 'Completed' 
+                                      : 'Pending'
+                                    }
+                                  </div>
+                                </React.Fragment>
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">No due date</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          task.priority === 'High' ? 'bg-red-100 text-red-800' :
+                          task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {task.priority}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          task.severity === 'Critical' ? 'bg-red-100 text-red-800' :
+                          task.severity === 'Major' ? 'bg-orange-100 text-orange-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {task.severity}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {/* Edit Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              editTask(task);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                            title="Edit task"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          
+                          {/* Create Subtask Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              createSubtask(task);
+                            }}
+                            className="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center gap-1"
+                            title="Create subtask"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+
+                          {/* More Actions Dropdown */}
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const menu = document.getElementById(`menu-${task._id}`);
+                                menu.classList.toggle('hidden');
+                              }}
+                              className="text-gray-400 hover:text-gray-600 p-1"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                            <div id={`menu-${task._id}`} className="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  sendToWhatsApp(task);
+                                  document.getElementById(`menu-${task._id}`).classList.add('hidden');
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                              >
+                                <MessageCircle className="w-4 h-4 text-green-600" />
+                                Send via WhatsApp
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedTask(task);
+                                  setCompletionReason('');
+                                  setShowCompleteModal(true);
+                                  document.getElementById(`menu-${task._id}`).classList.add('hidden');
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Mark Complete
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  showDeleteConfirm('Are you sure you want to delete this task?', () => {
+                                    deleteTask(task._id);
+                                  });
+                                  document.getElementById(`menu-${task._id}`).classList.add('hidden');
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete Task
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {searchedExternalTasks.length === 0 && searchTerms['external-tasks'] && (
+              <div className="text-center py-12 text-gray-500">
+                <UserPlus className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                <p>No tasks found matching "{searchTerms['external-tasks']}"</p>
+                <button 
+                  onClick={() => handleSearchChange('external-tasks', '')}
+                  className="mt-2 px-4 py-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
+            
+              {externalTasks.length === 0 && !searchTerms['external-tasks'] && (
+                <div className="text-center py-12 text-gray-500">
+                  <p>No tasks found</p>
+                </div>
+              )}
+            
+            {/* Pagination Controls for Table View */}
+            <PaginationControls 
+              viewName="external-tasks"
+              totalTasks={searchedExternalTasks}
+              currentPage={currentPages['external-tasks']}
+            />
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paginatedExternalTasks.map(task => (
+                <HorizontalTaskCard key={task._id} task={task} showCopyButton={true} />
+              ))}
+            </div>
+
+            {searchedExternalTasks.length === 0 && searchTerms['external-tasks'] && (
+              <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+                <UserPlus className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500">No tasks found matching "{searchTerms['external-tasks']}"</p>
+                <button 
+                  onClick={() => handleSearchChange('external-tasks', '')}
+                  className="mt-2 px-4 py-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
+
+            {externalTasks.length === 0 && !searchTerms['external-tasks'] && (
+              <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+                <p className="text-gray-500">No tasks assigned to external users yet</p>
+              </div>
+            )}
+            
+            {/* Pagination Controls for Cards View */}
+            <PaginationControls 
+              viewName="external-tasks"
+              totalTasks={searchedExternalTasks}
+              currentPage={currentPages['external-tasks']}
+            />
+          </>
+        )}
+      </div>
+    );
+  };
+
   // Confidential Tasks View - All confidential tasks (only accessible to Ketul Lathia)
   const ConfidentialTasksView = () => {
     // Get all confidential tasks
@@ -5881,7 +6522,7 @@ Priority: ${task.priority}`;
                 <Search className="w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder={`Search ${currentView === 'my-tasks' ? 'my' : currentView === 'all-tasks' ? 'all' : currentView === 'assigned-by-me' ? 'assigned by me' : currentView === 'associate-tasks' ? 'associate' : currentView === 'confidential-tasks' ? 'confidential' : ''} tasks...`}
+                  placeholder={`Search ${currentView === 'my-tasks' ? 'my' : currentView === 'all-tasks' ? 'all' : currentView === 'assigned-by-me' ? 'assigned by me' : currentView === 'associate-tasks' ? 'associate' : currentView === 'external-tasks' ? 'external' : currentView === 'confidential-tasks' ? 'confidential' : ''} tasks...`}
                   value={searchTerms[currentView] || ''}
                   onChange={(e) => handleSearchChange(currentView, e.target.value)}
                   className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -5941,6 +6582,18 @@ Priority: ${task.priority}`;
                       }`}
                     >
                       Associate Tasks
+                    </button>
+                  )}
+
+                  {/* External Tasks - exclude Kinjal Solanki */}
+                  {currentUser?.name !== 'Kinjal Solanki' && (
+                    <button
+                      onClick={() => { setCurrentView('external-tasks'); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'external-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      External Tasks
                     </button>
                   )}
 
@@ -6040,6 +6693,18 @@ Priority: ${task.priority}`;
                     </button>
                   )}
 
+                  {/* External Tasks - exclude Kinjal Solanki */}
+                  {currentUser?.name !== 'Kinjal Solanki' && (
+                    <button
+                      onClick={() => { setCurrentView('external-tasks'); setShowAdvancedMenu(false); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'external-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      External Tasks
+                    </button>
+                  )}
+
                   {/* Confidential Tasks - Only for Ketul Lathia */}
                   {currentUser?.name === 'Ketul Lathia' && (
                     <button
@@ -6095,6 +6760,7 @@ Priority: ${task.priority}`;
         {currentView === 'all-tasks' && <AllTasksView />}
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
         {currentView === 'associate-tasks' && <AssociateTasksView />}
+        {currentView === 'external-tasks' && <ExternalTasksView />}
         {currentView === 'confidential-tasks' && currentUser?.name === 'Ketul Lathia' && <ConfidentialTasksView />}
         {currentView === 'admin-reports' && currentUser?.name === 'Ketul Lathia' && <AdminReportsView />}
         {currentView === 'settings' && <NotificationSettingsView />}
@@ -6334,6 +7000,150 @@ Priority: ${task.priority}`;
         </div>
       )}
 
+      {/* External Users Modal */}
+      {showExternalUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">{editingExternalUser ? 'Edit External User' : 'Manage External Users'}</h2>
+              <button onClick={() => { setShowExternalUserModal(false); setNewExternalUserName(''); setEditingExternalUser(null); }} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4 overflow-y-auto">
+              {/* Add/Edit Form */}
+              <div className="bg-green-50 p-4 rounded-lg space-y-3">
+                <label className="block text-sm font-medium text-gray-700">External User Name *</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newExternalUserName}
+                    onChange={(e) => setNewExternalUserName(e.target.value)}
+                    placeholder="Enter external user name"
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const addExternalUser = async () => {
+                          if (!newExternalUserName.trim()) return;
+                          
+                          try {
+                            const userData = {
+                              name: newExternalUserName.trim(),
+                              ...(editingExternalUser && { _id: editingExternalUser._id })
+                            };
+                            
+                            await saveExternalUserToList(userData);
+                            setNewExternalUserName('');
+                            setEditingExternalUser(null);
+                          } catch (error) {
+                            console.error('Error saving external user:', error);
+                          }
+                        };
+                        addExternalUser();
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!newExternalUserName.trim()) return;
+                      
+                      try {
+                        const userData = {
+                          name: newExternalUserName.trim(),
+                          ...(editingExternalUser && { _id: editingExternalUser._id })
+                        };
+                        
+                        await saveExternalUserToList(userData);
+                        setNewExternalUserName('');
+                        setEditingExternalUser(null);
+                      } catch (error) {
+                        console.error('Error saving external user:', error);
+                      }
+                    }}
+                    disabled={!newExternalUserName.trim()}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {editingExternalUser ? 'Update' : 'Add'}
+                  </button>
+                  {editingExternalUser && (
+                    <button
+                      onClick={() => { setEditingExternalUser(null); setNewExternalUserName(''); }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* External Users List */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-gray-700">Existing External Users ({externalUsers.length})</h3>
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {externalUsers.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      No external users yet. Add one above.
+                    </div>
+                  ) : (
+                    externalUsers.map((user, index) => {
+                      const userName = typeof user === 'string' ? user : user?.name || '';
+                      const userId = typeof user === 'object' ? user?._id : index;
+                      
+                      return (
+                      <div
+                        key={userId}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-green-300 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <UserPlus className="w-5 h-5 text-green-600" />
+                          <span className="font-medium text-gray-900">{userName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingExternalUser(user);
+                              setNewExternalUserName(userName);
+                            }}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Edit external user"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                if (user._id) {
+                                  // Delete from database if it has an ID
+                                  await deleteExternalUser(user._id);
+                                  showSuccess('External user deleted successfully');
+                                } else {
+                                  // Handle old localStorage entries without _id
+                                  const updatedUsers = externalUsers.filter((_, i) => i !== index);
+                                  setExternalUsers(updatedUsers);
+                                  localStorage.setItem(`externalUsers_${currentUser?.username}`, JSON.stringify(updatedUsers));
+                                  showSuccess('External user deleted successfully');
+                                }
+                              } catch (error) {
+                                console.error('Error deleting external user:', error);
+                                showError('Failed to delete external user: ' + error.message);
+                              }
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete external user"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )})
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Task Modal */}
       {showTaskModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
@@ -6353,9 +7163,11 @@ Priority: ${task.priority}`;
                   value={formData.isAssociate ? 'ASSOCIATE' : formData.assignedTo}
                   onChange={(e) => {
                     if (e.target.value === 'ASSOCIATE') {
-                      setFormData({...formData, isAssociate: true, assignedTo: 'Associate'});
+                      setFormData({...formData, isAssociate: true, isExternalUser: false, assignedTo: 'Associate'});
+                    } else if (e.target.value === 'EXTERNAL_USER') {
+                      setFormData({...formData, isAssociate: false, isExternalUser: true, assignedTo: 'External User'});
                     } else {
-                      setFormData({...formData, isAssociate: false, assignedTo: e.target.value});
+                      setFormData({...formData, isAssociate: false, isExternalUser: false, assignedTo: e.target.value});
                     }
                   }}
                   className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
@@ -6363,6 +7175,7 @@ Priority: ${task.priority}`;
                 >
                   <option value="">Select User</option>
                   <option value="ASSOCIATE">📋 Associate (External Partner)</option>
+                  <option value="EXTERNAL_USER">👤 External User</option>
                   {users
                     .filter(user => {
                       // Ketul Lathia and Piyush Diwan can see everyone
@@ -6435,6 +7248,65 @@ Priority: ${task.priority}`;
                         onClick={() => setShowAssociateModal(true)}
                         className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 whitespace-nowrap"
                         title="Manage associates"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* External User Selection - shown only when External User is selected */}
+              {formData.isExternalUser && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-green-900 mb-2">Select External User *</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={formData.externalUserId || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value) {
+                            // Find external user by ID first, then fallback to name for old entries
+                            const extUser = externalUsers.find(u => u._id === value || u.name === value);
+                            if (extUser) {
+                              setFormData({
+                                ...formData,
+                                externalUserId: extUser._id, // Store the database ID
+                                externalUserDetails: {
+                                  name: extUser.name,
+                                  _id: extUser._id
+                                }
+                              });
+                            }
+                          } else {
+                            setFormData({
+                              ...formData,
+                              externalUserId: '',
+                              externalUserDetails: null
+                            });
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        required
+                      >
+                        <option value="">Select External User</option>
+                        {externalUsers.map((user, idx) => {
+                          const userName = typeof user === 'string' ? user : user?.name || '';
+                          const userKey = typeof user === 'object' ? user?._id : idx;
+                          return (
+                            <option key={userKey} value={userKey}>
+                              {userName}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowExternalUserModal(true)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 whitespace-nowrap"
+                        title="Manage external users"
                       >
                         <Plus className="w-4 h-4" />
                         Add
@@ -7090,6 +7962,19 @@ Priority: ${task.priority}`;
             >
               <Users className="w-4 h-4 mb-1" />
               <span className="text-xs font-medium whitespace-nowrap">Associates</span>
+            </button>
+          )}
+
+          {/* External Tasks - available to non-team members, exclude Kinjal Solanki */}
+          {!isTeamMember() && currentUser?.name !== 'Kinjal Solanki' && (
+            <button
+              onClick={() => setCurrentView('external-tasks')}
+              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                currentView === 'external-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+              }`}
+            >
+              <UserPlus className="w-4 h-4 mb-1" />
+              <span className="text-xs font-medium whitespace-nowrap">External</span>
             </button>
           )}
 
