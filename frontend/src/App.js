@@ -241,7 +241,7 @@ const TaskManagementSystem = () => {
 
   // Load data when logged in
   useEffect(() => {
-    if (isLoggedIn && currentUser) {
+    if (isLoggedIn && currentUser?.username) {
       loadTasks();
       loadUsers();
       loadNotifications();
@@ -252,7 +252,7 @@ const TaskManagementSystem = () => {
       const interval = setInterval(loadNotifications, 30000);
       return () => clearInterval(interval);
     }
-  }, [isLoggedIn, currentUser]);
+  }, [isLoggedIn, currentUser?.username]);
 
   // Initialize push notifications when app loads
   useEffect(() => {
@@ -544,11 +544,12 @@ const TaskManagementSystem = () => {
       const response = await axios.get(`${API_URL}/users`, { params });
       setUsers(response.data);
       
-      // Update current user data if it exists in the loaded users
+      // Update current user data if it exists in the loaded users, but only if it's actually different
       if (currentUser && currentUser.username) {
         const updatedCurrentUser = response.data.find(user => user.username === currentUser.username);
-        if (updatedCurrentUser) {
-          setCurrentUser(updatedCurrentUser);
+        if (updatedCurrentUser && updatedCurrentUser.position !== currentUser.position) {
+          console.log('🔄 Updating current user with fresh data');
+          setCurrentUser({...currentUser, ...updatedCurrentUser});
         }
       }
     } catch (error) {
