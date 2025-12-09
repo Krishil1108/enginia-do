@@ -1332,11 +1332,41 @@ const TaskManagementSystem = () => {
       
       // Clean up the task data before sending
       const taskData = {
-        ...formData,
+        project: formData.project,
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        severity: formData.severity,
+        inDate: formData.inDate,
+        outDate: formData.outDate,
+        assignedTo: formData.assignedTo,
         assignedBy: currentUser.username,
+        status: formData.status,
+        isConfidential: formData.isConfidential || false,
         reminder: formData.reminder && formData.reminder !== '' ? formData.reminder : null,
         associates: Array.isArray(formData.associates) ? formData.associates : []
       };
+
+      // Only add associate fields if isAssociate is true
+      if (formData.isAssociate && selectedAssociate) {
+        const selectedAssociateData = associates.find(a => (a._id || a.name) === selectedAssociate);
+        taskData.isAssociate = true;
+        taskData.associateDetails = selectedAssociateData || {
+          name: selectedAssociate,
+          email: '',
+          phone: '',
+          company: ''
+        };
+      }
+
+      // Only add external user fields if isExternalUser is true AND externalUserId exists
+      if (formData.isExternalUser && formData.externalUserId && formData.externalUserId !== '') {
+        taskData.isExternalUser = true;
+        taskData.externalUserId = formData.externalUserId;
+        if (formData.externalUserDetails) {
+          taskData.externalUserDetails = formData.externalUserDetails;
+        }
+      }
       
       let savedTask;
       if (editingTask) {
