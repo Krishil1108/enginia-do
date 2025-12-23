@@ -48,6 +48,10 @@ const taskSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  assignedToMultiple: {
+    type: [String],
+    default: []
+  },
   isAssociate: {
     type: Boolean,
     default: false

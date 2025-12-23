@@ -114,6 +114,7 @@ const TaskManagementSystem = () => {
   const [parentTaskForSubtask, setParentTaskForSubtask] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
+  const [showAssignToDropdown, setShowAssignToDropdown] = useState(false);
   const [filters, setFilters] = useState({});
   const [showFilters, setShowFilters] = useState(false);
   const [subtaskFilter, setSubtaskFilter] = useState('all'); // 'all', 'subtasks-only', 'tasks-only'
@@ -510,6 +511,12 @@ const TaskManagementSystem = () => {
           menu.style.display = 'none';
         }
       });
+      
+      // Close assign-to dropdown when clicking outside
+      const assignToDropdown = document.querySelector('.assign-to-dropdown');
+      if (assignToDropdown && !assignToDropdown.contains(event.target)) {
+        setShowAssignToDropdown(false);
+      }
     };
 
     document.addEventListener('click', handleClickOutside);
@@ -1260,6 +1267,7 @@ const TaskManagementSystem = () => {
     team: '',
     associates: [],
     assignedTo: '',
+    assignedToMultiple: [],
     assignedBy: '',
     isAssociate: false,
     associateDetails: {
@@ -1289,6 +1297,7 @@ const TaskManagementSystem = () => {
       team: '',
       associates: [],
       assignedTo: '',
+      assignedToMultiple: [],
       assignedBy: currentUser?.username || '',
       isAssociate: false,
       associateDetails: {
@@ -1307,11 +1316,16 @@ const TaskManagementSystem = () => {
     });
     setEditingTask(null);
     setSelectedAssociate('');
+    setShowAssignToDropdown(false);
   };
 
   const handleSubmit = async () => {
-    if (!formData.project || !formData.title || !formData.inDate || !formData.outDate || !formData.assignedTo) {
-      showError('Please fill in all required fields including Assigned To', 'Missing Required Fields');
+    // Validate that at least one assignee is selected
+    const hasAssignedTo = formData.assignedTo && formData.assignedTo !== '';
+    const hasMultipleAssignees = formData.assignedToMultiple && formData.assignedToMultiple.length > 0;
+    
+    if (!formData.project || !formData.title || !formData.inDate || !formData.outDate || (!hasAssignedTo && !hasMultipleAssignees)) {
+      showError('Please fill in all required fields including at least one assignee', 'Missing Required Fields');
       return;
     }
     
@@ -1340,6 +1354,7 @@ const TaskManagementSystem = () => {
         inDate: formData.inDate,
         outDate: formData.outDate,
         assignedTo: formData.assignedTo,
+        assignedToMultiple: formData.assignedToMultiple && formData.assignedToMultiple.length > 0 ? formData.assignedToMultiple : [],
         assignedBy: currentUser.username,
         status: formData.status,
         isConfidential: formData.isConfidential || false,
@@ -1562,6 +1577,7 @@ Priority: ${task.priority}`;
       team: task.team,
       associates: task.associates,
       assignedTo: task.assignedTo,
+      assignedToMultiple: task.assignedToMultiple || [],
       assignedBy: task.assignedBy,
       isAssociate: task.isAssociate || false,
       associateDetails: task.associateDetails || {
@@ -1601,14 +1617,21 @@ Priority: ${task.priority}`;
   }, [SEARCH_DEBOUNCE_DELAY]);  const filterTasksBySearch = useCallback((tasks, searchTerm) => {
     if (!searchTerm?.trim()) return tasks;
     const term = searchTerm.toLowerCase();
-    return tasks.filter(task => 
-      task.title?.toLowerCase().includes(term) ||
-      task.description?.toLowerCase().includes(term) ||
-      task.project?.toLowerCase().includes(term) ||
-      task.assignedTo?.name?.toLowerCase().includes(term) ||
-      task.assignedBy?.name?.toLowerCase().includes(term) ||
-      task.status?.toLowerCase().includes(term)
-    );
+    return tasks.filter(task => {
+      // Check multiple assignees for search
+      const assigneesMatch = task.assignedToMultiple && task.assignedToMultiple.length > 0 
+        ? task.assignedToMultiple.some(assignee => assignee.toLowerCase().includes(term))
+        : false;
+        
+      return task.title?.toLowerCase().includes(term) ||
+        task.description?.toLowerCase().includes(term) ||
+        task.project?.toLowerCase().includes(term) ||
+        task.assignedTo?.name?.toLowerCase().includes(term) ||
+        task.assignedTo?.toLowerCase().includes(term) ||
+        assigneesMatch ||
+        task.assignedBy?.name?.toLowerCase().includes(term) ||
+        task.status?.toLowerCase().includes(term);
+    });
   }, []);
 
   // Pagination functionality
@@ -1932,6 +1955,7 @@ Priority: ${task.priority}`;
         associates: Array.isArray(task.associates) ? task.associates : [],
         assignedBy: task.assignedBy,
         assignedTo: task.assignedTo,
+        assignedToMultiple: task.assignedToMultiple || [],
         isAssociate: task.isAssociate || false,
         associateDetails: task.associateDetails || { name: '', email: '', phone: '', company: '' },
         whatsapp: task.whatsapp || false,
@@ -1978,7 +2002,7 @@ Priority: ${task.priority}`;
       // Filter out subtasks if the filter is set to 'false'
       if (filters.showSubtasks === 'false' && task.isSubtask) return false;
       if (filters.project && task.project !== filters.project) return false;
-      if (filters.assignedTo && task.assignedTo !== filters.assignedTo) return false;
+      if (filters.assignedTo && task.assignedTo !== filters.assignedTo && !(task.assignedToMultiple && task.assignedToMultiple.includes(filters.assignedTo))) return false;
       if (filters.team && task.team !== filters.team) return false;
       if (filters.priority && task.priority !== filters.priority) return false;
       if (filters.severity && task.severity !== filters.severity) return false;
@@ -2005,7 +2029,12 @@ Priority: ${task.priority}`;
   };
 
   const getMyTasks = () => {
-    return tasks.filter(task => task.assignedTo === currentUser?.username);
+    return tasks.filter(task => {
+      // Check if task is assigned to current user in single assignment or multiple assignments
+      const isAssignedToMe = task.assignedTo === currentUser?.username || 
+                           (task.assignedToMultiple && task.assignedToMultiple.includes(currentUser?.username));
+      return isAssignedToMe;
+    });
   };
 
   const getTasksAssignedByMe = () => {
@@ -2104,7 +2133,12 @@ Priority: ${task.priority}`;
       if (selectedReportUser === 'all') {
         userTasks = reportTasks.filter(t => !t.isAssociate);
       } else {
-        userTasks = reportTasks.filter(t => !t.isAssociate && t.assignedTo === selectedReportUser);
+        userTasks = reportTasks.filter(t => {
+          if (t.isAssociate) return false;
+          // Check both single assignment and multiple assignments
+          return t.assignedTo === selectedReportUser || 
+                 (t.assignedToMultiple && t.assignedToMultiple.includes(selectedReportUser));
+        });
       }
       
       console.log('- User-filtered Tasks:', userTasks.length);
@@ -2172,7 +2206,11 @@ Priority: ${task.priority}`;
       // Group by user - only include selected user if specific user is chosen
       if (selectedReportUser === 'all') {
         users.forEach(user => {
-          const userTasks = reportTasks.filter(t => !t.isAssociate && t.assignedTo === user.username);
+          const userTasks = reportTasks.filter(t => {
+            if (t.isAssociate) return false;
+            return t.assignedTo === user.username || 
+                   (t.assignedToMultiple && t.assignedToMultiple.includes(user.username));
+          });
           if (userTasks.length > 0) {
             report.byUser[user.name] = {
               total: userTasks.length,
@@ -2192,7 +2230,11 @@ Priority: ${task.priority}`;
         // Only show the selected user's data - use tasks assigned TO the user only for Individual Performance
         const selectedUser = users.find(u => u.username === selectedReportUser);
         if (selectedUser) {
-          const userTasks = reportTasks.filter(t => !t.isAssociate && t.assignedTo === selectedUser.username);
+          const userTasks = reportTasks.filter(t => {
+            if (t.isAssociate) return false;
+            return t.assignedTo === selectedUser.username || 
+                   (t.assignedToMultiple && t.assignedToMultiple.includes(selectedUser.username));
+          });
           if (userTasks.length > 0) {
             report.byUser[selectedUser.name] = {
               total: userTasks.length,
@@ -2416,7 +2458,9 @@ Priority: ${task.priority}`;
         'Description': task.description,
         'Status': task.status,
         'Priority': task.priority,
-        'Assigned To': task.assignedTo,
+        'Assigned To': task.assignedToMultiple && task.assignedToMultiple.length > 0 
+          ? task.assignedToMultiple.join(', ') 
+          : task.assignedTo,
         'Assigned By': task.assignedBy,
         'Start Date': task.inDate ? new Date(task.inDate).toLocaleDateString() : '',
         'Due Date': task.outDate ? new Date(task.outDate).toLocaleDateString() : '',
@@ -2769,6 +2813,11 @@ Priority: ${task.priority}`;
                           <div className="text-sm font-medium text-gray-900">
                             {task.isAssociate && task.associateDetails?.name 
                               ? `${task.associateDetails.name}${task.associateDetails.company ? ` (${task.associateDetails.company})` : ''}`
+                              : task.assignedToMultiple && task.assignedToMultiple.length > 0
+                              ? task.assignedToMultiple.map(username => {
+                                  const user = users.find(u => u.username === username);
+                                  return user ? user.name : username;
+                                }).join(', ')
                               : (assignedUser?.name || task.assignedTo)}
                           </div>
                         </div>
@@ -7214,64 +7263,149 @@ Priority: ${task.priority}`;
             <div className="p-4 sm:p-6 space-y-4 pb-20 sm:pb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Assign To *</label>
-                <select
-                  value={formData.isAssociate ? 'ASSOCIATE' : formData.assignedTo}
-                  onChange={(e) => {
-                    if (e.target.value === 'ASSOCIATE') {
-                      setFormData({...formData, isAssociate: true, isExternalUser: false, assignedTo: 'Associate'});
-                    } else if (e.target.value === 'EXTERNAL_USER') {
-                      setFormData({...formData, isAssociate: false, isExternalUser: true, assignedTo: 'External User'});
-                    } else {
-                      setFormData({...formData, isAssociate: false, isExternalUser: false, assignedTo: e.target.value});
-                    }
-                  }}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                  required
-                >
-                  <option value="">Select User</option>
-                  <option value="ASSOCIATE">📋 Associate (External Partner)</option>
-                  <option value="EXTERNAL_USER">👤 External User</option>
-                  {users
-                    .filter(user => {
-                      // Vaishal, Nirali and Piyush Diwan can see everyone
-                      if (isAdmin() || currentUser?.username === 'piyush.diwan') {
-                        return true;
+                
+                {/* Main assignment type selector */}
+                <div className="mb-3">
+                  <select
+                    value={formData.isAssociate ? 'ASSOCIATE' : formData.isExternalUser ? 'EXTERNAL_USER' : 'USERS'}
+                    onChange={(e) => {
+                      if (e.target.value === 'ASSOCIATE') {
+                        setFormData({...formData, isAssociate: true, isExternalUser: false, assignedTo: 'Associate', assignedToMultiple: []});
+                      } else if (e.target.value === 'EXTERNAL_USER') {
+                        setFormData({...formData, isAssociate: false, isExternalUser: true, assignedTo: 'External User', assignedToMultiple: []});
+                      } else {
+                        setFormData({...formData, isAssociate: false, isExternalUser: false, assignedTo: '', assignedToMultiple: []});
                       }
-                      // For other users (like Vraj, Kinjal):
-                      // - Hide Studio Team members (Ankit, Happy, Darshit)
-                      // - Show Studio Team - Manager (Piyush Diwan)
-                      if (user.department === 'Studio Team') {
-                        return false; // Hide studio team members
-                      }
-                      return true; // Show everyone else including Studio Team - Manager
-                    })
-                    .map(user => (
-                      <option key={user._id} value={user.username}>
-                        {user.name} - {user.position || user.department}
-                      </option>
-                    ))
-                  }
-                </select>
-              </div>
+                    }}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  >
+                    <option value="USERS">👥 Team Members</option>
+                    <option value="ASSOCIATE">📋 Associate (External Partner)</option>
+                    <option value="EXTERNAL_USER">👤 External User</option>
+                  </select>
+                </div>
 
-              {/* Associate Selection - shown only when Associate is selected */}
-              {formData.isAssociate && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-purple-900 mb-2">Select Associate *</label>
+                {/* Multi-user selection dropdown for regular users */}
+                {!formData.isAssociate && !formData.isExternalUser && (
+                  <div className="relative assign-to-dropdown">
+                    <button
+                      type="button"
+                      onClick={() => setShowAssignToDropdown(!showAssignToDropdown)}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-left bg-white flex justify-between items-center"
+                    >
+                      <span>
+                        {formData.assignedToMultiple.length === 0 
+                          ? 'Select users...' 
+                          : `${formData.assignedToMultiple.length} user(s) selected`}
+                      </span>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {showAssignToDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {users
+                          .filter(user => {
+                            // Vaishal, Nirali and Piyush Diwan can see everyone
+                            if (isAdmin() || currentUser?.username === 'piyush.diwan') {
+                              return true;
+                            }
+                            // For other users (like Vraj, Kinjal):
+                            // - Hide Studio Team members (Ankit, Happy, Darshit)  
+                            // - Show Studio Team - Manager (Piyush Diwan)
+                            if (user.department === 'Studio Team') {
+                              return false; // Hide studio team members
+                            }
+                            return true; // Show everyone else including Studio Team - Manager
+                          })
+                          .map(user => (
+                            <div key={user._id} className="flex items-center p-2 hover:bg-gray-50">
+                              <input
+                                type="checkbox"
+                                id={`user-${user._id}`}
+                                checked={formData.assignedToMultiple.includes(user.username)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({
+                                      ...formData,
+                                      assignedToMultiple: [...formData.assignedToMultiple, user.username],
+                                      assignedTo: user.username // Keep single assignedTo for backward compatibility
+                                    });
+                                  } else {
+                                    const newAssignedToMultiple = formData.assignedToMultiple.filter(u => u !== user.username);
+                                    setFormData({
+                                      ...formData,
+                                      assignedToMultiple: newAssignedToMultiple,
+                                      assignedTo: newAssignedToMultiple.length > 0 ? newAssignedToMultiple[0] : ''
+                                    });
+                                  }
+                                }}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              />
+                              <label htmlFor={`user-${user._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer flex-1">
+                                {user.name} - {user.position || user.department}
+                              </label>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                    
+                    {/* Show selected users */}
+                    {formData.assignedToMultiple.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500 mb-1">Selected users:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {formData.assignedToMultiple.map(username => {
+                            const user = users.find(u => u.username === username);
+                            return (
+                              <span
+                                key={username}
+                                className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-100 text-blue-800"
+                              >
+                                {user ? user.name : username}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newAssignedToMultiple = formData.assignedToMultiple.filter(u => u !== username);
+                                    setFormData({
+                                      ...formData,
+                                      assignedToMultiple: newAssignedToMultiple,
+                                      assignedTo: newAssignedToMultiple.length > 0 ? newAssignedToMultiple[0] : ''
+                                    });
+                                  }}
+                                  className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Single Associate Selection */}
+                {formData.isAssociate && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                     <div className="flex gap-2">
                       <select
                         value={selectedAssociate}
                         onChange={(e) => {
                           const value = e.target.value;
                           setSelectedAssociate(value);
+                          setFormData({...formData, assignedTo: 'Associate', assignedToMultiple: []});
                           if (value) {
                             // Find associate by ID first, then fallback to name for old entries
                             const assoc = associates.find(a => a._id === value || a.name === value);
                             if (assoc) {
                               setFormData({
                                 ...formData,
-                                associateId: assoc._id, // Store the database ID
+                                assignedTo: 'Associate',
+                                assignedToMultiple: [],
+                                associateId: assoc._id,
                                 associateDetails: {
                                   name: assoc.name,
                                   company: assoc.company || '',
@@ -7283,6 +7417,8 @@ Priority: ${task.priority}`;
                           } else {
                             setFormData({
                               ...formData,
+                              assignedTo: 'Associate',
+                              assignedToMultiple: [],
                               associateId: null,
                               associateDetails: { name: '', company: '', email: '', phone: '' }
                             });
@@ -7309,58 +7445,39 @@ Priority: ${task.priority}`;
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* External User Selection - shown only when External User is selected */}
-              {formData.isExternalUser && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-green-900 mb-2">Select External User *</label>
+                {/* External User Selection */}  
+                {formData.isExternalUser && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex gap-2">
                       <select
-                        value={formData.externalUserId || ''}
+                        value={formData.externalUserId}
                         onChange={(e) => {
-                          const value = e.target.value;
-                          if (value) {
-                            // Find external user by ID first, then fallback to name for old entries
-                            const extUser = externalUsers.find(u => u._id === value || u.name === value);
-                            if (extUser) {
-                              setFormData({
-                                ...formData,
-                                externalUserId: extUser._id, // Store the database ID
-                                externalUserDetails: {
-                                  name: extUser.name,
-                                  _id: extUser._id
-                                }
-                              });
-                            }
-                          } else {
-                            setFormData({
-                              ...formData,
-                              externalUserId: '',
-                              externalUserDetails: null
-                            });
-                          }
+                          const userId = e.target.value;
+                          const selectedUser = externalUsers.find(u => u._id === userId);
+                          setFormData({
+                            ...formData,
+                            assignedTo: 'External User',
+                            assignedToMultiple: [],
+                            externalUserId: userId,
+                            externalUserDetails: selectedUser ? { name: selectedUser.name, _id: selectedUser._id } : null
+                          });
                         }}
-                        className="flex-1 px-4 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="flex-1 px-4 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       >
                         <option value="">Select External User</option>
-                        {externalUsers.map((user, idx) => {
-                          const userName = typeof user === 'string' ? user : user?.name || '';
-                          const userKey = typeof user === 'object' ? user?._id : idx;
-                          return (
-                            <option key={userKey} value={userKey}>
-                              {userName}
-                            </option>
-                          );
-                        })}
+                        {externalUsers.map((user) => (
+                          <option key={user._id} value={user._id}>
+                            {user.name}
+                          </option>
+                        ))}
                       </select>
                       <button
                         type="button"
                         onClick={() => setShowExternalUserModal(true)}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 whitespace-nowrap"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 whitespace-nowrap"
                         title="Manage external users"
                       >
                         <Plus className="w-4 h-4" />
@@ -7368,8 +7485,8 @@ Priority: ${task.priority}`;
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Project *</label>
@@ -7548,19 +7665,92 @@ Priority: ${task.priority}`;
             <div className="p-4 sm:p-6 space-y-4 pb-20 sm:pb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Assign To *</label>
-                <select
-                  value={formData.assignedTo}
-                  onChange={(e) => setFormData({...formData, assignedTo: e.target.value})}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                  required
-                >
-                  <option value="">{isAdmin() ? 'Select User' : 'Select Team Member'}</option>
-                  {(isAdmin() ? users : getMyTeamMembers()).map(user => (
-                    <option key={user._id} value={user.username}>
-                      {user.name} - {user.position || user.department}
-                    </option>
-                  ))}
-                </select>
+                
+                {/* Multi-user selection dropdown for subtasks */}
+                <div className="relative assign-to-dropdown">
+                  <button
+                    type="button"
+                    onClick={() => setShowAssignToDropdown(!showAssignToDropdown)}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-left bg-white flex justify-between items-center"
+                  >
+                    <span>
+                      {formData.assignedToMultiple.length === 0 
+                        ? 'Select users...' 
+                        : `${formData.assignedToMultiple.length} user(s) selected`}
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {showAssignToDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {(isAdmin() ? users : getMyTeamMembers()).map(user => (
+                        <div key={user._id} className="flex items-center p-2 hover:bg-gray-50">
+                          <input
+                            type="checkbox"
+                            id={`subtask-user-${user._id}`}
+                            checked={formData.assignedToMultiple.includes(user.username)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({
+                                  ...formData,
+                                  assignedToMultiple: [...formData.assignedToMultiple, user.username],
+                                  assignedTo: user.username // Keep single assignedTo for backward compatibility
+                                });
+                              } else {
+                                const newAssignedToMultiple = formData.assignedToMultiple.filter(u => u !== user.username);
+                                setFormData({
+                                  ...formData,
+                                  assignedToMultiple: newAssignedToMultiple,
+                                  assignedTo: newAssignedToMultiple.length > 0 ? newAssignedToMultiple[0] : ''
+                                });
+                              }
+                            }}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor={`subtask-user-${user._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer flex-1">
+                            {user.name} - {user.position || user.department}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Show selected users for subtask */}
+                  {formData.assignedToMultiple.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-1">Selected users:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {formData.assignedToMultiple.map(username => {
+                          const user = users.find(u => u.username === username);
+                          return (
+                            <span
+                              key={username}
+                              className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-blue-100 text-blue-800"
+                            >
+                              {user ? user.name : username}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newAssignedToMultiple = formData.assignedToMultiple.filter(u => u !== username);
+                                  setFormData({
+                                    ...formData,
+                                    assignedToMultiple: newAssignedToMultiple,
+                                    assignedTo: newAssignedToMultiple.length > 0 ? newAssignedToMultiple[0] : ''
+                                  });
+                                }}
+                                className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
