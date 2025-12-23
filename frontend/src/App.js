@@ -575,7 +575,8 @@ const TaskManagementSystem = () => {
 
   const getMyTeamMembers = useCallback(() => {
     if (!currentUser) return [];
-    return users.filter(u => u.manager === currentUser.username && u.isActive);
+    // For Enginia-do, return all active users as potential team members
+    return users.filter(u => u.isActive !== false);
   }, [currentUser, users]);
 
   const loadTasks = async () => {
@@ -4763,8 +4764,8 @@ Priority: ${task.priority}`;
     
     // Apply filters to assigned by me tasks
     const filteredTasks = assignedByMeTasks.filter(task => {
-      // Apply subtask filter (only for Piyush and Ketul)
-      if (['piyush.diwan'].includes(currentUser?.username) || isAdmin()) {
+      // Apply subtask filter (only for admins)
+      if (isAdmin()) {
         if (subtaskFilter === 'subtasks-only' && !task.isSubtask) return false;
         if (subtaskFilter === 'tasks-only' && task.isSubtask) return false;
         // 'all' shows both tasks and subtasks
@@ -4914,7 +4915,7 @@ Priority: ${task.priority}`;
             </div>
 
             {/* Subtask Filter - Only for Piyush and Ketul */}
-            {(['piyush.diwan'].includes(currentUser?.username) || isAdmin()) && (
+            {isAdmin() && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Task Type</label>
                 <select
@@ -7307,17 +7308,9 @@ Priority: ${task.priority}`;
                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                         {users
                           .filter(user => {
-                            // Vaishal, Nirali and Piyush Diwan can see everyone
-                            if (isAdmin() || currentUser?.username === 'piyush.diwan') {
-                              return true;
-                            }
-                            // For other users (like Vraj, Kinjal):
-                            // - Hide Studio Team members (Ankit, Happy, Darshit)  
-                            // - Show Studio Team - Manager (Piyush Diwan)
-                            if (user.department === 'Studio Team') {
-                              return false; // Hide studio team members
-                            }
-                            return true; // Show everyone else including Studio Team - Manager
+                            // Only owners (Vaishal, Nirali) have admin privileges
+                            // All other users can see everyone
+                            return true;
                           })
                           .map(user => (
                             <div key={user._id} className="flex items-center p-2 hover:bg-gray-50">
