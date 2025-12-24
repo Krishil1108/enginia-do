@@ -113,6 +113,20 @@ const UserManagement = ({ currentUser, onBack }) => {
     setShowForm(true);
   };
 
+  const handleDelete = async (user) => {
+    if (window.confirm(`Are you sure you want to permanently delete ${user.name}? This action cannot be undone and will remove all user data.`)) {
+      try {
+        await axios.delete(`${API_URL}/admin/users/${user._id}`, {
+          params: { requestingUser: currentUser.username }
+        });
+        fetchUsers();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert(error.response?.data?.message || 'Error deleting user');
+      }
+    }
+  };
+
   const handleDeactivate = async (user) => {
     if (window.confirm(`Are you sure you want to ${user.isActive ? 'deactivate' : 'activate'} ${user.name}?`)) {
       try {
@@ -398,8 +412,23 @@ const UserManagement = ({ currentUser, onBack }) => {
                       </button>
                       <button
                         onClick={() => handleDeactivate(user)}
-                        className={`${user.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
+                        className={`${user.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
                         title={user.isActive ? 'Deactivate User' : 'Activate User'}
+                      >
+                        {user.isActive ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Delete User Permanently"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

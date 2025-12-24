@@ -117,7 +117,8 @@ router.delete('/roles/:id', checkOwnerAccess, async (req, res) => {
 // Get all users with roles (for admin)
 router.get('/users', checkOwnerAccess, async (req, res) => {
   try {
-    const users = await User.find({ isActive: true })
+    // Get all users (both active and inactive) for admin to manage
+    const users = await User.find({})
       .populate('role', 'name permissions')
       .sort({ name: 1 });
     
@@ -141,6 +142,33 @@ router.post('/users', checkOwnerAccess, async (req, res) => {
     
     if (!role) {
       return res.status(400).json({ message: 'Role is required' });
+    }
+    
+    // Check if user with same username or email already exists (including inactive ones)
+    const existingUser = await User.findOne({
+      $or: [{ username }, { email }]
+    });
+    
+    if (existingUser) {
+      if (existingUser.isActive) {
+        return res.status(400).json({ message: 'Username or email already exists' });
+      } else {
+        // Reactivate existing user with new details
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        existingUser.password = hashedPassword;
+        existingUser.name = name;
+        existingUser.email = email;
+        existingUser.role = role;
+        existingUser.department = department || '';
+        existingUser.isActive = true;
+        
+        await existingUser.save();
+        await existingUser.populate('role', 'name permissions');
+        
+        return res.status(200).json(existingUser.toObject());
+      }
     }
     
     const bcrypt = require('bcryptjs');
@@ -236,6 +264,21 @@ router.get('/user-permissions/:username', async (req, res) => {
     }
 
     res.json({ permissions, isOwner: user.username === 'vaishal' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete user permanently
+router.delete('/users/:id', checkOwnerAccess, async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({ message: `User ${user.name} has been permanently deleted` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
