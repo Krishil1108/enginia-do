@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical } from 'lucide-react';
+import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical, Settings } from 'lucide-react';
 import API_URL from './config';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -12,6 +12,7 @@ import './pwa-styles.css';
 import notificationService from './services/notificationService';
 import UpdateChecker from './components/UpdateChecker';
 import CustomDialog from './components/CustomDialog';
+import AdminDashboard from './components/AdminDashboard';
 
 // Server optimization for render.com deployment
 const keepServerAlive = () => {
@@ -6734,6 +6735,21 @@ Priority: ${task.priority}`;
                   </div>
                 </button>
               )}
+
+              {/* Admin Dashboard - Only for owner Vaishal Shah */}
+              {currentUser?.username === 'vaishal' && (
+                <button
+                  onClick={() => { setCurrentView('admin-dashboard'); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentView === 'admin-dashboard' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    Admin Panel
+                  </div>
+                </button>
+              )}
               
               <button
                 onClick={() => { setCurrentView('settings'); }}
@@ -6842,6 +6858,21 @@ Priority: ${task.priority}`;
                   </div>
                 </button>
               )}
+
+              {/* Admin Dashboard - Only for owner Vaishal Shah */}
+              {currentUser?.username === 'vaishal' && (
+                <button
+                  onClick={() => { setCurrentView('admin-dashboard'); setShowAdvancedMenu(false); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentView === 'admin-dashboard' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    Admin Panel
+                  </div>
+                </button>
+              )}
               
               <button
                 onClick={() => { setCurrentView('settings'); setShowAdvancedMenu(false); }}
@@ -6867,6 +6898,7 @@ Priority: ${task.priority}`;
         {currentView === 'associate-tasks' && <AssociateTasksView />}
         {currentView === 'external-tasks' && <ExternalTasksView />}
         {currentView === 'confidential-tasks' && ['Vaishal', 'Nirali'].includes(currentUser?.name) && <ConfidentialTasksView />}
+        {currentView === 'admin-dashboard' && currentUser?.username === 'vaishal' && <AdminDashboard currentUser={currentUser} onBack={() => setCurrentView('my-tasks')} />}
         {currentView === 'admin-reports' && ['Vaishal', 'Nirali'].includes(currentUser?.name) && <AdminReportsView />}
         {currentView === 'settings' && <NotificationSettingsView />}
       </div>
@@ -8242,6 +8274,20 @@ Priority: ${task.priority}`;
               <span className="text-xs font-medium whitespace-nowrap">Reports</span>
             </button>
           )}
+
+          {/* Admin Dashboard - Only for owner Vaishal Shah */}
+          {currentUser?.username === 'vaishal' && (
+            <button
+              onClick={() => setCurrentView('admin-dashboard')}
+              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+                currentView === 'admin-dashboard' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600'
+              }`}
+            >
+              <Settings className="w-4 h-4 mb-1" />
+              <span className="text-xs font-medium whitespace-nowrap">Admin</span>
+            </button>
+          )}
+
           <button
             onClick={() => setCurrentView('settings')}
             className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${

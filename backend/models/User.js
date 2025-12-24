@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema({
     enum: ['Admin', 'Manager', 'Team Lead', 'Employee', 'Associate'],
     default: 'Employee'
   },
+  customRole: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role',
+    default: null
+  },
   email: {
     type: String,
     required: true,
