@@ -41,16 +41,15 @@ router.post('/roles', checkOwnerAccess, async (req, res) => {
       name,
       description: description || '',
       permissions: {
-        dashboard: permissions?.dashboard !== false,
-        tasks: permissions?.tasks !== false,
-        projects: permissions?.projects || false,
-        users: permissions?.users || false,
-        associates: permissions?.associates || false,
-        notifications: permissions?.notifications !== false,
-        reports: permissions?.reports || false,
-        settings: permissions?.settings || false,
-        analytics: permissions?.analytics || false,
-        calendar: permissions?.calendar !== false
+        myTasks: permissions?.myTasks !== false,
+        allTasks: permissions?.allTasks || false,
+        assignedByMe: permissions?.assignedByMe || false,
+        associateTasks: permissions?.associateTasks || false,
+        externalTasks: permissions?.externalTasks || false,
+        confidentialTasks: permissions?.confidentialTasks || false,
+        adminReports: permissions?.adminReports || false,
+        adminPanel: permissions?.adminPanel || false,
+        settings: permissions?.settings !== false
       }
     });
 
@@ -200,16 +199,15 @@ router.get('/user-permissions/:username', async (req, res) => {
     }
 
     let permissions = {
-      dashboard: true,
-      tasks: true,
-      projects: user.role === 'Admin' || user.role === 'Manager',
-      users: user.username === 'vaishal' || user.role === 'Admin',
-      associates: user.role === 'Admin' || user.role === 'Manager',
-      notifications: true,
-      reports: user.role === 'Admin' || user.role === 'Manager',
-      settings: user.username === 'vaishal' || user.role === 'Admin',
-      analytics: user.role === 'Admin' || user.role === 'Manager',
-      calendar: true
+      myTasks: true,
+      allTasks: user.role === 'Admin' || user.role === 'Manager',
+      assignedByMe: user.role === 'Admin' || user.role === 'Manager' || user.role === 'Team Lead',
+      associateTasks: user.role === 'Admin' || user.role === 'Manager',
+      externalTasks: user.role === 'Admin' || user.role === 'Manager',
+      confidentialTasks: user.username === 'vaishal' || user.name === 'Nirali',
+      adminReports: user.username === 'vaishal' || user.name === 'Nirali',
+      adminPanel: user.username === 'vaishal',
+      settings: true
     };
 
     // Override with custom role permissions if exists

@@ -12,43 +12,39 @@ const roleSchema = new mongoose.Schema({
     default: ''
   },
   permissions: {
-    dashboard: {
+    myTasks: {
       type: Boolean,
       default: true
     },
-    tasks: {
-      type: Boolean,
-      default: true
-    },
-    projects: {
+    allTasks: {
       type: Boolean,
       default: false
     },
-    users: {
+    assignedByMe: {
       type: Boolean,
       default: false
     },
-    associates: {
+    associateTasks: {
       type: Boolean,
       default: false
     },
-    notifications: {
+    externalTasks: {
       type: Boolean,
-      default: true
+      default: false
     },
-    reports: {
+    confidentialTasks: {
+      type: Boolean,
+      default: false
+    },
+    adminReports: {
+      type: Boolean,
+      default: false
+    },
+    adminPanel: {
       type: Boolean,
       default: false
     },
     settings: {
-      type: Boolean,
-      default: false
-    },
-    analytics: {
-      type: Boolean,
-      default: false
-    },
-    calendar: {
       type: Boolean,
       default: true
     }

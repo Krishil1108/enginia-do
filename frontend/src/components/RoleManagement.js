@@ -12,31 +12,29 @@ const RoleManagement = ({ currentUser, onBack }) => {
     name: '',
     description: '',
     permissions: {
-      dashboard: true,
-      tasks: true,
-      projects: false,
-      users: false,
-      associates: false,
-      notifications: true,
-      reports: false,
-      settings: false,
-      analytics: false,
-      calendar: true
+      myTasks: true,
+      allTasks: false,
+      assignedByMe: false,
+      associateTasks: false,
+      externalTasks: false,
+      confidentialTasks: false,
+      adminReports: false,
+      adminPanel: false,
+      settings: true
     }
   });
   const [errors, setErrors] = useState({});
 
   const permissionLabels = {
-    dashboard: 'Dashboard',
-    tasks: 'Tasks & To-Do Lists',
-    projects: 'Project Management',
-    users: 'User Management',
-    associates: 'Associate Management',
-    notifications: 'Notifications',
-    reports: 'Reports & Analytics',
-    settings: 'System Settings',
-    analytics: 'Analytics Dashboard',
-    calendar: 'Calendar View'
+    myTasks: 'My Tasks',
+    allTasks: 'All Tasks',
+    assignedByMe: 'Assigned By Me',
+    associateTasks: 'Associate Tasks',
+    externalTasks: 'External Tasks',
+    confidentialTasks: 'Confidential Tasks',
+    adminReports: 'Admin Reports',
+    adminPanel: 'Admin Panel',
+    settings: 'Settings'
   };
 
   useEffect(() => {
@@ -87,16 +85,15 @@ const RoleManagement = ({ currentUser, onBack }) => {
       name: '',
       description: '',
       permissions: {
-        dashboard: true,
-        tasks: true,
-        projects: false,
-        users: false,
-        associates: false,
-        notifications: true,
-        reports: false,
-        settings: false,
-        analytics: false,
-        calendar: true
+        myTasks: true,
+        allTasks: false,
+        assignedByMe: false,
+        associateTasks: false,
+        externalTasks: false,
+        confidentialTasks: false,
+        adminReports: false,
+        adminPanel: false,
+        settings: true
       }
     });
   };
@@ -358,16 +355,15 @@ const RoleManagement = ({ currentUser, onBack }) => {
 // Helper function to get permission descriptions
 const getPermissionDescription = (key) => {
   const descriptions = {
-    dashboard: 'View main dashboard and overview',
-    tasks: 'Create, edit, and manage tasks',
-    projects: 'Access project management features',
-    users: 'Manage user accounts and settings',
-    associates: 'Manage associate relationships',
-    notifications: 'Receive and manage notifications',
-    reports: 'Generate and view reports',
-    settings: 'Access system configuration',
-    analytics: 'View analytics and insights',
-    calendar: 'Access calendar functionality'
+    myTasks: 'View and manage personal tasks',
+    allTasks: 'View all tasks in the system',
+    assignedByMe: 'View tasks assigned by this user',
+    associateTasks: 'Access associate task management',
+    externalTasks: 'Manage external user tasks',
+    confidentialTasks: 'Access confidential tasks (owners only)',
+    adminReports: 'Generate and view admin reports',
+    adminPanel: 'Access admin user/role management',
+    settings: 'Access notification and system settings'
   };
   return descriptions[key] || 'Access this feature';
 };

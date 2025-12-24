@@ -14,66 +14,62 @@ async function createDefaultRoles() {
         const defaultRoles = [
             {
                 name: 'Salesman',
-                description: 'Sales team members with limited access to tasks and basic features',
+                description: 'Sales team members with limited access to basic task features only',
                 permissions: {
-                    dashboard: true,
-                    tasks: true,
-                    projects: false,
-                    users: false,
-                    associates: false,
-                    notifications: true,
-                    reports: false,
-                    settings: false,
-                    analytics: false,
-                    calendar: true
+                    myTasks: true,
+                    allTasks: false,
+                    assignedByMe: false,
+                    associateTasks: false,
+                    externalTasks: false,
+                    confidentialTasks: false,
+                    adminReports: false,
+                    adminPanel: false,
+                    settings: true
                 }
             },
             {
                 name: 'Marketing Team',
-                description: 'Marketing team with access to projects and analytics',
+                description: 'Marketing team with access to more task views and basic reporting',
                 permissions: {
-                    dashboard: true,
-                    tasks: true,
-                    projects: true,
-                    users: false,
-                    associates: false,
-                    notifications: true,
-                    reports: true,
-                    settings: false,
-                    analytics: true,
-                    calendar: true
+                    myTasks: true,
+                    allTasks: true,
+                    assignedByMe: true,
+                    associateTasks: false,
+                    externalTasks: false,
+                    confidentialTasks: false,
+                    adminReports: false,
+                    adminPanel: false,
+                    settings: true
                 }
             },
             {
                 name: 'Support Agent',
-                description: 'Customer support agents with basic access',
+                description: 'Customer support agents with basic task access',
                 permissions: {
-                    dashboard: true,
-                    tasks: true,
-                    projects: false,
-                    users: false,
-                    associates: false,
-                    notifications: true,
-                    reports: false,
-                    settings: false,
-                    analytics: false,
-                    calendar: true
+                    myTasks: true,
+                    allTasks: false,
+                    assignedByMe: false,
+                    associateTasks: false,
+                    externalTasks: true,
+                    confidentialTasks: false,
+                    adminReports: false,
+                    adminPanel: false,
+                    settings: true
                 }
             },
             {
                 name: 'Project Manager',
-                description: 'Project managers with access to projects and team oversight',
+                description: 'Project managers with access to team oversight and reporting',
                 permissions: {
-                    dashboard: true,
-                    tasks: true,
-                    projects: true,
-                    users: false,
-                    associates: true,
-                    notifications: true,
-                    reports: true,
-                    settings: false,
-                    analytics: true,
-                    calendar: true
+                    myTasks: true,
+                    allTasks: true,
+                    assignedByMe: true,
+                    associateTasks: true,
+                    externalTasks: true,
+                    confidentialTasks: false,
+                    adminReports: false,
+                    adminPanel: false,
+                    settings: true
                 }
             }
         ];
@@ -104,7 +100,7 @@ async function createDefaultRoles() {
         console.log('\nRoles created:');
         defaultRoles.forEach(role => {
             const permissionCount = Object.values(role.permissions).filter(Boolean).length;
-            console.log(`- ${role.name}: ${permissionCount}/10 permissions`);
+            console.log(`- ${role.name}: ${permissionCount}/9 permissions`);
         });
 
     } catch (error) {
