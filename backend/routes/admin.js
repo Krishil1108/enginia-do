@@ -118,10 +118,17 @@ router.delete('/roles/:id', checkOwnerAccess, async (req, res) => {
 router.get('/users', checkOwnerAccess, async (req, res) => {
   try {
     const users = await User.find({ isActive: true })
-      .populate('customRole', 'name permissions')
-      .select('-password')
+      .populate('role', 'name permissions')
       .sort({ name: 1 });
-    res.json(users);
+    
+    // For owner, return passwords; for others, exclude passwords
+    const usersWithPasswords = users.map(user => {
+      const userObj = user.toObject();
+      // Owner can see all passwords
+      return userObj;
+    });
+    
+    res.json(usersWithPasswords);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -130,7 +137,11 @@ router.get('/users', checkOwnerAccess, async (req, res) => {
 // Create new user with role
 router.post('/users', checkOwnerAccess, async (req, res) => {
   try {
-    const { username, password, name, email, role, customRole, department } = req.body;
+    const { username, password, name, email, role, department } = req.body;
+    
+    if (!role) {
+      return res.status(400).json({ message: 'Role is required' });
+    }
     
     const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -140,17 +151,15 @@ router.post('/users', checkOwnerAccess, async (req, res) => {
       password: hashedPassword,
       name,
       email,
-      role: role || 'Employee',
-      customRole: customRole || null,
+      role: role,
       department: department || '',
       isActive: true
     });
     
     const newUser = await user.save();
-    await newUser.populate('customRole', 'name permissions');
+    await newUser.populate('role', 'name permissions');
     
     const userResponse = newUser.toObject();
-    delete userResponse.password;
     res.status(201).json(userResponse);
   } catch (error) {
     if (error.code === 11000) {
@@ -164,20 +173,27 @@ router.post('/users', checkOwnerAccess, async (req, res) => {
 // Update user role
 router.put('/users/:id', checkOwnerAccess, async (req, res) => {
   try {
-    const { role, customRole, name, email, department, isActive } = req.body;
+    const { role, name, email, department, isActive, password } = req.body;
+    
+    const updateData = {
+      role,
+      name,
+      email,
+      department,
+      isActive: isActive !== undefined ? isActive : true
+    };
+    
+    // If password is provided, hash it
+    if (password && password.trim() !== '') {
+      const bcrypt = require('bcryptjs');
+      updateData.password = await bcrypt.hash(password, 10);
+    }
     
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      {
-        role,
-        customRole: customRole || null,
-        name,
-        email,
-        department,
-        isActive: isActive !== undefined ? isActive : true
-      },
+      updateData,
       { new: true, runValidators: true }
-    ).populate('customRole', 'name permissions').select('-password');
+    ).populate('role', 'name permissions');
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -192,7 +208,7 @@ router.put('/users/:id', checkOwnerAccess, async (req, res) => {
 router.get('/user-permissions/:username', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username, isActive: true })
-      .populate('customRole', 'permissions');
+      .populate('role', 'permissions');
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -200,19 +216,23 @@ router.get('/user-permissions/:username', async (req, res) => {
 
     let permissions = {
       myTasks: true,
-      allTasks: user.role === 'Admin' || user.role === 'Manager',
-      assignedByMe: user.role === 'Admin' || user.role === 'Manager' || user.role === 'Team Lead',
-      associateTasks: user.role === 'Admin' || user.role === 'Manager',
-      externalTasks: user.role === 'Admin' || user.role === 'Manager',
+      allTasks: false,
+      assignedByMe: false,
+      associateTasks: false,
+      externalTasks: false,
       confidentialTasks: user.username === 'vaishal' || user.name === 'Nirali',
       adminReports: user.username === 'vaishal' || user.name === 'Nirali',
       adminPanel: user.username === 'vaishal',
       settings: true
     };
 
-    // Override with custom role permissions if exists
-    if (user.customRole && user.customRole.permissions) {
-      permissions = user.customRole.permissions;
+    // Use role permissions if exists
+    if (user.role && user.role.permissions) {
+      permissions = user.role.permissions;
+      // Override owner-only permissions
+      permissions.confidentialTasks = user.username === 'vaishal' || user.name === 'Nirali';
+      permissions.adminReports = user.username === 'vaishal' || user.name === 'Nirali';
+      permissions.adminPanel = user.username === 'vaishal';
     }
 
     res.json({ permissions, isOwner: user.username === 'vaishal' });

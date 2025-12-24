@@ -14,8 +14,7 @@ const UserManagement = ({ currentUser, onBack }) => {
     password: '',
     name: '',
     email: '',
-    role: 'Employee',
-    customRole: '',
+    role: '',
     department: '',
     isActive: true
   });
@@ -54,17 +53,23 @@ const UserManagement = ({ currentUser, onBack }) => {
     e.preventDefault();
     setErrors({});
 
+    if (!formData.role) {
+      setErrors({ general: 'Please select a role' });
+      return;
+    }
+
     try {
       if (editingUser) {
-        // Update user
-        const updateData = { ...formData };
-        delete updateData.password; // Don't update password unless specifically requested
-        
-        await axios.put(`${API_URL}/admin/users/${editingUser._id}`, updateData, {
+        // Update user - include password if changed
+        await axios.put(`${API_URL}/admin/users/${editingUser._id}`, formData, {
           params: { requestingUser: currentUser.username }
         });
       } else {
         // Create new user
+        if (!formData.password) {
+          setErrors({ general: 'Password is required for new users' });
+          return;
+        }
         await axios.post(`${API_URL}/admin/users`, formData, {
           params: { requestingUser: currentUser.username }
         });
@@ -88,8 +93,7 @@ const UserManagement = ({ currentUser, onBack }) => {
       password: '',
       name: '',
       email: '',
-      role: 'Employee',
-      customRole: '',
+      role: '',
       department: '',
       isActive: true
     });
@@ -99,11 +103,10 @@ const UserManagement = ({ currentUser, onBack }) => {
     setEditingUser(user);
     setFormData({
       username: user.username,
-      password: '',
+      password: user.password || '', // Show current password
       name: user.name,
       email: user.email,
-      role: user.role,
-      customRole: user.customRole?._id || '',
+      role: user.role?._id || '',
       department: user.department || '',
       isActive: user.isActive
     });
@@ -114,7 +117,10 @@ const UserManagement = ({ currentUser, onBack }) => {
     if (window.confirm(`Are you sure you want to ${user.isActive ? 'deactivate' : 'activate'} ${user.name}?`)) {
       try {
         await axios.put(`${API_URL}/admin/users/${user._id}`, {
-          ...user,
+          role: user.role._id,
+          name: user.name,
+          email: user.email,
+          department: user.department,
           isActive: !user.isActive
         }, {
           params: { requestingUser: currentUser.username }
@@ -189,29 +195,33 @@ const UserManagement = ({ currentUser, onBack }) => {
                   />
                 </div>
 
-                {!editingUser && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Password *
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required={!editingUser}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Password {!editingUser && '*'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required={!editingUser}
+                      placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
-                )}
+                  {editingUser && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Current password is shown. Change it to update.
+                    </p>
+                  )}
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -241,35 +251,22 @@ const UserManagement = ({ currentUser, onBack }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    System Role
+                    Role *
                   </label>
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
                   >
-                    <option value="Employee">Employee</option>
-                    <option value="Team Lead">Team Lead</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Associate">Associate</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Custom Role (Optional)
-                  </label>
-                  <select
-                    value={formData.customRole}
-                    onChange={(e) => setFormData({ ...formData, customRole: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">No custom role</option>
+                    <option value="">Select a role</option>
                     {roles.map(role => (
                       <option key={role._id} value={role._id}>{role.name}</option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Roles are managed in Role & Permission Management
+                  </p>
                 </div>
 
                 <div>
@@ -369,11 +366,11 @@ const UserManagement = ({ currentUser, onBack }) => {
                     <div className="text-sm text-gray-900">
                       <div className="flex items-center gap-2">
                         <Shield className="w-4 h-4" />
-                        {user.role}
+                        {user.role?.name || 'No Role'}
                       </div>
-                      {user.customRole && (
-                        <div className="text-sm text-blue-600 mt-1">
-                          Custom: {user.customRole.name}
+                      {user.role?.description && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          {user.role.description}
                         </div>
                       )}
                     </div>

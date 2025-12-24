@@ -16,14 +16,9 @@ const userSchema = new mongoose.Schema({
     required: true
   },
   role: {
-    type: String,
-    enum: ['Admin', 'Manager', 'Team Lead', 'Employee', 'Associate'],
-    default: 'Employee'
-  },
-  customRole: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Role',
-    default: null
+    required: true
   },
   email: {
     type: String,
