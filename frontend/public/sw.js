@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.8.0-' + Date.now(); // Multi-user assignment functionality
+const CACHE_VERSION = 'v1.8.1-' + Date.now(); // Fixed navigation tab visibility on tablets/desktops
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'

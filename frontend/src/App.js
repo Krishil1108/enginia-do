@@ -573,6 +573,7 @@ const TaskManagementSystem = () => {
     
     try {
       const response = await axios.get(`${API_URL}/admin/user-permissions/${username}`);
+      console.log('🔐 User permissions loaded:', response.data.permissions);
       setUserPermissions(response.data.permissions || {});
       setIsOwner(response.data.isOwner || false);
     } catch (error) {
@@ -6634,7 +6635,7 @@ Priority: ${task.priority}`;
 
               <button
                 onClick={() => setShowAdvancedMenu(!showAdvancedMenu)}
-                className="lg:hidden md:block p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="md:hidden p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -6675,7 +6676,7 @@ Priority: ${task.priority}`;
           )}
 
           {/* Desktop Navigation - Permission Based */}
-          <div className="hidden lg:block mt-3 pb-2 border-t pt-3">
+          <div className="hidden md:block mt-3 pb-2 border-t pt-3">
             <div className="flex flex-wrap gap-2 overflow-x-auto">
               {/* My Tasks - Based on permission */}
               {userPermissions.myTasks && (
@@ -6803,7 +6804,7 @@ Priority: ${task.priority}`;
 
           {/* Mobile Navigation - Permission Based */}
           {showAdvancedMenu && (
-            <div className="lg:hidden mt-3 flex flex-wrap gap-1 sm:gap-2 pb-2 border-t pt-3 overflow-x-auto">
+            <div className="md:hidden mt-3 flex flex-wrap gap-1 sm:gap-2 pb-2 border-t pt-3 overflow-x-auto">
               {/* My Tasks - Based on permission */}
               {userPermissions.myTasks && (
                 <button
