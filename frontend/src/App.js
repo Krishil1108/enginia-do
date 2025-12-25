@@ -90,6 +90,7 @@ const TaskManagementSystem = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [userPermissions, setUserPermissions] = useState({});
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [projects, setProjects] = useState([]);
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -240,8 +241,10 @@ const TaskManagementSystem = () => {
       const user = JSON.parse(savedUser);
       setCurrentUser(user);
       setIsLoggedIn(true);
+      // Fetch user permissions on app restart
+      fetchUserPermissions(user.username);
     }
-  }, []);
+  }, [fetchUserPermissions]);
 
   // Load data when logged in
   useEffect(() => {
@@ -571,6 +574,7 @@ const TaskManagementSystem = () => {
   const fetchUserPermissions = useCallback(async (username) => {
     if (!username) return;
     
+    setPermissionsLoading(true);
     try {
       const response = await axios.get(`${API_URL}/admin/user-permissions/${username}`);
       console.log('🔐 User permissions loaded:', response.data.permissions);
@@ -590,6 +594,8 @@ const TaskManagementSystem = () => {
         adminPanel: false,
         settings: true
       });
+    } finally {
+      setPermissionsLoading(false);
     }
   }, []);
 
@@ -6678,8 +6684,8 @@ Priority: ${task.priority}`;
           {/* Desktop Navigation - Permission Based */}
           <div className="hidden md:block mt-3 pb-2 border-t pt-3">
             <div className="flex flex-wrap gap-2 overflow-x-auto">
-              {/* My Tasks - Based on permission */}
-              {userPermissions.myTasks && (
+              {/* My Tasks - Based on permission (show while loading as fallback) */}
+              {(userPermissions.myTasks || permissionsLoading) && (
                 <button
                   onClick={() => { setCurrentView('my-tasks'); }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -6805,8 +6811,8 @@ Priority: ${task.priority}`;
           {/* Mobile Navigation - Permission Based */}
           {showAdvancedMenu && (
             <div className="md:hidden mt-3 flex flex-wrap gap-1 sm:gap-2 pb-2 border-t pt-3 overflow-x-auto">
-              {/* My Tasks - Based on permission */}
-              {userPermissions.myTasks && (
+              {/* My Tasks - Based on permission (show while loading as fallback) */}
+              {(userPermissions.myTasks || permissionsLoading) && (
                 <button
                   onClick={() => { setCurrentView('my-tasks'); setShowAdvancedMenu(false); }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${

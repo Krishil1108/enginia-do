@@ -103,7 +103,7 @@ const UserManagement = ({ currentUser, onBack }) => {
     setEditingUser(user);
     setFormData({
       username: user.username,
-      password: user.password || '', // Show current password
+      password: '', // Don't show the hashed password for security
       name: user.name,
       email: user.email,
       role: user.role?._id || '',
@@ -232,7 +232,7 @@ const UserManagement = ({ currentUser, onBack }) => {
                   </div>
                   {editingUser && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Current password is shown. Change it to update.
+                      Leave blank to keep current password. Enter new password to change it.
                     </p>
                   )}
                 </div>

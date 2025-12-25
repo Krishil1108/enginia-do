@@ -149,17 +149,6 @@ const AdminDashboard = ({ currentUser, onBack }) => {
           </div>
         </div>
       </div>
-
-      {/* Instructions */}
-      <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-yellow-800 mb-2">Getting Started</h3>
-        <div className="text-yellow-700 space-y-2">
-          <p><strong>Step 1:</strong> Create custom roles in Role Management (e.g., "Salesman", "Marketing Team")</p>
-          <p><strong>Step 2:</strong> Set specific page permissions for each role using the checkboxes</p>
-          <p><strong>Step 3:</strong> Add users in User Management and assign them to roles</p>
-          <p><strong>Step 4:</strong> Users will only see the pages you've given them permission to access</p>
-        </div>
-      </div>
     </div>
   );
 };
