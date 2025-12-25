@@ -122,14 +122,14 @@ router.get('/users', checkOwnerAccess, async (req, res) => {
       .populate('role', 'name permissions')
       .sort({ name: 1 });
     
-    // For owner, return passwords; for others, exclude passwords
-    const usersWithPasswords = users.map(user => {
+    // Never return passwords for security - always exclude them
+    const safeUsers = users.map(user => {
       const userObj = user.toObject();
-      // Owner can see all passwords
+      delete userObj.password; // Remove password from response
       return userObj;
     });
     
-    res.json(usersWithPasswords);
+    res.json(safeUsers);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

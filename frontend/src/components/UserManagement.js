@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Trash2, Save, X, Eye, EyeOff, Shield } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, Save, X, Eye, EyeOff, Shield, RefreshCw, Copy } from 'lucide-react';
 import axios from 'axios';
 import API_URL from '../config';
 
@@ -20,6 +20,30 @@ const UserManagement = ({ currentUser, onBack }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Generate a secure random password
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const handleGeneratePassword = () => {
+    const newPassword = generatePassword();
+    setFormData({ ...formData, password: newPassword });
+    setShowPassword(true); // Show the generated password
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Password copied to clipboard!');
+    }).catch(() => {
+      alert('Failed to copy password');
+    });
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -213,28 +237,62 @@ const UserManagement = ({ currentUser, onBack }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Password {!editingUser && '*'}
                   </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required={!editingUser}
-                      placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="w-full px-3 py-2 pr-20 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required={!editingUser}
+                        placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center">
+                        {formData.password && (
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(formData.password)}
+                            className="px-2 text-gray-400 hover:text-gray-600"
+                            title="Copy password"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="px-3 text-gray-400 hover:text-gray-600"
+                          title={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleGeneratePassword}
+                        className="flex items-center gap-1 px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        Generate Secure Password
+                      </button>
+                    </div>
+                    
+                    {editingUser ? (
+                      <div className="bg-amber-50 border border-amber-200 rounded-md p-2">
+                        <p className="text-xs text-amber-700">
+                          <Shield className="w-3 h-3 inline mr-1" />
+                          Security: Current password is securely hashed in database. Leave blank to keep unchanged, or enter new password to reset it.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">
+                        Password will be securely hashed before storing in database.
+                      </p>
+                    )}
                   </div>
-                  {editingUser && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Leave blank to keep current password. Enter new password to change it.
-                    </p>
-                  )}
                 </div>
 
                 <div>
