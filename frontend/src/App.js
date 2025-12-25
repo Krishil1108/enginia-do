@@ -236,15 +236,26 @@ const TaskManagementSystem = () => {
   
   // Check if user is logged in
   useEffect(() => {
+    console.log('🔍 Checking localStorage for saved user...');
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
-      const user = JSON.parse(savedUser);
-      setCurrentUser(user);
-      setIsLoggedIn(true);
-      // Fetch user permissions on app restart
-      fetchUserPermissions(user.username);
+      try {
+        const user = JSON.parse(savedUser);
+        console.log('✅ Found saved user:', user.name, user.username);
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+        // Set basic permissions immediately to prevent blank screen
+        setUserPermissions({ myTasks: true, settings: true });
+        // Fetch user permissions on app restart
+        fetchUserPermissions(user.username);
+      } catch (error) {
+        console.error('❌ Error parsing saved user:', error);
+        localStorage.removeItem('currentUser');
+      }
+    } else {
+      console.log('ℹ️ No saved user found');
     }
-  }, [fetchUserPermissions]);
+  }, []); // Remove fetchUserPermissions from dependency array to prevent infinite loop
 
   // Load data when logged in
   useEffect(() => {

@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.8.3-' + Date.now(); // Fixed PWA session restore: fetch permissions on app restart
+const CACHE_VERSION = 'v1.8.4-' + Date.now(); // HOTFIX: Fixed infinite render loop causing blank screen
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'
