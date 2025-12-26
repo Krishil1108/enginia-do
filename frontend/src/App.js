@@ -12,6 +12,7 @@ import './pwa-styles.css';
 import notificationService from './services/notificationService';
 import UpdateChecker from './components/UpdateChecker';
 import CustomDialog from './components/CustomDialog';
+import AdminDashboard from './components/AdminDashboard';
 
 // Server optimization for render.com deployment
 const keepServerAlive = () => {
@@ -6735,6 +6736,21 @@ Priority: ${task.priority}`;
                 </button>
               )}
               
+              {/* Admin Panel - Only for Vaishal */}
+              {currentUser?.username === 'vaishal' && (
+                <button
+                  onClick={() => { setCurrentView('admin-panel'); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentView === 'admin-panel' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Admin Panel
+                  </div>
+                </button>
+              )}
+              
               <button
                 onClick={() => { setCurrentView('settings'); }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -6843,6 +6859,21 @@ Priority: ${task.priority}`;
                 </button>
               )}
               
+              {/* Admin Panel - Only for Vaishal (Mobile) */}
+              {currentUser?.username === 'vaishal' && (
+                <button
+                  onClick={() => { setCurrentView('admin-panel'); setShowAdvancedMenu(false); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentView === 'admin-panel' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Admin Panel
+                  </div>
+                </button>
+              )}
+              
               <button
                 onClick={() => { setCurrentView('settings'); setShowAdvancedMenu(false); }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -6868,6 +6899,12 @@ Priority: ${task.priority}`;
         {currentView === 'external-tasks' && <ExternalTasksView />}
         {currentView === 'confidential-tasks' && ['Vaishal', 'Nirali'].includes(currentUser?.name) && <ConfidentialTasksView />}
         {currentView === 'admin-reports' && ['Vaishal', 'Nirali'].includes(currentUser?.name) && <AdminReportsView />}
+        {currentView === 'admin-panel' && currentUser?.username === 'vaishal' && (
+          <AdminDashboard 
+            currentUser={currentUser} 
+            onBack={() => setCurrentView('my-tasks')} 
+          />
+        )}
         {currentView === 'settings' && <NotificationSettingsView />}
       </div>
 
