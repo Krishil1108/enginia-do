@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.8.5-' + Date.now(); // Security: Never expose passwords + Enhanced password management
+const CACHE_VERSION = 'v1.9.0-' + Date.now(); // Admin dashboard mobile optimization
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'
