@@ -250,7 +250,7 @@ router.get('/user-permissions/:username', async (req, res) => {
       externalTasks: false,
       confidentialTasks: user.username === 'vaishal' || user.name === 'Nirali',
       adminReports: user.username === 'vaishal' || user.name === 'Nirali',
-      adminPanel: user.username === 'vaishal',
+      adminPanel: user.username === 'vaishal' || user.name === 'Nirali',
       settings: true
     };
 
@@ -260,7 +260,7 @@ router.get('/user-permissions/:username', async (req, res) => {
       // Override owner-only permissions
       permissions.confidentialTasks = user.username === 'vaishal' || user.name === 'Nirali';
       permissions.adminReports = user.username === 'vaishal' || user.name === 'Nirali';
-      permissions.adminPanel = user.username === 'vaishal';
+      permissions.adminPanel = user.username === 'vaishal' || user.name === 'Nirali';
     }
 
     res.json({ permissions, isOwner: user.username === 'vaishal' });
