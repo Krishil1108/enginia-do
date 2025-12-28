@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.8.7-' + Date.now(); // Fix: Admin panel access for Nirali in mobile view
+const CACHE_VERSION = 'v1.8.8-' + Date.now(); // Fix: Add missing state variables for status change modal
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'

@@ -179,6 +179,9 @@ const TaskManagementSystem = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [completionReason, setCompletionReason] = useState('');
   const [overdueReason, setOverdueReason] = useState('');
+  const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
+  const [statusChangeNote, setStatusChangeNote] = useState('');
+  const [pendingStatusChange, setPendingStatusChange] = useState(null);
   const [showTaskDetailsModal, setShowTaskDetailsModal] = useState(false);
   const [taskDetails, setTaskDetails] = useState(null);
   
