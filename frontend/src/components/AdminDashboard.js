@@ -46,114 +46,108 @@ const AdminDashboard = ({ currentUser, onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header Section - Mobile Optimized */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-indigo-100 rounded-lg flex-shrink-0">
-                <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 leading-tight">
-                  Admin Dashboard
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600 mt-1">
-                  Welcome, {currentUser.name}
-                </p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:hidden">
-                  Manage users and permissions
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onBack}
-              className="w-full sm:w-auto bg-gray-500 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
-            >
-              Back to Main
-            </button>
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <Settings className="w-8 h-8 text-indigo-600" />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+            <p className="text-gray-600">Welcome, {currentUser.name} - Manage users and permissions</p>
           </div>
-          <p className="text-gray-600 mt-3 hidden sm:block">
-            Manage users and permissions
+        </div>
+        <button
+          onClick={onBack}
+          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+        >
+          Back to Main
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* User Management Card */}
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-blue-200"
+             onClick={() => setActiveView('users')}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Users className="w-8 h-8 text-blue-600" />
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">User Management</h2>
+          <p className="text-gray-600 mb-4">
+            Add new users, assign roles, and manage user accounts. Set up user credentials and permissions.
           </p>
-        </div>
-
-        {/* Cards Grid - Mobile First Design */}
-        <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6">
-          {/* User Management Card */}
-          <div className="bg-white rounded-xl shadow-md p-5 sm:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 hover:border-blue-200"
-               onClick={() => setActiveView('users')}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <Users className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
-              </div>
-              <ArrowRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          <div className="space-y-2">
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              Create new user accounts
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
-              User Management
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
-              Add new users, assign roles, and manage user accounts. Set up user credentials and permissions.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></div>
-                <span className="leading-tight">Create user accounts</span>
-              </div>
-              <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></div>
-                <span className="leading-tight">Assign roles</span>
-              </div>
-              <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></div>
-                <span className="leading-tight">Activate/deactivate</span>
-              </div>
-              <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mr-2 flex-shrink-0"></div>
-                <span className="leading-tight">Manage information</span>
-              </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              Assign system and custom roles
             </div>
-          </div>
-
-          {/* Role Management Card */}
-          <div className="bg-white rounded-xl shadow-md p-5 sm:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 hover:border-purple-200"
-               onClick={() => setActiveView('roles')}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <Shield className="w-7 h-7 sm:w-8 sm:h-8 text-purple-600" />
-              </div>
-              <ArrowRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              Activate/deactivate users
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
-              Role & Permission Management
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
-              Create custom roles with specific page permissions. Control which features users can access.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full mr-2 flex-shrink-0"></div>
-                <span className="leading-tight">Create custom roles</span>
-              </div>
-              <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full mr-2 flex-shrink-0"></div>
-                <span className="leading-tight">Set permissions</span>
-              </div>
-              <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full mr-2 flex-shrink-0"></div>
-                <span className="leading-tight">Control access</span>
-              </div>
-              <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full mr-2 flex-shrink-0"></div>
-                <span className="leading-tight">Manage descriptions</span>
-              </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              Manage user information
             </div>
           </div>
         </div>
 
-        {/* Mobile Bottom Spacing */}
-        <div className="h-6 sm:h-0"></div>
+        {/* Role Management Card */}
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-purple-200"
+             onClick={() => setActiveView('roles')}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <Shield className="w-8 h-8 text-purple-600" />
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Role & Permission Management</h2>
+          <p className="text-gray-600 mb-4">
+            Create custom roles with specific page permissions. Control which features users can access.
+          </p>
+          <div className="space-y-2">
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+              Create custom roles (e.g., Salesman)
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+              Set page-specific permissions
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+              Control feature access
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+              Manage role descriptions
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Admin Overview</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-indigo-600 mb-1">Owner Access</div>
+            <div className="text-sm text-gray-600">Full system control</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600 mb-1">Unlimited</div>
+            <div className="text-sm text-gray-600">Users & roles</div>
+          </div>
+          <div className="bg-white rounded-lg p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600 mb-1">10</div>
+            <div className="text-sm text-gray-600">Permission types</div>
+          </div>
+        </div>
       </div>
     </div>
   );

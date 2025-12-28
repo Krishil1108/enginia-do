@@ -98,6 +98,10 @@ const taskSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  statusChangeNote: {
+    type: String,
+    default: ''
+  },
   completedAt: {
     type: Date
   },
