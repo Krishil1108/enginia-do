@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.9.0-' + Date.now(); // Rebrand: Changed firm name from Enginia to Enjinia
+const CACHE_VERSION = 'v1.9.1-' + Date.now(); // Rebrand: Enjinia (keeping API URL as enginia-do.onrender.com)
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'
@@ -313,7 +313,7 @@ self.addEventListener('notificationclick', (event) => {
         .then((clientList) => {
           // Try to focus existing window first
           for (const client of clientList) {
-            if (client.url.includes('enjinia-do.onrender.com') || client.url.includes('localhost')) {
+            if (client.url.includes('enginia-do.onrender.com') || client.url.includes('localhost')) {
               console.log('🎯 Focusing existing window');
               return client.focus();
             }
