@@ -1,7 +1,7 @@
 {
-  "name": "enginia-do",
+  "name": "enjinia-do",
   "version": "1.0.0",
-  "description": "Enginia-do - Complete Task Management System",
+  "description": "Enjinia-do - Complete Task Management System",
   "scripts": {
     "install-all": "cd backend && npm install && cd ../frontend && npm install",
     "start-backend": "cd backend && npm start",

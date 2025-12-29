@@ -8,7 +8,7 @@ async function migrateToSingleRoleSystem() {
         console.log('🔄 Migrating to single role system...');
 
         // Connect to MongoDB
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/enginia-to-do');
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/enjinia-to-do');
         console.log('✅ MongoDB connected');
 
         // Create a default "General User" role for existing users

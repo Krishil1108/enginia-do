@@ -4,10 +4,10 @@ const Role = require('./models/Role');
 
 async function createDefaultRoles() {
     try {
-        console.log('🎯 Creating default roles for Enginia To-Do...');
+        console.log('🎯 Creating default roles for enjinia To-Do...');
 
         // Connect to MongoDB
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/enginia-to-do');
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/enjinia-to-do');
         console.log('✅ MongoDB connected');
 
         // Define default roles

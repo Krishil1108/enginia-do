@@ -416,7 +416,7 @@ const TaskManagementSystem = () => {
 
     if (isIOSSafari) {
       // iOS Safari manual installation instructions
-      showInfo('To install Enginia-do on iOS:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nEnginia-do will then appear as an app icon on your home screen!', 'Install Enginia-do on iOS');
+      showInfo('To install Enjinia-do on iOS:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nEnjinia-do will then appear as an app icon on your home screen!', 'Install Enjinia-do on iOS');
       setShowInstallPrompt(false);
       return;
     }
@@ -613,7 +613,7 @@ const TaskManagementSystem = () => {
     }
   }, []);
 
-  // Check if current user is admin - Vaishal and Nirali (Enginia owners)
+  // Check if current user is admin - Vaishal and Nirali (Enjinia owners)
   const isAdmin = useCallback(() => {
     return isOwner || ['vaishal', 'nirali'].includes(currentUser?.username?.toLowerCase());
   }, [currentUser, isOwner]);
@@ -624,7 +624,7 @@ const TaskManagementSystem = () => {
 
   const getMyTeamMembers = useCallback(() => {
     if (!currentUser) return [];
-    // For Enginia-do, return all active users as potential team members
+    // For Enjinia-do, return all active users as potential team members
     return users.filter(u => u.isActive !== false);
   }, [currentUser, users]);
 
@@ -2386,7 +2386,7 @@ Priority: ${task.priority}`;
 
     // Summary Sheet
     const summaryData = [
-      ['Enginia-do Report'],
+      ['Enjinia-do Report'],
       ['Period', data.period.label],
       ['Report Type', data.period.type.toUpperCase()],
       ['Generated On', new Date().toLocaleDateString()],
@@ -2436,7 +2436,7 @@ Priority: ${task.priority}`;
     // Title
     doc.setFontSize(20);
     doc.setFont(undefined, 'bold');
-    doc.text('Enginia-do Report', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('Enjinia-do Report', pageWidth / 2, yPosition, { align: 'center' });
     yPosition += 15;
 
     // Period Info
@@ -2603,7 +2603,7 @@ Priority: ${task.priority}`;
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
               <Users className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Enginia-do</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Enjinia-do</h1>
             <p className="text-gray-600 mt-2">
               {isRegistering ? 'Create your account' : 'Sign in to continue'}
             </p>
@@ -3732,7 +3732,7 @@ Priority: ${task.priority}`;
               <div>
                 <h4 className="font-medium text-gray-900">App Status</h4>
                 <p className="text-sm text-gray-600">
-                  {isInstalled ? 'Enginia-do is installed as an app on your device' : 'Enginia-do can be installed as a native app'}
+                  {isInstalled ? 'Enjinia-do is installed as an app on your device' : 'Enjinia-do can be installed as a native app'}
                 </p>
               </div>
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -3748,7 +3748,7 @@ Priority: ${task.priority}`;
                 {deferredPrompt && (
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                     <div>
-                      <h4 className="font-medium text-gray-900">Install Enginia-do App</h4>
+                      <h4 className="font-medium text-gray-900">Install Enjinia-do App</h4>
                       <p className="text-sm text-gray-600">
                         Get offline access, push notifications, and home screen icon
                       </p>
@@ -3833,8 +3833,8 @@ Priority: ${task.priority}`;
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-green-900">Enginia-do is installed!</p>
-                    <p className="text-sm text-green-700">You can now use Enginia-do as a native app with offline access and push notifications.</p>
+                    <p className="font-medium text-green-900">Enjinia-do is installed!</p>
+                    <p className="text-sm text-green-700">You can now use Enjinia-do as a native app with offline access and push notifications.</p>
                   </div>
                 </div>
               </div>
@@ -6368,7 +6368,7 @@ Priority: ${task.priority}`;
     );
   };
 
-  // Confidential Tasks View - All confidential tasks (only accessible to Enginia owners: Vaishal and Nirali)
+  // Confidential Tasks View - All confidential tasks (only accessible to Enjinia owners: Vaishal and Nirali)
   const ConfidentialTasksView = () => {
     // Get all confidential tasks
     const confidentialTasks = tasks.filter(task => task.isConfidential);
@@ -6625,7 +6625,7 @@ Priority: ${task.priority}`;
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enginia-do</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enjinia-do</h1>
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-lg">
                 <User className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900">{currentUser.name}</span>

@@ -20,7 +20,7 @@ const User = mongoose.model('User', UserSchema);
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/enginia-to-do', {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/enjinia-to-do', {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       family: 4
@@ -51,7 +51,7 @@ const createOwners = async () => {
         name: 'Vaishal',
         username: 'vaishal',
         password: hashedVaishalPassword,
-        email: 'vaishal@enginia.com',
+        email: 'vaishal@enjinia.com',
         role: 'Admin',
         department: 'Owner',
         isActive: true,
@@ -61,7 +61,7 @@ const createOwners = async () => {
         name: 'Nirali',
         username: 'nirali',
         password: hashedNiraliPassword,
-        email: 'nirali@enginia.com',
+        email: 'nirali@enjinia.com',
         role: 'Admin',
         department: 'Owner',
         isActive: true,
@@ -87,13 +87,13 @@ const createOwners = async () => {
     console.log(`👤 Vaishal:`);
     console.log(`   Username: vaishal`);
     console.log(`   Password: ${vaishalPassword}`);
-    console.log(`   Email: vaishal@enginia.com`);
+    console.log(`   Email: vaishal@enjinia.com`);
     console.log(`   Role: Admin (Owner)`);
     console.log('');
     console.log(`👤 Nirali:`);
     console.log(`   Username: nirali`);
     console.log(`   Password: ${niraliPassword}`);
-    console.log(`   Email: nirali@enginia.com`);
+    console.log(`   Email: nirali@enjinia.com`);
     console.log(`   Role: Admin (Owner)`);
     console.log('='.repeat(50));
     console.log('\n✨ Both users have full admin rights and owner privileges');

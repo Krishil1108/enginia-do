@@ -19,9 +19,9 @@ mongoose.connect(mongoUri, {
     useUnifiedTopology: true
 });
 
-async function createEnginiaOwners() {
+async function createenjiniaOwners() {
     try {
-        console.log('🚀 Creating Enginia owners...');
+        console.log('🚀 Creating enjinia owners...');
 
         // Generate 6-digit numeric passwords
         const vaishalPassword = Math.floor(100000 + Math.random() * 900000).toString();
@@ -30,7 +30,7 @@ async function createEnginiaOwners() {
         const owners = [
             {
                 username: 'vaishal',
-                email: 'vaishal@enginia.com',
+                email: 'vaishal@enjinia.com',
                 password: vaishalPassword,
                 role: 'Admin',
                 team: 'Management',
@@ -38,7 +38,7 @@ async function createEnginiaOwners() {
             },
             {
                 username: 'nirali',
-                email: 'nirali@enginia.com', 
+                email: 'nirali@enjinia.com', 
                 password: niraliPassword,
                 role: 'Admin',
                 team: 'Management',
@@ -95,7 +95,7 @@ async function createEnginiaOwners() {
             console.log('');
         }
 
-        console.log('🎉 Enginia owners created successfully!');
+        console.log('🎉 enjinia owners created successfully!');
         console.log('\n⚠️  Important: Save these passwords securely!');
         
     } catch (error) {
@@ -105,4 +105,4 @@ async function createEnginiaOwners() {
     }
 }
 
-createEnginiaOwners();
+createenjiniaOwners();

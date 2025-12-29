@@ -19,14 +19,14 @@ mongoose.connect(mongoUri, {
     useUnifiedTopology: true
 });
 
-async function createEnginiaTeamMembers() {
+async function createenjiniaTeamMembers() {
     try {
-        console.log('🚀 Creating Enginia team members...');
+        console.log('🚀 Creating enjinia team members...');
 
         const teamMembers = [
             {
                 username: 'chintan',
-                email: 'chintan@enginia.com',
+                email: 'chintan@enjinia.com',
                 name: 'Chintan',
                 role: 'Employee',
                 department: 'Development',
@@ -34,7 +34,7 @@ async function createEnginiaTeamMembers() {
             },
             {
                 username: 'gaurav',
-                email: 'gaurav@enginia.com',
+                email: 'gaurav@enjinia.com',
                 name: 'Gaurav',
                 role: 'Employee',
                 department: 'Development',
@@ -42,7 +42,7 @@ async function createEnginiaTeamMembers() {
             },
             {
                 username: 'pratik',
-                email: 'pratik@enginia.com',
+                email: 'pratik@enjinia.com',
                 name: 'Pratik',
                 role: 'Employee',
                 department: 'Development',
@@ -50,7 +50,7 @@ async function createEnginiaTeamMembers() {
             },
             {
                 username: 'karan',
-                email: 'karan@enginia.com',
+                email: 'karan@enjinia.com',
                 name: 'Karan',
                 role: 'Employee',
                 department: 'Development',
@@ -58,7 +58,7 @@ async function createEnginiaTeamMembers() {
             },
             {
                 username: 'shivam',
-                email: 'shivam@enginia.com',
+                email: 'shivam@enjinia.com',
                 name: 'Shivam',
                 role: 'Employee',
                 department: 'Development',
@@ -66,7 +66,7 @@ async function createEnginiaTeamMembers() {
             },
             {
                 username: 'deep',
-                email: 'deep@enginia.com',
+                email: 'deep@enjinia.com',
                 name: 'Deep',
                 role: 'Employee',
                 department: 'Development',
@@ -74,7 +74,7 @@ async function createEnginiaTeamMembers() {
             },
             {
                 username: 'mehul',
-                email: 'mehul@enginia.com',
+                email: 'mehul@enjinia.com',
                 name: 'Mehul',
                 role: 'Employee',
                 department: 'Development',
@@ -82,7 +82,7 @@ async function createEnginiaTeamMembers() {
             },
             {
                 username: 'mihir',
-                email: 'mihir@enginia.com',
+                email: 'mihir@enjinia.com',
                 name: 'Mihir',
                 role: 'Employee',
                 department: 'Development',
@@ -90,7 +90,7 @@ async function createEnginiaTeamMembers() {
             },
             {
                 username: 'vishal',
-                email: 'vishal@enginia.com',
+                email: 'vishal@enjinia.com',
                 name: 'Vishal',
                 role: 'Employee',
                 department: 'Development',
@@ -130,7 +130,7 @@ async function createEnginiaTeamMembers() {
             }
         }
 
-        console.log('\n✅ Enginia team members creation completed!');
+        console.log('\n✅ enjinia team members creation completed!');
         console.log('\n📌 Important Notes:');
         console.log('- Save these passwords securely');
         console.log('- Users should change passwords on first login');
@@ -145,4 +145,4 @@ async function createEnginiaTeamMembers() {
 }
 
 // Run the function
-createEnginiaTeamMembers();
+createenjiniaTeamMembers();

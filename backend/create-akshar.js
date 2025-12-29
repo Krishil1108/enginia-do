@@ -28,7 +28,7 @@ async function createAkshar() {
 
         const aksharData = {
             username: 'akshar',
-            email: 'akshar@enginia.com',
+            email: 'akshar@enjinia.com',
             password: aksharPassword,
             role: 'Admin',
             team: 'Management',
