@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.9.1-' + Date.now(); // Rebrand: Enjinia (keeping API URL as enginia-do.onrender.com)
+const CACHE_VERSION = 'v1.9.2-' + Date.now(); // Fix: Admin Reports now respects role permissions
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'

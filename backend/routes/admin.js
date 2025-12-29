@@ -249,7 +249,7 @@ router.get('/user-permissions/:username', async (req, res) => {
       associateTasks: false,
       externalTasks: false,
       confidentialTasks: user.username === 'vaishal' || user.name === 'Nirali',
-      adminReports: user.username === 'vaishal' || user.name === 'Nirali',
+      adminReports: false,
       adminPanel: user.username === 'vaishal' || user.name === 'Nirali',
       settings: true
     };
@@ -257,9 +257,8 @@ router.get('/user-permissions/:username', async (req, res) => {
     // Use role permissions if exists
     if (user.role && user.role.permissions) {
       permissions = user.role.permissions;
-      // Override owner-only permissions
+      // Override owner-only permissions (only Confidential Tasks and Admin Panel)
       permissions.confidentialTasks = user.username === 'vaishal' || user.name === 'Nirali';
-      permissions.adminReports = user.username === 'vaishal' || user.name === 'Nirali';
       permissions.adminPanel = user.username === 'vaishal' || user.name === 'Nirali';
     }
 
