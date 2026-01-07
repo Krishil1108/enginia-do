@@ -1,11 +1,12 @@
-// Notification Service for PWA Push Notifications
+// Notification Service for Firebase Push Notifications
 import API_URL from '../config';
+import { messaging } from '../firebase-config';
+import { getToken } from 'firebase/messaging';
 
 class NotificationService {
   constructor() {
-    this.registration = null;
-    this.subscription = null;
-    this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
+    this.fcmToken = null;
+    this.isSupported = 'Notification' in window && 'serviceWorker' in navigator;
   }
 
   // Initialize the notification service
@@ -16,47 +17,14 @@ class NotificationService {
     }
 
     try {
-      // Register service worker
-      console.log('Registering service worker...');
-      this.registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('SW registered:', this.registration);
+      // Register service worker for Firebase
+      console.log('Registering Firebase service worker...');
+      await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      console.log('Firebase Service Worker registered successfully');
       
-      // Wait for service worker to be ready
-      console.log('Waiting for service worker to be ready...');
-      const registration = await navigator.serviceWorker.ready;
-      this.registration = registration;
-      console.log('Service Worker is ready:', registration);
-      
-      // Wait a bit for the service worker to fully activate
-      if (registration.active) {
-        console.log('Service Worker is active and ready for push notifications');
-        return true;
-      } else {
-        console.log('Waiting for Service Worker to activate...');
-        return new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            console.warn('Service Worker activation timeout');
-            resolve(true); // Still resolve to allow push functionality
-          }, 5000);
-          
-          const checkActivation = () => {
-            if (registration.active) {
-              clearTimeout(timeout);
-              console.log('Service Worker activated successfully');
-              resolve(true);
-            }
-          };
-          
-          // Check immediately
-          checkActivation();
-          
-          // Listen for state changes
-          registration.addEventListener('statechange', checkActivation);
-        });
-      }
+      return true;
     } catch (error) {
       console.error('Service Worker registration failed:', error);
-      // Still return true to allow basic notification functionality
       return false;
     }
   }
@@ -78,83 +46,43 @@ class NotificationService {
     return this.isSupported && Notification.permission === 'granted';
   }
 
-  // Subscribe to push notifications
+  // Subscribe to Firebase push notifications
   async subscribeToPush() {
-    if (!this.registration) {
-      console.error('Service Worker not registered');
-      return null;
-    }
-
     try {
-      // Ensure service worker is ready and active
-      await navigator.serviceWorker.ready;
-      
-      // Wait a bit more to ensure the service worker is fully active
-      if (!this.registration.active) {
-        console.log('Waiting for service worker to activate...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!messaging) {
+        console.error('Firebase messaging not initialized');
+        return null;
       }
 
-      // Check if already subscribed
-      const existingSubscription = await this.registration.pushManager.getSubscription();
-      if (existingSubscription) {
-        this.subscription = existingSubscription;
-        console.log('Using existing subscription:', existingSubscription);
-        return existingSubscription;
-      }
-
-      // Create new subscription
-      const vapidPublicKey = 'BFNVI-J2_zF_ZzZtk49ZwfFfq-HiePDgJRzXm2vP-ar2ABnfVI-wJmSKJTAyWKKZkRH-Og77s4_1ER-7fAES3xU';
-      
-      console.log('Creating new push subscription...');
-      const subscription = await this.registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
+      // Get FCM token
+      console.log('Requesting FCM token...');
+      const token = await getToken(messaging, {
+        vapidKey: 'BFNVI-J2_zF_ZzZtk49ZwfFfq-HiePDgJRzXm2vP-ar2ABnfVI-wJmSKJTAyWKKZkRH-Og77s4_1ER-7fAES3xU'
       });
 
-      this.subscription = subscription;
-      console.log('Push subscription created successfully:', subscription);
-      
-      // Send subscription to server
-      await this.sendSubscriptionToServer(subscription);
-      
-      return subscription;
-    } catch (error) {
-      console.error('Failed to subscribe to push notifications:', error);
-      
-      // If it's an AbortError, try once more after a delay
-      if (error.name === 'AbortError') {
-        console.log('Retrying subscription after service worker activation...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      if (token) {
+        this.fcmToken = token;
+        console.log('FCM token obtained:', token.substring(0, 20) + '...');
         
-        try {
-          const retrySubscription = await this.registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: this.urlBase64ToUint8Array('BFNVI-J2_zF_ZzZtk49ZwfFfq-HiePDgJRzXm2vP-ar2ABnfVI-wJmSKJTAyWKKZkRH-Og77s4_1ER-7fAES3xU')
-          });
-          
-          this.subscription = retrySubscription;
-          await this.sendSubscriptionToServer(retrySubscription);
-          return retrySubscription;
-        } catch (retryError) {
-          console.error('Retry also failed:', retryError);
-        }
+        // Send token to server
+        await this.sendTokenToServer(token);
+        
+        return token;
+      } else {
+        console.warn('No FCM token available');
+        return null;
       }
-      
+    } catch (error) {
+      console.error('Failed to get FCM token:', error);
       return null;
     }
   }
 
   // Unsubscribe from push notifications
   async unsubscribeFromPush() {
-    if (!this.subscription) {
-      return true;
-    }
-
     try {
-      await this.subscription.unsubscribe();
-      await this.removeSubscriptionFromServer();
-      this.subscription = null;
+      await this.removeTokenFromServer();
+      this.fcmToken = null;
       console.log('Unsubscribed from push notifications');
       return true;
     } catch (error) {
@@ -163,8 +91,8 @@ class NotificationService {
     }
   }
 
-  // Send subscription to server
-  async sendSubscriptionToServer(subscription) {
+  // Send FCM token to server
+  async sendTokenToServer(token) {
     try {
       const user = JSON.parse(localStorage.getItem('currentUser'));
       if (!user) {
@@ -172,64 +100,31 @@ class NotificationService {
         return;
       }
 
-      console.log('Subscribing user to push notifications:', {
-        username: user.username,
-        _id: user._id,
-        name: user.name
+      console.log('Registering FCM token for user:', user.username);
+
+      const response = await fetch(`${API_URL}/notifications/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fcmToken: token,
+          userId: user._id || user.username
+        })
       });
 
-      // Subscribe with both username and _id to ensure compatibility
-      const subscriptionRequests = [];
-      
-      // Primary subscription with username
-      subscriptionRequests.push(
-        fetch(`${API_URL}/notifications/subscribe`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            subscription: subscription.toJSON(),
-            userId: user.username,
-            userAgent: navigator.userAgent
-          })
-        })
-      );
-      
-      // Secondary subscription with _id if available
-      if (user._id && user._id !== user.username) {
-        subscriptionRequests.push(
-          fetch(`${API_URL}/notifications/subscribe`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              subscription: subscription.toJSON(),
-              userId: user._id,
-              userAgent: navigator.userAgent
-            })
-          })
-        );
+      if (response.ok) {
+        console.log('FCM token registered successfully');
+      } else {
+        throw new Error('Failed to register FCM token');
       }
-      
-      const results = await Promise.allSettled(subscriptionRequests);
-      console.log('Subscription results:', results);
-      
-      // Check if at least one succeeded
-      const hasSuccess = results.some(result => result.status === 'fulfilled' && result.value.ok);
-      if (!hasSuccess) {
-        throw new Error('Failed to send subscription to server');
-      }
-
-      console.log('Subscription sent to server successfully');
     } catch (error) {
-      console.error('Error sending subscription to server:', error);
+      console.error('Error sending FCM token to server:', error);
     }
   }
 
-  // Remove subscription from server
-  async removeSubscriptionFromServer() {
+  // Remove token from server
+  async removeTokenFromServer() {
     try {
       const user = JSON.parse(localStorage.getItem('currentUser'));
       if (!user) return;
@@ -244,62 +139,7 @@ class NotificationService {
         })
       });
     } catch (error) {
-      console.error('Error removing subscription from server:', error);
-    }
-  }
-
-  // Show local notification using service worker
-  async showLocalNotification(title, options = {}) {
-    if (Notification.permission !== 'granted') {
-      console.warn('Notification permission not granted');
-      return null;
-    }
-
-    try {
-      if (this.registration) {
-        // Use service worker to show notification (WhatsApp-style)
-        console.log('📢 Showing active notification via service worker:', title);
-        return await this.registration.showNotification(title, {
-          body: options.body || '📋 You have a new task notification',
-          icon: options.icon || '/favicon.ico',
-          badge: options.badge || '/favicon.ico',
-          tag: (options.tag || 'task-notification') + '_' + Date.now(), // Unique to avoid replacement
-          requireInteraction: true, // Force interaction like WhatsApp
-          silent: false, // Never silent
-          vibrate: options.vibrate || [300, 100, 300, 100, 300], // Strong vibration
-          renotify: true, // Re-alert user
-          persistent: true,
-          actions: [
-            { action: 'view', title: '👁️ Open', icon: '/favicon.ico' },
-            { action: 'dismiss', title: '❌ Close', icon: '/favicon.ico' }
-          ],
-          data: {
-            url: '/',
-            timestamp: Date.now(),
-            ...options.data
-          },
-          ...options
-        });
-      } else {
-        // Fallback to direct notification (when SW not available)
-        console.log('Showing notification directly (no SW):', title);
-        const notification = new Notification(title, {
-          body: options.body || 'Task Management notification',
-          icon: options.icon || '/favicon.ico',
-          tag: options.tag || 'task-notification',
-          ...options
-        });
-
-        // Auto close after 5 seconds if not clicked
-        setTimeout(() => {
-          notification.close();
-        }, 5000);
-
-        return notification;
-      }
-    } catch (error) {
-      console.error('Error showing local notification:', error);
-      return null;
+      console.error('Error removing token from server:', error);
     }
   }
 
@@ -310,238 +150,46 @@ class NotificationService {
       return;
     }
 
-    console.log('🧪 Testing notification system...');
-    
-    // Check notification permission status
-    console.log('📋 Notification permission:', Notification.permission);
-    
-    // Check if browser supports notifications
-    console.log('🌐 Browser support check:', {
-      notificationSupport: 'Notification' in window,
-      serviceWorkerSupport: 'serviceWorker' in navigator,
-      pushManagerSupport: 'PushManager' in window
-    });
-    
-    // Check current visible notifications
-    if (this.registration) {
-      try {
-        const notifications = await this.registration.getNotifications();
-        console.log('📱 Currently visible notifications:', notifications.length);
-        notifications.forEach((notification, index) => {
-          console.log(`📌 Visible notification ${index + 1}:`, {
-            title: notification.title,
-            body: notification.body,
-            tag: notification.tag
-          });
-        });
-      } catch (error) {
-        console.log('❌ Could not get visible notifications:', error);
-      }
-    }
-
-    console.log('🚀 Showing test notification...');
-    const result = await this.showLocalNotification('🔔 Enjinia-do Notification Test', {
-      body: '📱 This is a test push notification! If you see this, notifications are working perfectly.',
-      requireInteraction: true, // Stay visible like WhatsApp
-      silent: false,
-      vibrate: [300, 100, 300, 100, 300, 100, 300], // Strong vibration
-      renotify: true,
-      tag: 'test_notification_' + Date.now() // Unique tag
-    });
-    
-    if (result) {
-      console.log('✅ Test notification API call successful');
-      
-      // Wait a moment and check if notification is visible
-      setTimeout(async () => {
-        if (this.registration) {
-          try {
-            const notifications = await this.registration.getNotifications();
-            console.log('📊 Notifications after test:', notifications.length);
-            if (notifications.length === 0) {
-              console.warn('⚠️ Notification was created but is not visible - likely suppressed by browser/device settings');
-              alert('🔔 Notification was sent but may be suppressed by your device settings. Please check:\n\n1. Browser notification settings for this site\n2. Device "Do Not Disturb" mode\n3. System notification settings');
-            } else {
-              console.log('✅ Notification is visible in the system');
-            }
-          } catch (error) {
-            console.log('Could not check notification visibility:', error);
-          }
-        }
-      }, 1000);
-    } else {
-      console.error('❌ Failed to show test notification');
-    }
-  }
-
-  async diagnoseNotificationIssues() {
-    console.log('🔍 COMPREHENSIVE NOTIFICATION DIAGNOSTICS');
-    console.log('=' .repeat(50));
-    
-    // Basic browser support
-    console.log('🌐 Browser Support:');
-    console.log('  - Notifications:', 'Notification' in window);
-    console.log('  - Service Workers:', 'serviceWorker' in navigator);
-    console.log('  - Push Manager:', 'PushManager' in window);
-    
-    // Permission status
-    console.log('🔐 Permission Status:', Notification.permission);
-    
-    // Browser info
-    console.log('🖥️ Browser Info:');
-    console.log('  - User Agent:', navigator.userAgent.substring(0, 100) + '...');
-    console.log('  - Platform:', navigator.platform);
-    console.log('  - Language:', navigator.language);
-    
-    // Page visibility
-    console.log('👁️ Page Visibility:');
-    console.log('  - Document Hidden:', document.hidden);
-    console.log('  - Has Focus:', document.hasFocus ? document.hasFocus() : 'unknown');
-    console.log('  - Visibility State:', document.visibilityState);
-    
-    // Check for Do Not Disturb or Focus Assist
-    if (navigator.permissions) {
-      try {
-        const permission = await navigator.permissions.query({name: 'notifications'});
-        console.log('📋 Detailed Permission:', permission.state);
-      } catch (e) {
-        console.log('📋 Detailed Permission: Not available');
-      }
-    }
-    
-    // Current notifications
-    if (this.registration) {
-      try {
-        const notifications = await this.registration.getNotifications();
-        console.log('📱 Current Notifications:', notifications.length);
-        notifications.forEach((notif, i) => {
-          console.log(`  ${i + 1}. ${notif.title} (${notif.tag})`);
-        });
-      } catch (e) {
-        console.log('📱 Current Notifications: Error checking');
-      }
-    }
-    
-    // System info that might affect notifications
-    console.log('⚙️ Potential Issues:');
-    if (document.hidden) console.warn('  ⚠️ Page is hidden - may affect notifications');
-    if (Notification.permission !== 'granted') console.warn('  ⚠️ Permission not granted');
-    if (navigator.userAgent.includes('Mobile')) console.log('  📱 Mobile device detected');
-    if (navigator.userAgent.includes('iPhone')) console.warn('  🍎 iOS - notifications may be limited');
-    
-    console.log('=' .repeat(50));
-    
-    return {
-      supported: 'Notification' in window,
-      permission: Notification.permission,
-      hidden: document.hidden,
-      mobile: navigator.userAgent.includes('Mobile')
-    };
-  }
-
-  async showActiveNotification() {
-    console.log('⚡ Showing WhatsApp-style active notification...');
+    console.log('🧪 Testing Firebase notification system...');
     
     try {
-      // Method 1: Try direct browser notification first (most reliable)
-      try {
-        const directNotif = new Notification('🚨 DIRECT WhatsApp-Style Notification!', {
-          body: 'This is a DIRECT notification that should be VERY visible!',
-          icon: '/favicon.ico',
-          requireInteraction: true,
-          vibrate: [500, 200, 500, 200, 500, 200, 500],
-          silent: false,
-          tag: 'direct-active-' + Date.now()
-        });
-        
-        directNotif.onclick = () => {
-          console.log('🖱️ Direct notification clicked!');
-          window.focus();
-        };
-        
-        console.log('✅ Direct active notification created successfully');
-      } catch (directError) {
-        console.error('❌ Direct notification failed:', directError);
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      if (!user) {
+        alert('Please log in to test notifications');
+        return;
       }
-      
-      // Method 2: Service worker notification as backup
-      await this.showLocalNotification(
-        '🚨 SERVICE WORKER Active Notification!', 
-        'This notification demands your attention like WhatsApp!',
-        {
-          requireInteraction: true,
-          vibrate: [500, 200, 500, 200, 500, 200, 500],
-          silent: false,
-          renotify: true,
-          tag: 'sw-active-notification-' + Date.now()
-        }
-      );
-      
-    } catch (error) {
-      console.error('Failed to show active notification:', error);
-      
-      // Last resort: Alert user about notification issues
-      setTimeout(() => {
-        alert('🚨 NOTIFICATION TEST\n\nIf you\'re seeing this alert but NO notification popup, your browser is blocking notifications!\n\nTo fix:\n1. Check browser notification settings\n2. Disable Do Not Disturb mode\n3. Enable site notifications\n4. Try a different browser');
-      }, 1000);
-    }
-  }
 
-  // Helper function to convert VAPID key
-  urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
+      const response = await fetch(`${API_URL}/notifications/test-push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user._id || user.username
+        })
+      });
 
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  }
-
-  // Re-register existing subscription with backend (for server restarts)
-  async reRegisterSubscription() {
-    if (!this.registration) {
-      return false;
-    }
-
-    try {
-      const subscription = await this.registration.pushManager.getSubscription();
-      if (subscription) {
-        console.log('Found existing subscription, re-registering with backend...');
-        await this.sendSubscriptionToServer(subscription);
-        return true;
+      const result = await response.json();
+      if (result.success) {
+        console.log('✅ Test notification sent successfully');
+        alert('✅ Test notification sent! Check your device for the notification.');
       } else {
-        console.log('No existing subscription found');
-        return false;
+        console.error('❌ Test notification failed:', result.error);
+        alert('Test notification failed: ' + result.error);
       }
     } catch (error) {
-      console.error('Error re-registering subscription:', error);
-      return false;
+      console.error('Error testing notification:', error);
+      alert('Failed to send test notification');
     }
   }
 
   // Get subscription status
   async getSubscriptionStatus() {
-    if (!this.registration) {
-      return { subscribed: false, supported: this.isSupported };
-    }
-
-    try {
-      const subscription = await this.registration.pushManager.getSubscription();
-      return {
-        subscribed: !!subscription,
-        supported: this.isSupported,
-        permission: Notification.permission
-      };
-    } catch (error) {
-      console.error('Error checking subscription status:', error);
-      return { subscribed: false, supported: this.isSupported };
-    }
+    return {
+      subscribed: !!this.fcmToken,
+      supported: this.isSupported,
+      permission: Notification.permission
+    };
   }
 }
 

@@ -1,32 +1,9 @@
 const express = require('express');
-const webpush = require('web-push');
 const router = express.Router();
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const firebaseNotificationService = require('../services/firebaseNotificationService');
 const { deleteOldNotifications, getNotificationStats, runManualCleanup } = require('../services/notificationCleanup');
-
-// VAPID Keys - Use environment variables in production
-const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || 'BFNVI-J2_zF_ZzZtk49ZwfFfq-HiePDgJRzXm2vP-ar2ABnfVI-wJmSKJTAyWKKZkRH-Og77s4_1ER-7fAES3xU',
-  privateKey: process.env.VAPID_PRIVATE_KEY || 'ryUh3Js6fhVUJURfr1WOb8boWO7MbcIxjhMb7rvB7DU'
-};
-
-// Configure web-push
-try {
-  webpush.setVapidDetails(
-    process.env.VAPID_EMAIL || 'mailto:noreply@taskmanager.com',
-    vapidKeys.publicKey,
-    vapidKeys.privateKey
-  );
-  console.log('✅ VAPID keys configured for push notifications');
-} catch (error) {
-  console.error('❌ Failed to configure VAPID keys:', error.message);
-  console.log('💡 Run "node generate-vapid-keys.js" to generate new keys');
-}
-
-// In-memory storage for subscriptions (in production, use a database)
-const subscriptions = new Map();
 
 // Track recent notifications to prevent rapid duplicates (5-second window)
 const recentNotifications = new Map();
@@ -120,55 +97,44 @@ router.post('/', async (req, res) => {
 
 // Push notification routes
 
-// Subscribe to push notifications
+// Subscribe to push notifications (FCM token registration)
 router.post('/subscribe', async (req, res) => {
   try {
-    const { subscription, userId, userAgent } = req.body;
+    const { fcmToken, userId } = req.body;
     
-    if (!subscription || !userId) {
+    if (!fcmToken || !userId) {
       return res.status(400).json({ 
-        error: 'Subscription and userId are required' 
+        error: 'FCM token and userId are required' 
       });
     }
 
-    // Check if this subscription already exists to prevent duplicates
-    const subscriptionEndpoint = subscription.endpoint;
-    let existingUserId = null;
-    
-    // Look for existing subscription with same endpoint
-    for (const [storedUserId, storedData] of subscriptions.entries()) {
-      if (storedData.subscription.endpoint === subscriptionEndpoint) {
-        existingUserId = storedUserId;
-        break;
-      }
+    // Find user by either _id or username
+    let user = await User.findById(userId);
+    if (!user) {
+      user = await User.findOne({ username: userId });
     }
     
-    // If subscription exists for different userId, remove the old one
-    if (existingUserId && existingUserId !== userId) {
-      console.log(`🔄 Removing duplicate subscription for ${existingUserId}, keeping ${userId}`);
-      subscriptions.delete(existingUserId);
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
     }
 
-    // Store subscription (will overwrite if same userId)
-    subscriptions.set(userId, {
-      subscription,
-      userAgent: userAgent || 'Unknown',
-      subscribedAt: new Date(),
-      endpoint: subscriptionEndpoint
-    });
+    // Save FCM token to user
+    user.fcmToken = fcmToken;
+    await user.save();
 
-    console.log(`✅ User ${userId} subscribed to push notifications`);
-    console.log(`📊 Total unique subscriptions: ${subscriptions.size}`);
+    console.log(`✅ User ${userId} subscribed to Firebase push notifications`);
     
     // Send a welcome notification
-    const payload = JSON.stringify({
-      title: 'Notifications Enabled!',
-      body: 'You will now receive push notifications for task updates.',
-      icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%236366f1"/%3E%3Cpath d="M25 50L40 65L75 30" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E',
-      tag: 'welcome-notification'
-    });
-
-    await webpush.sendNotification(subscription, payload);
+    const result = await firebaseNotificationService.sendNotification(
+      fcmToken,
+      {
+        title: 'Notifications Enabled!',
+        body: 'You will now receive push notifications for task updates.',
+        data: { type: 'welcome' }
+      }
+    );
 
     res.status(201).json({ 
       message: 'Subscription successful',
@@ -194,10 +160,15 @@ router.post('/unsubscribe', async (req, res) => {
       });
     }
 
-    // Remove subscription
-    const removed = subscriptions.delete(userId);
+    // Find user and remove FCM token
+    let user = await User.findById(userId);
+    if (!user) {
+      user = await User.findOne({ username: userId });
+    }
     
-    if (removed) {
+    if (user) {
+      user.fcmToken = null;
+      await user.save();
       console.log(`User ${userId} unsubscribed from push notifications`);
       res.json({ 
         message: 'Unsubscribed successfully',
@@ -205,7 +176,7 @@ router.post('/unsubscribe', async (req, res) => {
       });
     } else {
       res.status(404).json({ 
-        error: 'Subscription not found',
+        error: 'User not found',
         success: false 
       });
     }
@@ -300,19 +271,29 @@ router.post('/test-push', async (req, res) => {
 });
 
 // Get push notification stats
-router.get('/push-stats', (req, res) => {
-  const stats = {
-    totalSubscriptions: subscriptions.size,
-    subscriptionKeys: Array.from(subscriptions.keys()),
-    subscriptions: Array.from(subscriptions.entries()).map(([userId, data]) => ({
-      userId,
-      subscribedAt: data.subscribedAt,
-      userAgent: data.userAgent ? data.userAgent.substring(0, 50) + '...' : 'Unknown'
-    }))
-  };
-  
-  console.log('📊 Current push notification stats:', stats);
-  res.json(stats);
+router.get('/push-stats', async (req, res) => {
+  try {
+    const usersWithTokens = await User.countDocuments({ fcmToken: { $exists: true, $ne: null } });
+    const users = await User.find({ fcmToken: { $exists: true, $ne: null } })
+      .select('username name fcmToken')
+      .limit(50);
+    
+    const stats = {
+      totalSubscriptions: usersWithTokens,
+      subscribedUsers: users.map(u => ({
+        userId: u._id,
+        username: u.username,
+        name: u.name,
+        hasToken: !!u.fcmToken
+      }))
+    };
+    
+    console.log('📊 Current push notification stats:', { totalSubscriptions: stats.totalSubscriptions });
+    res.json(stats);
+  } catch (error) {
+    console.error('Error getting push stats:', error);
+    res.status(500).json({ error: 'Failed to get push stats' });
+  }
 });
 
 // Helper function to send push notifications using Firebase
@@ -373,73 +354,69 @@ router.post('/burst-test', async (req, res) => {
   try {
     const { userId } = req.body;
     
-    if (!userId) {
-      // Send to all users if no specific user
-      const allUsers = Array.from(subscriptions.keys());
-      if (allUsers.length === 0) {
-        return res.json({ success: false, message: 'No subscriptions found' });
-      }
+    let targetUsers = [];
+    if (userId) {
+      let user = await User.findById(userId);
+      if (!user) user = await User.findOne({ username: userId });
+      if (user && user.fcmToken) targetUsers.push(user);
+    } else {
+      targetUsers = await User.find({ fcmToken: { $exists: true, $ne: null } });
+    }
+    
+    if (targetUsers.length === 0) {
+      return res.json({ success: false, message: 'No users with FCM tokens found' });
     }
 
     const notifications = [
       {
         title: '🚨 URGENT: Task Reminder',
-        body: 'You have an important task due soon! This notification should be very noticeable.',
-        vibrate: [500, 200, 500, 200, 500, 200, 500]
+        body: 'You have an important task due soon! This notification should be very noticeable.'
       },
       {
         title: '📋 Task Update Alert',
-        body: 'Your task list has been updated - check it now!',
-        vibrate: [200, 100, 200, 100, 400]
+        body: 'Your task list has been updated - check it now!'
       },
       {
         title: '⚡ Quick Action Required',
-        body: 'Tap to complete your pending task - just like WhatsApp!',
-        vibrate: [300, 150, 300, 150, 300, 150, 600]
+        body: 'Tap to complete your pending task - just like WhatsApp!'
       }
     ];
 
     let totalSuccess = 0;
-    const targetUsers = userId ? [userId] : Array.from(subscriptions.keys());
     
-    // Send notifications with delays to simulate WhatsApp-style attention
+    // Send notifications with delays
     for (const [index, notif] of notifications.entries()) {
       setTimeout(async () => {
-        for (const targetUserId of targetUsers) {
+        for (const user of targetUsers) {
           try {
-            const result = await sendPushNotification(targetUserId, {
-              title: notif.title,
-              body: notif.body,
-              icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%23ff6b35"/%3E%3Ctext x="50" y="60" font-size="40" text-anchor="middle" fill="white"%3E⚡%3C/text%3E%3C/svg%3E',
-              tag: 'burst_' + index + '_' + Date.now(),
-              vibrate: notif.vibrate,
-              data: {
-                burst: true,
-                sequence: index + 1,
-                total: notifications.length,
-                urgent: true
-              },
-              actions: [
-                { action: 'view', title: '👀 View Now', icon: '/favicon.ico' },
-                { action: 'snooze', title: '⏰ Snooze 5min', icon: '/favicon.ico' },
-                { action: 'dismiss', title: '🚫 Dismiss All', icon: '/favicon.ico' }
-              ]
-            });
+            const result = await firebaseNotificationService.sendNotification(
+              user.fcmToken,
+              {
+                title: notif.title,
+                body: notif.body,
+                data: {
+                  burst: 'true',
+                  sequence: String(index + 1),
+                  total: String(notifications.length),
+                  urgent: 'true'
+                }
+              }
+            );
             
             if (result.success) {
               totalSuccess++;
-              console.log(`✅ Burst notification ${index + 1} sent to ${targetUserId}`);
+              console.log(`✅ Burst notification ${index + 1} sent to ${user.username}`);
             }
           } catch (error) {
-            console.error(`❌ Burst notification ${index + 1} failed for ${targetUserId}:`, error);
+            console.error(`❌ Burst notification ${index + 1} failed for ${user.username}:`, error);
           }
         }
-      }, index * 3000); // Send every 3 seconds for maximum attention
+      }, index * 3000); // Send every 3 seconds
     }
 
     res.json({ 
       success: true, 
-      message: `Burst of ${notifications.length} WhatsApp-style active notifications initiated for ${targetUsers.length} user(s)`,
+      message: `Burst of ${notifications.length} Firebase notifications initiated for ${targetUsers.length} user(s)`,
       targetUsers: targetUsers.length
     });
   } catch (error) {
