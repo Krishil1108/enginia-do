@@ -109,7 +109,16 @@ router.post('/subscribe', async (req, res) => {
     }
 
     // Find user by either _id or username
-    let user = await User.findById(userId);
+    let user = null;
+    
+    // Check if userId looks like a MongoDB ObjectId (24 hex characters)
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+    
+    if (isObjectId) {
+      user = await User.findById(userId);
+    }
+    
+    // If not found by ID or not an ObjectId, try username
     if (!user) {
       user = await User.findOne({ username: userId });
     }
@@ -161,7 +170,16 @@ router.post('/unsubscribe', async (req, res) => {
     }
 
     // Find user and remove FCM token
-    let user = await User.findById(userId);
+    let user = null;
+    
+    // Check if userId looks like a MongoDB ObjectId (24 hex characters)
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+    
+    if (isObjectId) {
+      user = await User.findById(userId);
+    }
+    
+    // If not found by ID or not an ObjectId, try username
     if (!user) {
       user = await User.findOne({ username: userId });
     }
