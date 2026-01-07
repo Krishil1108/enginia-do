@@ -54,6 +54,12 @@ class NotificationService {
         return null;
       }
 
+      // Wait for service worker to be ready
+      await navigator.serviceWorker.ready;
+      
+      // Add a small delay to ensure service worker is fully activated
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Get FCM token
       console.log('Requesting FCM token...');
       const token = await getToken(messaging, {

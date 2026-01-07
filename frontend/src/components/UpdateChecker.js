@@ -36,16 +36,11 @@ const UpdateChecker = () => {
         }
       });
 
-      // Check for updates aggressively - every 10 seconds
+      // Check for updates periodically - every 5 minutes
       const checkForUpdates = () => {
         navigator.serviceWorker.getRegistration().then((registration) => {
           if (registration) {
-            console.log('🔍 Checking for service worker updates...');
-            registration.update().then(() => {
-              console.log('✅ Update check completed');
-            }).catch(err => {
-              console.log('⚠️ Update check failed:', err);
-            });
+            registration.update().catch(() => {});
           }
         });
       };
@@ -53,41 +48,22 @@ const UpdateChecker = () => {
       // Initial check
       checkForUpdates();
 
-      // Check for updates very frequently - every 10 seconds
-      const intervalId = setInterval(checkForUpdates, 10000);
+      // Check for updates every 5 minutes
+      const intervalId = setInterval(checkForUpdates, 300000);
 
-      // Check for updates when page becomes visible
+      // Check for updates when page becomes visible (but silently)
       const handleVisibilityChange = () => {
         if (!document.hidden) {
-          console.log('📱 Page visible - force checking for updates');
           checkForUpdates();
         }
       };
 
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
-      // Force check on focus
-      const handleFocus = () => {
-        console.log('👁️ Window focused - force checking for updates');
-        checkForUpdates();
-      };
-
-      window.addEventListener('focus', handleFocus);
-      
-      // Check on page load
-      const handleLoad = () => {
-        console.log('📄 Page loaded - checking for updates');
-        checkForUpdates();
-      };
-      
-      window.addEventListener('load', handleLoad);
-
       // Cleanup
       return () => {
         clearInterval(intervalId);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
-        window.removeEventListener('focus', handleFocus);
-        window.removeEventListener('load', handleLoad);
       };
     }
   }, []);

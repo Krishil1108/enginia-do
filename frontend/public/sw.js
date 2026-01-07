@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.9.2-' + Date.now(); // Fix: Admin Reports now respects role permissions
+const CACHE_VERSION = 'v1.9.3-' + Date.now(); // Fix: Firebase notifications and reduced update spam
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'
