@@ -2,6 +2,9 @@ const express = require('express');
 const webpush = require('web-push');
 const router = express.Router();
 const Notification = require('../models/Notification');
+const User = require('../models/User');
+const firebaseNotificationService = require('../services/firebaseNotificationService');
+const { deleteOldNotifications, getNotificationStats, runManualCleanup } = require('../services/notificationCleanup');
 
 // VAPID Keys - Use environment variables in production
 const vapidKeys = {
@@ -246,6 +249,30 @@ router.post('/send-push', async (req, res) => {
       });
     }
 
+    // Check for duplicate notifications (5-second window)
+    const notificationKey = `${userId}_${title}_${body}`;
+    const now = Date.now();
+    const lastSent = recentNotifications.get(notificationKey);
+    
+    if (lastSent && (now - lastSent) < 5000) {
+      console.log(`⏭️ Skipping duplicate push notification for ${userId} - sent ${now - lastSent}ms ago`);
+      return res.json({ 
+        success: true, 
+        message: 'Duplicate notification prevented',
+        skipped: true 
+      });
+    }
+    
+    // Record this notification
+    recentNotifications.set(notificationKey, now);
+    
+    // Clean up old entries (older than 10 seconds)
+    for (const [key, timestamp] of recentNotifications.entries()) {
+      if (now - timestamp > 10000) {
+        recentNotifications.delete(key);
+      }
+    }
+
     const result = await sendPushNotification(userId, {
       title,
       body: body || '',
@@ -308,89 +335,53 @@ router.get('/push-stats', (req, res) => {
   res.json(stats);
 });
 
-// Helper function to send push notifications
+// Helper function to send push notifications using Firebase
 async function sendPushNotification(userId, notificationData) {
   try {
-    console.log(`📤 Attempting to send push notification to userId: ${userId}`);
-    console.log(`📋 Available subscriptions:`, Array.from(subscriptions.keys()));
+    console.log(`📤 Attempting to send Firebase push notification to userId: ${userId}`);
     
-    let userSubscription = subscriptions.get(userId);
+    // Find user by either _id or username
+    let user = await User.findById(userId);
+    if (!user) {
+      user = await User.findOne({ username: userId });
+    }
     
-    if (!userSubscription) {
-      console.log(`❌ No subscription found for userId: ${userId}`);
+    if (!user) {
+      console.log(`❌ User not found: ${userId}`);
       return { 
         success: false, 
-        error: `User not subscribed to push notifications. Available subscriptions: ${Array.from(subscriptions.keys()).join(', ')}` 
+        error: `User not found: ${userId}` 
       };
     }
     
-    // Check if we already sent this notification recently (prevent rapid-fire duplicates)
-    const notificationKey = `${userId}_${notificationData.title}_${notificationData.body}`;
-    const now = Date.now();
-    const lastSent = recentNotifications.get(notificationKey);
-    
-    if (lastSent && (now - lastSent) < 5000) { // 5 second deduplication window
-      console.log(`⏭️ Skipping duplicate notification for ${userId} (sent ${now - lastSent}ms ago)`);
+    if (!user.fcmToken) {
+      console.log(`❌ No FCM token found for user: ${userId}`);
       return { 
-        success: true, 
-        message: 'Duplicate notification skipped (too recent)' 
+        success: false, 
+        error: `User has no FCM token registered` 
       };
     }
     
-    // Record this notification
-    recentNotifications.set(notificationKey, now);
+    console.log(`✅ Found FCM token for user: ${userId}`);
     
-    // Clean up old entries (keep only last 5 minutes)
-    for (const [key, timestamp] of recentNotifications.entries()) {
-      if (now - timestamp > 300000) { // 5 minutes
-        recentNotifications.delete(key);
+    // Send notification via Firebase
+    const result = await firebaseNotificationService.sendNotification(
+      user.fcmToken,
+      {
+        title: notificationData.title,
+        body: notificationData.body || '',
+        data: notificationData.data || {}
       }
-    }
+    );
     
-    console.log(`Found subscription for userId: ${userId}`);
-
-    const payload = JSON.stringify({
-      title: notificationData.title,
-      body: notificationData.body || '',
-      icon: notificationData.icon || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%236366f1"/%3E%3Cpath d="M25 50L40 65L75 30" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E',
-      badge: notificationData.badge || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%236366f1"/%3E%3Cpath d="M25 50L40 65L75 30" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/%3E%3C/svg%3E',
-      tag: (notificationData.tag || 'task-notification') + '_' + Date.now(),
-      requireInteraction: true, // Force interaction like WhatsApp/Teams
-      silent: false,
-      vibrate: [300, 100, 300, 100, 300, 100, 300], // Strong vibration pattern
-      renotify: true,
-      persistent: true,
-      data: {
-        url: '/',
-        timestamp: Date.now(),
-        urgent: true,
-        ...notificationData.data
-      },
-      actions: notificationData.actions || [
-        { action: 'view', title: '👁️ Open Task', icon: '/favicon.ico' },
-        { action: 'mark_read', title: '✅ Mark Read', icon: '/favicon.ico' },
-        { action: 'dismiss', title: '❌ Dismiss', icon: '/favicon.ico' }
-      ]
-    });
-
-    await webpush.sendNotification(userSubscription.subscription, payload);
+    console.log(`📬 Firebase notification result:`, result);
+    return result;
     
-    console.log(`Push notification sent successfully to userId: ${userId}`);
-    return { 
-      success: true, 
-      message: 'Push notification sent successfully' 
-    };
   } catch (error) {
-    console.error('Error sending push notification:', error);
-    
-    // If subscription is invalid, remove it
-    if (error.statusCode === 410) {
-      subscriptions.delete(userId);
-    }
-    
+    console.error('Error sending Firebase push notification:', error);
     return { 
       success: false, 
-      error: 'Failed to send push notification' 
+      error: 'Failed to send push notification: ' + error.message 
     };
   }
 }
@@ -474,6 +465,75 @@ router.post('/burst-test', async (req, res) => {
   } catch (error) {
     console.error('❌ Burst notification error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Notification cleanup routes
+// Get notification statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const stats = await getNotificationStats();
+    res.json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    console.error('❌ Failed to get notification stats:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Manual cleanup trigger (for testing/admin use)
+router.post('/cleanup', async (req, res) => {
+  try {
+    const { daysOld = 30 } = req.body;
+    
+    if (daysOld < 1) {
+      return res.status(400).json({
+        success: false,
+        error: 'daysOld must be at least 1'
+      });
+    }
+    
+    const result = await runManualCleanup(daysOld);
+    
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('❌ Manual cleanup failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Check cleanup status
+router.get('/cleanup/status', async (req, res) => {
+  try {
+    const stats = await getNotificationStats();
+    const now = new Date();
+    
+    res.json({
+      success: true,
+      message: 'Automatic cleanup is active',
+      schedule: 'Every 24 hours',
+      nextCleanup: 'Running continuously',
+      currentStats: stats,
+      cleanupThreshold: '30 days',
+      lastChecked: now.toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Failed to get cleanup status:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 

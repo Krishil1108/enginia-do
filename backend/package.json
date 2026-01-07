@@ -1,7 +1,7 @@
 {
-  "name": "enjinia-do-backend",
+  "name": "enginia-do-backend",
   "version": "1.8.0",
-  "description": "Backend for enjinia-do Task Management System",
+  "description": "Backend for Enginia-do Task Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

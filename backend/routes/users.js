@@ -98,6 +98,43 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Save FCM token for push notifications
+router.post('/fcm-token', async (req, res) => {
+  try {
+    const { userId, fcmToken } = req.body;
+    
+    if (!userId || !fcmToken) {
+      return res.status(400).json({ 
+        message: 'userId and fcmToken are required' 
+      });
+    }
+    
+    // Find user by either _id or username
+    let user = await User.findById(userId);
+    if (!user) {
+      user = await User.findOne({ username: userId });
+    }
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Update FCM token
+    user.fcmToken = fcmToken;
+    await user.save();
+    
+    console.log(`✅ FCM token saved for user: ${user.username}`);
+    
+    res.json({ 
+      message: 'FCM token saved successfully',
+      success: true 
+    });
+  } catch (error) {
+    console.error('Error saving FCM token:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Update user
 router.put('/:id', async (req, res) => {
   try {

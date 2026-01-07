@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical, Settings } from 'lucide-react';
+import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical } from 'lucide-react';
 import API_URL from './config';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -89,9 +89,6 @@ const TaskManagementSystem = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
-  const [userPermissions, setUserPermissions] = useState({});
-  const [permissionsLoading, setPermissionsLoading] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
   const [projects, setProjects] = useState([]);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
@@ -179,9 +176,6 @@ const TaskManagementSystem = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [completionReason, setCompletionReason] = useState('');
   const [overdueReason, setOverdueReason] = useState('');
-  const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
-  const [statusChangeNote, setStatusChangeNote] = useState('');
-  const [pendingStatusChange, setPendingStatusChange] = useState(null);
   const [showTaskDetailsModal, setShowTaskDetailsModal] = useState(false);
   const [taskDetails, setTaskDetails] = useState(null);
   
@@ -239,26 +233,13 @@ const TaskManagementSystem = () => {
   
   // Check if user is logged in
   useEffect(() => {
-    console.log('🔍 Checking localStorage for saved user...');
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        console.log('✅ Found saved user:', user.name, user.username);
-        setCurrentUser(user);
-        setIsLoggedIn(true);
-        // Set basic permissions immediately to prevent blank screen
-        setUserPermissions({ myTasks: true, settings: true });
-        // Fetch user permissions on app restart
-        fetchUserPermissions(user.username);
-      } catch (error) {
-        console.error('❌ Error parsing saved user:', error);
-        localStorage.removeItem('currentUser');
-      }
-    } else {
-      console.log('ℹ️ No saved user found');
+      const user = JSON.parse(savedUser);
+      setCurrentUser(user);
+      setIsLoggedIn(true);
     }
-  }, []); // Remove fetchUserPermissions from dependency array to prevent infinite loop
+  }, []);
 
   // Load data when logged in
   useEffect(() => {
@@ -416,7 +397,7 @@ const TaskManagementSystem = () => {
 
     if (isIOSSafari) {
       // iOS Safari manual installation instructions
-      showInfo('To install Enjinia-do on iOS:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nEnjinia-do will then appear as an app icon on your home screen!', 'Install Enjinia-do on iOS');
+      showInfo('To install Enginia-do on iOS:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm\n\nEnginia-do will then appear as an app icon on your home screen!', 'Install Enginia-do on iOS');
       setShowInstallPrompt(false);
       return;
     }
@@ -584,39 +565,10 @@ const TaskManagementSystem = () => {
     }
   };
 
-  // Fetch user permissions based on role
-  const fetchUserPermissions = useCallback(async (username) => {
-    if (!username) return;
-    
-    setPermissionsLoading(true);
-    try {
-      const response = await axios.get(`${API_URL}/admin/user-permissions/${username}`);
-      console.log('🔐 User permissions loaded:', response.data.permissions);
-      setUserPermissions(response.data.permissions || {});
-      setIsOwner(response.data.isOwner || false);
-    } catch (error) {
-      console.error('Error fetching user permissions:', error);
-      // Set default permissions if fetch fails
-      setUserPermissions({
-        myTasks: true,
-        allTasks: false,
-        assignedByMe: false,
-        associateTasks: false,
-        externalTasks: false,
-        confidentialTasks: false,
-        adminReports: false,
-        adminPanel: false,
-        settings: true
-      });
-    } finally {
-      setPermissionsLoading(false);
-    }
-  }, []);
-
-  // Check if current user is admin - Vaishal and Nirali (Enjinia owners)
+  // Check if current user is admin - Vaishal and Nirali (Enginia owners)
   const isAdmin = useCallback(() => {
-    return isOwner || ['vaishal', 'nirali'].includes(currentUser?.username?.toLowerCase());
-  }, [currentUser, isOwner]);
+    return currentUser && ['vaishal', 'nirali'].includes(currentUser.username);
+  }, [currentUser]);
 
   const isTeamMember = useCallback(() => {
     return currentUser && currentUser.manager;
@@ -624,7 +576,7 @@ const TaskManagementSystem = () => {
 
   const getMyTeamMembers = useCallback(() => {
     if (!currentUser) return [];
-    // For Enjinia-do, return all active users as potential team members
+    // For Enginia-do, return all active users as potential team members
     return users.filter(u => u.isActive !== false);
   }, [currentUser, users]);
 
@@ -1973,7 +1925,7 @@ Priority: ${task.priority}`;
   };
 
   const handleStatusChange = async (task, newStatus) => {
-    // If changing to Completed, show completion modal (mandatory note)
+    // If changing to Completed, show completion modal
     if (newStatus === 'Completed') {
       setSelectedTask(task);
       setCompletionReason('');
@@ -1989,17 +1941,6 @@ Priority: ${task.priority}`;
       return;
     }
 
-    // For other status changes, show optional note modal
-    setSelectedTask(task);
-    setPendingStatusChange(newStatus);
-    setStatusChangeNote('');
-    setShowStatusChangeModal(true);
-  };
-
-  const submitStatusChange = async () => {
-    const task = selectedTask;
-    const newStatus = pendingStatusChange;
-    
     try {
       setLoading(true);
       
@@ -2022,8 +1963,7 @@ Priority: ${task.priority}`;
         whatsapp: task.whatsapp || false,
         status: newStatus,
         completionReason: task.completionReason || '',
-        overdueReason: task.overdueReason || '',
-        statusChangeNote: statusChangeNote || '' // Add optional note for status changes
+        overdueReason: task.overdueReason || ''
       };
       
       // Only include reminder if it's a valid date
@@ -2036,23 +1976,15 @@ Priority: ${task.priority}`;
       const response = await axios.put(`${API_URL}/tasks/${task._id}`, taskUpdateData);
       
       // Notify task creator about status change
-      const notificationMessage = statusChangeNote 
-        ? `Task "${task.title}" status changed to ${newStatus} by ${currentUser.name}. Note: ${statusChangeNote}`
-        : `Task "${task.title}" status changed to ${newStatus} by ${currentUser.name}`;
-      
       await createNotification(
         task._id,
         task.assignedBy,
-        notificationMessage,
+        `Task "${task.title}" status changed to ${newStatus} by ${currentUser.name}`,
         'task_updated',
         currentUser.username
       );
       
       await loadTasks();
-      setShowStatusChangeModal(false);
-      setSelectedTask(null);
-      setStatusChangeNote('');
-      setPendingStatusChange(null);
     } catch (error) {
       console.error('Error updating task status:', error);
       console.error('Error response:', error.response?.data);
@@ -2386,7 +2318,7 @@ Priority: ${task.priority}`;
 
     // Summary Sheet
     const summaryData = [
-      ['Enjinia-do Report'],
+      ['Enginia-do Report'],
       ['Period', data.period.label],
       ['Report Type', data.period.type.toUpperCase()],
       ['Generated On', new Date().toLocaleDateString()],
@@ -2436,7 +2368,7 @@ Priority: ${task.priority}`;
     // Title
     doc.setFontSize(20);
     doc.setFont(undefined, 'bold');
-    doc.text('Enjinia-do Report', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('Enginia-do Report', pageWidth / 2, yPosition, { align: 'center' });
     yPosition += 15;
 
     // Period Info
@@ -2564,9 +2496,6 @@ Priority: ${task.priority}`;
         localStorage.setItem('currentUser', JSON.stringify(user));
         setCurrentUser(user);
         setIsLoggedIn(true);
-        
-        // Fetch user permissions after login
-        await fetchUserPermissions(user.username);
       } catch (error) {
         showError(error.response?.data?.message || 'Login failed', 'Login Failed');
       } finally {
@@ -2603,7 +2532,7 @@ Priority: ${task.priority}`;
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
               <Users className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Enjinia-do</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Enginia-do</h1>
             <p className="text-gray-600 mt-2">
               {isRegistering ? 'Create your account' : 'Sign in to continue'}
             </p>
@@ -3732,7 +3661,7 @@ Priority: ${task.priority}`;
               <div>
                 <h4 className="font-medium text-gray-900">App Status</h4>
                 <p className="text-sm text-gray-600">
-                  {isInstalled ? 'Enjinia-do is installed as an app on your device' : 'Enjinia-do can be installed as a native app'}
+                  {isInstalled ? 'Enginia-do is installed as an app on your device' : 'Enginia-do can be installed as a native app'}
                 </p>
               </div>
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -3748,7 +3677,7 @@ Priority: ${task.priority}`;
                 {deferredPrompt && (
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                     <div>
-                      <h4 className="font-medium text-gray-900">Install Enjinia-do App</h4>
+                      <h4 className="font-medium text-gray-900">Install Enginia-do App</h4>
                       <p className="text-sm text-gray-600">
                         Get offline access, push notifications, and home screen icon
                       </p>
@@ -3833,8 +3762,8 @@ Priority: ${task.priority}`;
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-green-900">Enjinia-do is installed!</p>
-                    <p className="text-sm text-green-700">You can now use Enjinia-do as a native app with offline access and push notifications.</p>
+                    <p className="font-medium text-green-900">Enginia-do is installed!</p>
+                    <p className="text-sm text-green-700">You can now use Enginia-do as a native app with offline access and push notifications.</p>
                   </div>
                 </div>
               </div>
@@ -6368,7 +6297,7 @@ Priority: ${task.priority}`;
     );
   };
 
-  // Confidential Tasks View - All confidential tasks (only accessible to Enjinia owners: Vaishal and Nirali)
+  // Confidential Tasks View - All confidential tasks (only accessible to Enginia owners: Vaishal and Nirali)
   const ConfidentialTasksView = () => {
     // Get all confidential tasks
     const confidentialTasks = tasks.filter(task => task.isConfidential);
@@ -6625,7 +6554,7 @@ Priority: ${task.priority}`;
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enjinia-do</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enginia-do</h1>
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-lg">
                 <User className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900">{currentUser.name}</span>
@@ -6675,7 +6604,7 @@ Priority: ${task.priority}`;
 
               <button
                 onClick={() => setShowAdvancedMenu(!showAdvancedMenu)}
-                className="md:hidden p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="lg:hidden md:block p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -6715,88 +6644,85 @@ Priority: ${task.priority}`;
             </div>
           )}
 
-          {/* Desktop Navigation - Permission Based */}
-          <div className="hidden md:block mt-3 pb-2 border-t pt-3">
+          {/* Desktop Navigation - Always Visible */}
+          <div className="hidden lg:block mt-3 pb-2 border-t pt-3">
             <div className="flex flex-wrap gap-2 overflow-x-auto">
-              {/* My Tasks - Based on permission (show while loading as fallback) */}
-              {(userPermissions.myTasks || permissionsLoading) && (
-                <button
-                  onClick={() => { setCurrentView('my-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'my-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  My Tasks
-                </button>
-              )}
+              <button
+                onClick={() => { setCurrentView('my-tasks'); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'my-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                My Tasks
+              </button>
               
-              {/* All Tasks - Based on permission */}
-              {userPermissions.allTasks && (
-                <button
-                  onClick={() => { setCurrentView('all-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  All Tasks
-                </button>
-              )}
-              
-              {/* Assigned By Me - Based on permission */}
-              {userPermissions.assignedByMe && (
-                <button
-                  onClick={() => { setCurrentView('assigned-by-me'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Assigned By Me
-                </button>
-              )}
-              
-              {/* Associate Tasks - Based on permission */}
-              {userPermissions.associateTasks && (
-                <button
-                  onClick={() => { setCurrentView('associate-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'associate-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Associate Tasks
-                </button>
-              )}
+              {!isTeamMember() && (
+                <>
+                  {/* All Tasks - hidden from Kinjal and Vraj */}
+                  {!['Kinjal Solanki', 'Vraj Patel'].includes(currentUser?.name) && (
+                    <button
+                      onClick={() => { setCurrentView('all-tasks'); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      All Tasks
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={() => { setCurrentView('assigned-by-me'); }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    Assigned By Me
+                  </button>
+                  
+                  {/* Associate Tasks - exclude Kinjal Solanki */}
+                  {currentUser?.name !== 'Kinjal Solanki' && (
+                    <button
+                      onClick={() => { setCurrentView('associate-tasks'); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'associate-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Associate Tasks
+                    </button>
+                  )}
 
-              {/* External Tasks - Based on permission */}
-              {userPermissions.externalTasks && (
-                <button
-                  onClick={() => { setCurrentView('external-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'external-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  External Tasks
-                </button>
-              )}
+                  {/* External Tasks - exclude Kinjal Solanki */}
+                  {currentUser?.name !== 'Kinjal Solanki' && (
+                    <button
+                      onClick={() => { setCurrentView('external-tasks'); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'external-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      External Tasks
+                    </button>
+                  )}
 
-              {/* Confidential Tasks - Based on permission */}
-              {userPermissions.confidentialTasks && (
-                <button
-                  onClick={() => { setCurrentView('confidential-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Confidential Tasks
-                  </div>
-                </button>
+                  {/* Confidential Tasks - Only for Owners */}
+                  {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
+                    <button
+                      onClick={() => { setCurrentView('confidential-tasks'); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Confidential Tasks
+                      </div>
+                    </button>
+                  )}
+                </>
               )}
               
-              {/* Admin Reports - Based on permission */}
-              {userPermissions.adminReports && (
+              {isAdmin() && (
                 <button
                   onClick={() => { setCurrentView('admin-reports'); }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -6809,121 +6735,117 @@ Priority: ${task.priority}`;
                   </div>
                 </button>
               )}
-
-              {/* Admin Panel - Based on permission */}
-              {userPermissions.adminPanel && (
+              
+              {/* Admin Panel - Only for Vaishal */}
+              {currentUser?.username === 'vaishal' && (
                 <button
-                  onClick={() => { setCurrentView('admin-dashboard'); }}
+                  onClick={() => { setCurrentView('admin-panel'); }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'admin-dashboard' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                    currentView === 'admin-panel' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
+                    <Users className="w-4 h-4" />
                     Admin Panel
                   </div>
                 </button>
               )}
               
-              {/* Settings - Based on permission */}
-              {userPermissions.settings && (
-                <button
-                  onClick={() => { setCurrentView('settings'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'settings' ? 'bg-gray-600 text-white' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4" />
-                    Settings
-                  </div>
-                </button>
-              )}
+              <button
+                onClick={() => { setCurrentView('settings'); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'settings' ? 'bg-gray-600 text-white' : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4" />
+                  Settings
+                </div>
+              </button>
             </div>
           </div>
 
-          {/* Mobile Navigation - Permission Based */}
+          {/* Mobile Navigation - Toggle Menu */}
           {showAdvancedMenu && (
-            <div className="md:hidden mt-3 flex flex-wrap gap-1 sm:gap-2 pb-2 border-t pt-3 overflow-x-auto">
-              {/* My Tasks - Based on permission (show while loading as fallback) */}
-              {(userPermissions.myTasks || permissionsLoading) && (
-                <button
-                  onClick={() => { setCurrentView('my-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'my-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  My Tasks
-                </button>
+            <div className="lg:hidden mt-3 flex flex-wrap gap-1 sm:gap-2 pb-2 border-t pt-3 overflow-x-auto">
+              <button
+                onClick={() => { setCurrentView('my-tasks'); setShowAdvancedMenu(false); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'my-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                My Tasks
+              </button>
+              
+              {!isTeamMember() && (
+                <>
+                  {/* All Tasks - hidden from Kinjal and Vraj */}
+                  {!['Kinjal Solanki', 'Vraj Patel'].includes(currentUser?.name) && (
+                    <button
+                      onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      All Tasks
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={() => { setCurrentView('assigned-by-me'); setShowAdvancedMenu(false); }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    Assigned By Me
+                  </button>
+                  
+
+                  
+                  {/* Associate Tasks - exclude Kinjal Solanki */}
+                  {currentUser?.name !== 'Kinjal Solanki' && (
+                    <button
+                      onClick={() => { setCurrentView('associate-tasks'); setShowAdvancedMenu(false); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'associate-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Associate Tasks
+                    </button>
+                  )}
+
+                  {/* External Tasks - exclude Kinjal Solanki */}
+                  {currentUser?.name !== 'Kinjal Solanki' && (
+                    <button
+                      onClick={() => { setCurrentView('external-tasks'); setShowAdvancedMenu(false); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'external-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      External Tasks
+                    </button>
+                  )}
+
+                  {/* Confidential Tasks - Only for Owners */}
+                  {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
+                    <button
+                      onClick={() => { setCurrentView('confidential-tasks'); setShowAdvancedMenu(false); }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Confidential Tasks
+                      </div>
+                    </button>
+                  )}
+                </>
               )}
               
-              {/* All Tasks - Based on permission */}
-              {userPermissions.allTasks && (
-                <button
-                  onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  All Tasks
-                </button>
-              )}
-              
-              {/* Assigned By Me - Based on permission */}
-              {userPermissions.assignedByMe && (
-                <button
-                  onClick={() => { setCurrentView('assigned-by-me'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Assigned By Me
-                </button>
-              )}
-              
-              {/* Associate Tasks - Based on permission */}
-              {userPermissions.associateTasks && (
-                <button
-                  onClick={() => { setCurrentView('associate-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'associate-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Associate Tasks
-                </button>
-              )}
-
-              {/* External Tasks - Based on permission */}
-              {userPermissions.externalTasks && (
-                <button
-                  onClick={() => { setCurrentView('external-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'external-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  External Tasks
-                </button>
-              )}
-
-              {/* Confidential Tasks - Based on permission */}
-              {userPermissions.confidentialTasks && (
-                <button
-                  onClick={() => { setCurrentView('confidential-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Confidential Tasks
-                  </div>
-                </button>
-              )}
-
-              {/* Admin Reports - Based on permission */}
-              {userPermissions.adminReports && (
+              {isAdmin() && (
                 <button
                   onClick={() => { setCurrentView('admin-reports'); setShowAdvancedMenu(false); }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -6936,36 +6858,33 @@ Priority: ${task.priority}`;
                   </div>
                 </button>
               )}
-
-              {/* Admin Panel - Based on permission */}
-              {userPermissions.adminPanel && (
+              
+              {/* Admin Panel - Only for Vaishal (Mobile) */}
+              {currentUser?.username === 'vaishal' && (
                 <button
-                  onClick={() => { setCurrentView('admin-dashboard'); setShowAdvancedMenu(false); }}
+                  onClick={() => { setCurrentView('admin-panel'); setShowAdvancedMenu(false); }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'admin-dashboard' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                    currentView === 'admin-panel' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
+                    <Users className="w-4 h-4" />
                     Admin Panel
                   </div>
                 </button>
               )}
-
-              {/* Settings - Based on permission */}
-              {userPermissions.settings && (
-                <button
-                  onClick={() => { setCurrentView('settings'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'settings' ? 'bg-gray-600 text-white' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4" />
-                    Settings
-                  </div>
-                </button>
-              )}
+              
+              <button
+                onClick={() => { setCurrentView('settings'); setShowAdvancedMenu(false); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'settings' ? 'bg-gray-600 text-white' : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4" />
+                  Settings
+                </div>
+              </button>
             </div>
           )}
         </div>
@@ -6978,9 +6897,14 @@ Priority: ${task.priority}`;
         {currentView === 'assigned-by-me' && <AssignedByMeView />}
         {currentView === 'associate-tasks' && <AssociateTasksView />}
         {currentView === 'external-tasks' && <ExternalTasksView />}
-        {currentView === 'confidential-tasks' && userPermissions.confidentialTasks && <ConfidentialTasksView />}
-        {currentView === 'admin-dashboard' && userPermissions.adminPanel && <AdminDashboard currentUser={currentUser} onBack={() => setCurrentView('my-tasks')} />}
-        {currentView === 'admin-reports' && userPermissions.adminReports && <AdminReportsView />}
+        {currentView === 'confidential-tasks' && ['Vaishal', 'Nirali'].includes(currentUser?.name) && <ConfidentialTasksView />}
+        {currentView === 'admin-reports' && ['Vaishal', 'Nirali'].includes(currentUser?.name) && <AdminReportsView />}
+        {currentView === 'admin-panel' && currentUser?.username === 'vaishal' && (
+          <AdminDashboard 
+            currentUser={currentUser} 
+            onBack={() => setCurrentView('my-tasks')} 
+          />
+        )}
         {currentView === 'settings' && <NotificationSettingsView />}
       </div>
 
@@ -7714,8 +7638,8 @@ Priority: ${task.priority}`;
                 </select>
               </div>
 
-              {/* Confidential Toggle - Based on permission */}
-              {userPermissions.confidentialTasks && (
+              {/* Confidential Toggle - Only for Owners */}
+              {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
                 <div>
                   <label className="flex items-center gap-3">
                     <input
@@ -8071,69 +7995,6 @@ Priority: ${task.priority}`;
           </div>
         </div>
       )}
-
-      {/* Status Change Modal with Optional Note */}
-      {showStatusChangeModal && selectedTask && pendingStatusChange && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full">
-            <div className="bg-blue-50 border-b border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
-              <div className="flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                <h2 className="text-xl font-semibold text-blue-900">Change Status to {pendingStatusChange}</h2>
-              </div>
-              <button onClick={() => { setShowStatusChangeModal(false); setSelectedTask(null); setStatusChangeNote(''); setPendingStatusChange(null); }} className="text-gray-400 hover:text-gray-600">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-2">Task: <span className="font-semibold text-gray-900">{selectedTask.title}</span></p>
-                <p className="text-sm text-gray-600 mb-2">Project: <span className="font-semibold text-gray-900">{getProjectName(selectedTask.project)}</span></p>
-                <p className="text-sm text-gray-600">
-                  Current Status: <span className="font-semibold text-gray-900">{selectedTask.status}</span> → New Status: <span className="font-semibold text-blue-600">{pendingStatusChange}</span>
-                </p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Add Note (Optional)
-                </label>
-                <textarea
-                  value={statusChangeNote}
-                  onChange={(e) => setStatusChangeNote(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows="4"
-                  placeholder="Optionally add a note about this status change (e.g., progress update, blockers, next steps)..."
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Note is optional. You can skip it or add details about the status change.
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={submitStatusChange}
-                  disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {loading ? 'Updating...' : 'Update Status'}
-                </button>
-                <button
-                  onClick={() => { setShowStatusChangeModal(false); setSelectedTask(null); setStatusChangeNote(''); setPendingStatusChange(null); }}
-                  className="px-6 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       
       {/* Task Details Modal */}
       {showTaskDetailsModal && taskDetails && (
@@ -8325,24 +8186,21 @@ Priority: ${task.priority}`;
         </div>
       )}
 
-      {/* Mobile Bottom Navigation - Permission Based */}
+      {/* Mobile Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-30">
         <div className="flex overflow-x-auto scrollbar-hide px-2 py-2 gap-2">
-          {/* My Tasks - Based on permission */}
-          {userPermissions.myTasks && (
-            <button
-              onClick={() => setCurrentView('my-tasks')}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-                currentView === 'my-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-              }`}
-            >
-              <User className="w-4 h-4 mb-1" />
-              <span className="text-xs font-medium whitespace-nowrap">My Tasks</span>
-            </button>
-          )}
+          <button
+            onClick={() => setCurrentView('my-tasks')}
+            className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+              currentView === 'my-tasks' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+            }`}
+          >
+            <User className="w-4 h-4 mb-1" />
+            <span className="text-xs font-medium whitespace-nowrap">My Tasks</span>
+          </button>
           
-          {/* All Tasks - Based on permission */}
-          {userPermissions.allTasks && (
+          {/* All Tasks - hidden from Kinjal Solanki and Vraj Patel */}
+          {!isTeamMember() && !['Kinjal Solanki', 'Vraj Patel'].includes(currentUser?.name) && (
             <button
               onClick={() => setCurrentView('all-tasks')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
@@ -8354,8 +8212,8 @@ Priority: ${task.priority}`;
             </button>
           )}
 
-          {/* Assigned by Me - Based on permission */}
-          {userPermissions.assignedByMe && (
+          {/* Assigned by Me - available to non-team members */}
+          {!isTeamMember() && (
             <button
               onClick={() => setCurrentView('assigned-by-me')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
@@ -8367,8 +8225,10 @@ Priority: ${task.priority}`;
             </button>
           )}
 
-          {/* Associate Tasks - Based on permission */}
-          {userPermissions.associateTasks && (
+
+
+          {/* Associate Tasks - available to non-team members, exclude Kinjal Solanki */}
+          {!isTeamMember() && currentUser?.name !== 'Kinjal Solanki' && (
             <button
               onClick={() => setCurrentView('associate-tasks')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
@@ -8380,8 +8240,8 @@ Priority: ${task.priority}`;
             </button>
           )}
 
-          {/* External Tasks - Based on permission */}
-          {userPermissions.externalTasks && (
+          {/* External Tasks - available to non-team members, exclude Kinjal Solanki */}
+          {!isTeamMember() && currentUser?.name !== 'Kinjal Solanki' && (
             <button
               onClick={() => setCurrentView('external-tasks')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
@@ -8393,8 +8253,8 @@ Priority: ${task.priority}`;
             </button>
           )}
 
-          {/* Confidential Tasks - Based on permission */}
-          {userPermissions.confidentialTasks && (
+          {/* Confidential Tasks - Only for Owners */}
+          {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
             <button
               onClick={() => setCurrentView('confidential-tasks')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
@@ -8408,8 +8268,7 @@ Priority: ${task.priority}`;
             </button>
           )}
           
-          {/* Admin Reports - Based on permission */}
-          {userPermissions.adminReports && (
+          {(['Vaishal', 'Nirali'].includes(currentUser?.name)) && (
             <button
               onClick={() => setCurrentView('admin-reports')}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
@@ -8420,32 +8279,15 @@ Priority: ${task.priority}`;
               <span className="text-xs font-medium whitespace-nowrap">Reports</span>
             </button>
           )}
-
-          {/* Admin Dashboard - Based on permission */}
-          {userPermissions.adminPanel && (
-            <button
-              onClick={() => setCurrentView('admin-dashboard')}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-                currentView === 'admin-dashboard' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600'
-              }`}
-            >
-              <Settings className="w-4 h-4 mb-1" />
-              <span className="text-xs font-medium whitespace-nowrap">Admin</span>
-            </button>
-          )}
-
-          {/* Settings - Based on permission */}
-          {userPermissions.settings && (
-            <button
-              onClick={() => setCurrentView('settings')}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
-                currentView === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-              }`}
-            >
-              <Bell className="w-4 h-4 mb-1" />
-              <span className="text-xs font-medium whitespace-nowrap">Settings</span>
-            </button>
-          )}
+          <button
+            onClick={() => setCurrentView('settings')}
+            className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-max ${
+              currentView === 'settings' ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
+            }`}
+          >
+            <Bell className="w-4 h-4 mb-1" />
+            <span className="text-xs font-medium whitespace-nowrap">Settings</span>
+          </button>
         </div>
       </div>
 
