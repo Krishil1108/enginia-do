@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v2.1.0-' + Date.now(); // Documentation reorganization and backend config updates
+const CACHE_VERSION = 'v1.9.2-' + Date.now(); // Fix: Admin Reports now respects role permissions
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'
@@ -152,7 +152,7 @@ self.addEventListener('push', (event) => {
   console.log('Push data available:', !!event.data);
   
   let notificationData = {
-    title: 'Enginia-do - Task Management',
+    title: 'Enjinia-do - Task Management',
     body: 'You have a new notification',
     icon: '/favicon.ico',
     badge: '/favicon.ico',
@@ -278,7 +278,7 @@ self.addEventListener('push', (event) => {
     // Fallback: try showing a very basic notification
     console.log('🔄 Attempting fallback notification...');
     return self.registration.showNotification(
-      'Enginia-do Notification',
+      'Enjinia-do Notification',
       {
         body: 'You have a new notification',
         icon: '/favicon.ico',
