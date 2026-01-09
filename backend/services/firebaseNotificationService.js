@@ -50,54 +50,38 @@ class FirebaseNotificationService {
     }
 
     try {
+      // Send DATA-ONLY message for instant notifications (no notification payload)
       const message = {
-        notification: {
-          title: notification.title || 'Task Update',
-          body: notification.body || 'You have a new notification'
-        },
         data: {
-          ...notification.data,
-          // Ensure data is stringified for compatibility
-          click_action: 'FLUTTER_NOTIFICATION_CLICK'
+          title: notification.title || 'Task Update',
+          body: notification.body || 'You have a new notification',
+          taskId: notification.data?.taskId?.toString() || '',
+          type: notification.data?.type || 'task_update',
+          ...notification.data
         },
         token: fcmToken,
-        // Android specific options for background notifications
+        // Android specific options for high priority
         android: {
-          priority: 'high',
-          notification: {
-            channelId: 'task_updates',
-            priority: 'high',
-            defaultSound: true,
-            defaultVibrateTimings: true,
-            visibility: 'public',
-            tag: `task-${notification.data?.taskId || Date.now()}`
-          }
+          priority: 'high'
         },
         // iOS specific options
         apns: {
+          headers: {
+            'apns-priority': '10'
+          },
           payload: {
             aps: {
-              alert: {
-                title: notification.title || 'Task Update',
-                body: notification.body || 'You have a new notification'
-              },
-              sound: 'default',
-              badge: 1,
               'content-available': 1
             }
           }
         },
         // Web push specific options
         webpush: {
-          notification: {
-            title: notification.title || 'Task Update',
-            body: notification.body || 'You have a new notification',
-            icon: '/favicon.ico',
-            badge: '/favicon.ico',
-            requireInteraction: true,
-            vibrate: [200, 100, 200],
-            tag: `task-${notification.data?.taskId || Date.now()}`,
-            renotify: true,
+          headers: {
+            Urgency: 'high'
+          }
+        }
+      };
             data: notification.data || {}
           },
           fcmOptions: {
@@ -132,12 +116,16 @@ class FirebaseNotificationService {
     }
 
     try {
+      // Send DATA-ONLY message for instant notifications
       const message = {
-        notification: {
+        data: {
           title: notification.title || 'Task Update',
-          body: notification.body || 'You have a new notification'
+          body: notification.body || 'You have a new notification',
+          taskId: notification.data?.taskId?.toString() || '',
+          type: notification.data?.type || 'task_update',
+          projectId: notification.data?.projectId?.toString() || '',
+          ...notification.data
         },
-        data: notification.data || {},
         tokens: fcmTokens
       };
 

@@ -1,5 +1,5 @@
 // Firebase Cloud Messaging Service Worker
-// Enhanced notifications with detailed status changes
+// INSTANT notifications - no deduplication
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
@@ -27,61 +27,25 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Track recent notifications to prevent duplicates
-const recentNotifications = new Map();
-
-// Handle background messages (when app is closed or in background)
+// Handle background messages from Firebase (data-only messages)
 messaging.onBackgroundMessage((payload) => {
-  console.log('🔔 [BACKGROUND] Received message:', payload);
+  console.log('🔔 Service Worker received message (INSTANT):', payload);
 
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'Enginia-do Notification';
-  const notificationBody = payload.notification?.body || payload.data?.body || '';
-  
-  // Check for duplicate notifications (5-second window)
-  const notificationKey = `${notificationTitle}_${notificationBody}`;
-  const now = Date.now();
-  const lastShown = recentNotifications.get(notificationKey);
-  
-  if (lastShown && (now - lastShown) < 5000) {
-    console.log('⏭️ [BACKGROUND] Skipping duplicate notification');
-    return;
-  }
-  
-  // Record this notification
-  recentNotifications.set(notificationKey, now);
-  
-  // Clean up old entries (older than 10 seconds)
-  for (const [key, timestamp] of recentNotifications.entries()) {
-    if (now - timestamp > 10000) {
-      recentNotifications.delete(key);
-    }
-  }
-
+  // Extract from data payload (we send data-only messages now)
+  const notificationTitle = payload.data?.title || 'New Notification';
   const notificationOptions = {
-    body: notificationBody,
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    tag: `task-${payload.data?.taskId || 'default'}-${now}`,
-    requireInteraction: true,
-    vibrate: [200, 100, 200, 100, 200],
-    renotify: true,
-    silent: false,
-    data: payload.data || {},
-    actions: [
-      { action: 'view', title: '👁️ View' },
-      { action: 'dismiss', title: '❌ Dismiss' }
-    ]
+    body: payload.data?.body || '',
+    icon: '/logo192.png',
+    badge: '/logo192.png',
+    tag: `task-${Date.now()}`, // Unique tag for each notification to prevent grouping
+    requireInteraction: false, // Don't require interaction for faster display
+    silent: false, // Ensure notification makes sound
+    vibrate: [200, 100, 200], // Vibration pattern for mobile
+    data: payload.data
   };
 
-  console.log('📢 [BACKGROUND] Showing notification:', notificationTitle);
-  
-  return self.registration.showNotification(notificationTitle, notificationOptions)
-    .then(() => {
-      console.log('✅ [BACKGROUND] Notification displayed successfully');
-    })
-    .catch((error) => {
-      console.error('❌ [BACKGROUND] Failed to show notification:', error);
-    });
+  console.log('📣 Showing notification instantly:', notificationTitle);
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification clicks
