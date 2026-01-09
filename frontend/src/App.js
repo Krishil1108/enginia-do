@@ -269,14 +269,10 @@ const TaskManagementSystem = () => {
       loadProjects();
       loadAssociates();
       loadExternalUsers();
-      // Poll for new data every 5 seconds for instant sync
-      const notificationInterval = setInterval(loadNotifications, 5000);
-      const taskInterval = setInterval(loadTasks, 5000);
-      const projectInterval = setInterval(loadProjects, 5000);
+      // Background sync every 10 seconds - only for notifications
+      const notificationInterval = setInterval(loadNotifications, 10000);
       return () => {
         clearInterval(notificationInterval);
-        clearInterval(taskInterval);
-        clearInterval(projectInterval);
       };
     }
   }, [isLoggedIn, currentUser?.username]);
