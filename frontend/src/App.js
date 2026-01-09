@@ -283,6 +283,21 @@ const TaskManagementSystem = () => {
       loadProjects();
       loadAssociates();
       loadExternalUsers();
+      
+      // Auto-refresh tasks every 10 seconds for real-time updates
+      const taskInterval = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          loadTasks(true); // Silent refresh - no loading spinner
+        }
+      }, 10000);
+
+      // Poll for new notifications every 30 seconds
+      const notificationInterval = setInterval(loadNotifications, 30000);
+
+      return () => {
+        clearInterval(taskInterval);
+        clearInterval(notificationInterval);
+      };
     }
   }, [isLoggedIn, currentUser?.username]);
 
@@ -643,16 +658,20 @@ const TaskManagementSystem = () => {
     return users.filter(u => u.isActive !== false);
   }, [currentUser, users]);
 
-  const loadTasks = async () => {
+  const loadTasks = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const params = currentUser?.username ? { username: currentUser.username } : {};
       const response = await axios.get(`${API_URL}/tasks`, { params });
       setTasks(response.data);
     } catch (error) {
       console.error('Error loading tasks:', error);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 

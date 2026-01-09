@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.3.0'; // Fix: Non-aggressive update checker
+const CACHE_VERSION = 'v3.4.0'; // Added back live sync with polling
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [
