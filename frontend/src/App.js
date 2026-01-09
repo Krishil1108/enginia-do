@@ -270,16 +270,35 @@ const TaskManagementSystem = () => {
       loadProjects();
       loadAssociates();
       loadExternalUsers();
-      
-      // Background sync every 10 seconds - only for notifications
+    }
+  }, [isLoggedIn, currentUser?.username, loadNotifications]);
+
+  // Background notification polling - separate from data loading
+  useEffect(() => {
+    if (isLoggedIn && currentUser?.username) {
       // Clear any existing interval first
       if (notificationIntervalRef.current) {
         clearInterval(notificationIntervalRef.current);
       }
       
-      // Start background polling
+      // Start background polling - runs independently
       notificationIntervalRef.current = setInterval(() => {
-        loadNotifications();
+        if (currentUser?.username) {
+          axios.get(`${API_URL}/notifications/user/${currentUser.username}`)
+            .then(response => {
+              const newNotifications = response.data;
+              const newUnreadCount = newNotifications.filter(n => !n.isRead).length;
+              
+              setNotifications(prev => {
+                const prevStr = JSON.stringify(prev);
+                const newStr = JSON.stringify(newNotifications);
+                return prevStr !== newStr ? newNotifications : prev;
+              });
+              
+              setUnreadCount(prev => prev !== newUnreadCount ? newUnreadCount : prev);
+            })
+            .catch(err => console.error('Background notification poll error:', err));
+        }
       }, 10000);
       
       return () => {
@@ -667,7 +686,7 @@ const TaskManagementSystem = () => {
     }
   };
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     if (!currentUser) return;
     try {
       const response = await axios.get(`${API_URL}/notifications/user/${currentUser.username}`);
@@ -691,7 +710,7 @@ const TaskManagementSystem = () => {
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
-  };
+  }, [currentUser]);
 
   const loadProjects = async () => {
     try {
