@@ -7,6 +7,35 @@ class NotificationService {
   constructor() {
     this.fcmToken = null;
     this.isSupported = 'Notification' in window && 'serviceWorker' in navigator;
+    this.FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
+  }
+
+  // Check if stored token is from old Firebase project
+  async validateStoredToken() {
+    try {
+      const storedProjectId = localStorage.getItem('firebase_project_id');
+      if (storedProjectId && storedProjectId !== this.FIREBASE_PROJECT_ID) {
+        console.log('🔄 Firebase project changed - clearing old token');
+        await this.clearOldToken();
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error validating token:', error);
+      return false;
+    }
+  }
+
+  // Clear old Firebase token
+  async clearOldToken() {
+    try {
+      localStorage.removeItem('fcm_token');
+      localStorage.removeItem('firebase_project_id');
+      this.fcmToken = null;
+      console.log('✅ Old Firebase token cleared');
+    } catch (error) {
+      console.error('Error clearing old token:', error);
+    }
   }
 
   // Initialize the notification service
@@ -48,6 +77,8 @@ class NotificationService {
 
   // Subscribe to Firebase push notifications
   async subscribeToPush() {
+    // Validate existing token first
+    await this.validateStoredToken();
     try {
       if (!messaging) {
         console.error('Firebase messaging not initialized');
@@ -69,6 +100,10 @@ class NotificationService {
       if (token) {
         this.fcmToken = token;
         console.log('FCM token obtained:', token.substring(0, 20) + '...');
+        
+        // Store project ID with token
+        localStorage.setItem('firebase_project_id', this.FIREBASE_PROJECT_ID);
+        localStorage.setItem('fcm_token', token);
         
         // Send token to server
         await this.sendTokenToServer(token);
