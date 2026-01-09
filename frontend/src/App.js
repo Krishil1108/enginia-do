@@ -237,6 +237,33 @@ const TaskManagementSystem = () => {
   const showConfirm = (message, onConfirm, title = 'Confirm Action') => showDialog(title, message, 'confirm', onConfirm, 'Confirm', 'Cancel');
   const showDeleteConfirm = (message, onConfirm, title = 'Confirm Delete') => showDialog(title, message, 'delete', onConfirm, 'Delete', 'Cancel');
   
+  // Load notifications function - defined early to avoid reference errors
+  const loadNotifications = useCallback(async () => {
+    if (!currentUser) return;
+    try {
+      const response = await axios.get(`${API_URL}/notifications/user/${currentUser.username}`);
+      const newNotifications = response.data;
+      const newUnreadCount = newNotifications.filter(n => !n.isRead).length;
+      
+      // Only update state if there are actual changes to prevent unnecessary re-renders
+      setNotifications(prev => {
+        if (JSON.stringify(prev) !== JSON.stringify(newNotifications)) {
+          return newNotifications;
+        }
+        return prev;
+      });
+      
+      setUnreadCount(prev => {
+        if (prev !== newUnreadCount) {
+          return newUnreadCount;
+        }
+        return prev;
+      });
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  }, [currentUser]);
+  
   
   // Check if user is logged in
   useEffect(() => {
@@ -685,32 +712,6 @@ const TaskManagementSystem = () => {
       setLoading(false);
     }
   };
-
-  const loadNotifications = useCallback(async () => {
-    if (!currentUser) return;
-    try {
-      const response = await axios.get(`${API_URL}/notifications/user/${currentUser.username}`);
-      const newNotifications = response.data;
-      const newUnreadCount = newNotifications.filter(n => !n.isRead).length;
-      
-      // Only update state if there are actual changes to prevent unnecessary re-renders
-      setNotifications(prev => {
-        if (JSON.stringify(prev) !== JSON.stringify(newNotifications)) {
-          return newNotifications;
-        }
-        return prev;
-      });
-      
-      setUnreadCount(prev => {
-        if (prev !== newUnreadCount) {
-          return newUnreadCount;
-        }
-        return prev;
-      });
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-    }
-  }, [currentUser]);
 
   const loadProjects = async () => {
     try {
