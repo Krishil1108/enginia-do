@@ -112,6 +112,7 @@ const TaskManagementSystem = () => {
   const [tasks, setTasks] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const notificationIntervalRef = useRef(null);
   const [copiedTaskData, setCopiedTaskData] = useState('');
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showSubtaskModal, setShowSubtaskModal] = useState(false);
@@ -269,11 +270,30 @@ const TaskManagementSystem = () => {
       loadProjects();
       loadAssociates();
       loadExternalUsers();
+      
       // Background sync every 10 seconds - only for notifications
-      const notificationInterval = setInterval(loadNotifications, 10000);
+      // Clear any existing interval first
+      if (notificationIntervalRef.current) {
+        clearInterval(notificationIntervalRef.current);
+      }
+      
+      // Start background polling
+      notificationIntervalRef.current = setInterval(() => {
+        loadNotifications();
+      }, 10000);
+      
       return () => {
-        clearInterval(notificationInterval);
+        if (notificationIntervalRef.current) {
+          clearInterval(notificationIntervalRef.current);
+          notificationIntervalRef.current = null;
+        }
       };
+    } else {
+      // Clear interval when logged out
+      if (notificationIntervalRef.current) {
+        clearInterval(notificationIntervalRef.current);
+        notificationIntervalRef.current = null;
+      }
     }
   }, [isLoggedIn, currentUser?.username]);
 
@@ -651,9 +671,23 @@ const TaskManagementSystem = () => {
     if (!currentUser) return;
     try {
       const response = await axios.get(`${API_URL}/notifications/user/${currentUser.username}`);
-      setNotifications(response.data);
-      const unread = response.data.filter(n => !n.isRead).length;
-      setUnreadCount(unread);
+      const newNotifications = response.data;
+      const newUnreadCount = newNotifications.filter(n => !n.isRead).length;
+      
+      // Only update state if there are actual changes to prevent unnecessary re-renders
+      setNotifications(prev => {
+        if (JSON.stringify(prev) !== JSON.stringify(newNotifications)) {
+          return newNotifications;
+        }
+        return prev;
+      });
+      
+      setUnreadCount(prev => {
+        if (prev !== newUnreadCount) {
+          return newUnreadCount;
+        }
+        return prev;
+      });
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
