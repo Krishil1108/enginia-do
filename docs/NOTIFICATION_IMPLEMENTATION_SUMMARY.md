@@ -35,9 +35,9 @@ Successfully implemented the exact same Firebase Cloud Messaging (FCM) notificat
 ```javascript
 {
   apiKey: "AIzaSyBmVWT4dd3m-H9Wf5ksBSmGA6AKiqk1Nkg",
-  authDomain: "trido-11.firebaseapp.com",
-  projectId: "trido-11",
-  storageBucket: "trido-11.firebasestorage.app",
+  authDomain: "engine-11-a08c8.firebaseapp.com",
+  projectId: "engine-11-a08c8",
+  storageBucket: "engine-11-a08c8.firebasestorage.app",
   messagingSenderId: "543027789224",
   appId: "1:543027789224:web:8b9e94f68379b0b1e7319d",
   measurementId: "G-7D624BB27G"
@@ -140,7 +140,7 @@ npm install firebase@^10.7.1
 
 ### 1. Get Firebase Service Account
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select project: **trido-11**
+2. Select project: **engine-11-a08c8**
 3. Settings → Service accounts
 4. Generate new private key
 5. Download JSON file

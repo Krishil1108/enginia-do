@@ -8,7 +8,7 @@
 
 **How to get:**
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select project: `trido-11`
+2. Select project: `engine-11-a08c8`
 3. Click Settings (⚙️) → Project settings
 4. Go to "Service accounts" tab
 5. Click "Generate new private key"
@@ -110,7 +110,7 @@ MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/enginia-d
    - `REACT_APP_API_URL` - Your backend URL
    - `REACT_APP_VAPID_PUBLIC_KEY` - Same public key from backend
 
-3. Firebase config is already filled in (using trido-11 project)
+3. Firebase config is already filled in (using engine-11-a08c8 project)
 
 ---
 
@@ -127,7 +127,7 @@ JWT_SECRET=<your-generated-jwt-secret>
 VAPID_PUBLIC_KEY=<your-vapid-public-key>
 VAPID_PRIVATE_KEY=<your-vapid-private-key>
 VAPID_EMAIL=<your-email>
-FIREBASE_PROJECT_ID=trido-11
+FIREBASE_PROJECT_ID=engine-11-a08c8
 FRONTEND_URL=<your-frontend-production-url>
 ```
 
@@ -143,9 +143,9 @@ Add these environment variables:
 REACT_APP_API_URL=<your-backend-production-url>
 REACT_APP_VAPID_PUBLIC_KEY=<your-vapid-public-key>
 REACT_APP_FIREBASE_API_KEY=AIzaSyBmVWT4dd3m-H9Wf5ksBSmGA6AKiqk1Nkg
-REACT_APP_FIREBASE_AUTH_DOMAIN=trido-11.firebaseapp.com
-REACT_APP_FIREBASE_PROJECT_ID=trido-11
-REACT_APP_FIREBASE_STORAGE_BUCKET=trido-11.firebasestorage.app
+REACT_APP_FIREBASE_AUTH_DOMAIN=engine-11-a08c8.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=engine-11-a08c8
+REACT_APP_FIREBASE_STORAGE_BUCKET=engine-11-a08c8.firebasestorage.app
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=543027789224
 REACT_APP_FIREBASE_APP_ID=1:543027789224:web:8b9e94f68379b0b1e7319d
 REACT_APP_FIREBASE_MEASUREMENT_ID=G-7D624BB27G

@@ -10,7 +10,7 @@ const DEMO_USERS = [
     username: 'ketul.lathia',
     password: '125478',
     name: 'Ketul Lathia',
-    email: 'ketul.lathia@trido.com',
+    email: 'ketul.lathia@enginia.com',
     role: 'Admin',
     department: 'Owner',
     isActive: true
@@ -19,7 +19,7 @@ const DEMO_USERS = [
     username: 'kinjal.solanki',
     password: '963258',
     name: 'Kinjal Solanki',
-    email: 'kinjal.solanki@trido.com',
+    email: 'kinjal.solanki@enginia.com',
     role: 'Manager',
     department: 'Administrative',
     isActive: true
@@ -28,7 +28,7 @@ const DEMO_USERS = [
     username: 'vraj.patel',
     password: '741852',
     name: 'Vraj Patel',
-    email: 'vraj.patel@trido.com',
+    email: 'vraj.patel@enginia.com',
     role: 'Team Lead',
     department: 'Project Management',
     isActive: true
@@ -37,7 +37,7 @@ const DEMO_USERS = [
     username: 'piyush.diwan',
     password: '369852',
     name: 'Piyush Diwan',
-    email: 'piyush.diwan@trido.com',
+    email: 'piyush.diwan@enginia.com',
     role: 'Employee',
     department: 'Studio Team',
     isActive: true

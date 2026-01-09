@@ -6,7 +6,7 @@ You need a Firebase project with Cloud Messaging enabled.
 ## Step 1: Get Firebase Service Account Key
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project: **trido-11**
+2. Select your project: **engine-11-a08c8**
 3. Click on the gear icon (⚙️) next to "Project Overview"
 4. Select "Project settings"
 5. Go to the "Service accounts" tab
@@ -18,7 +18,7 @@ You need a Firebase project with Cloud Messaging enabled.
 ## Step 2: Verify Firebase Configuration
 
 The Firebase configuration is already set up in the frontend:
-- Project ID: `trido-11`
+- Project ID: `engine-11-a08c8`
 - App ID: `1:543027789224:web:8b9e94f68379b0b1e7319d`
 
 Files configured:
