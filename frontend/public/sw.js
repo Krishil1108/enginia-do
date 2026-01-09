@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.7.0'; // Fixed Firebase credentials to correct enginia project
+const CACHE_VERSION = 'v3.8.0'; // Fixed VAPID key to match enginia Firebase project
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [
