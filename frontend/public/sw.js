@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v3.0.0-' + Date.now(); // Fix: Removed all polling, using UpdateChecker
+const CACHE_VERSION = 'v3.1.0-' + Date.now(); // Fix: No polling, pure push notifications like to-do-trimity
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [

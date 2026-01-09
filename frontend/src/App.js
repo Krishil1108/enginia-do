@@ -237,31 +237,18 @@ const TaskManagementSystem = () => {
   const showDeleteConfirm = (message, onConfirm, title = 'Confirm Delete') => showDialog(title, message, 'delete', onConfirm, 'Delete', 'Cancel');
   
   // Load notifications function - defined early to avoid reference errors
-  const loadNotifications = useCallback(async () => {
+  // Load notifications only when user explicitly requests (click bell, login, etc)
+  const loadNotifications = async () => {
     if (!currentUser) return;
     try {
       const response = await axios.get(`${API_URL}/notifications/user/${currentUser.username}`);
-      const newNotifications = response.data;
-      const newUnreadCount = newNotifications.filter(n => !n.isRead).length;
-      
-      // Only update state if there are actual changes to prevent unnecessary re-renders
-      setNotifications(prev => {
-        if (JSON.stringify(prev) !== JSON.stringify(newNotifications)) {
-          return newNotifications;
-        }
-        return prev;
-      });
-      
-      setUnreadCount(prev => {
-        if (prev !== newUnreadCount) {
-          return newUnreadCount;
-        }
-        return prev;
-      });
+      setNotifications(response.data);
+      const unread = response.data.filter(n => !n.isRead).length;
+      setUnreadCount(unread);
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
-  }, [currentUser]);
+  };
   
   
   // Check if user is logged in
@@ -297,7 +284,7 @@ const TaskManagementSystem = () => {
       loadAssociates();
       loadExternalUsers();
     }
-  }, [isLoggedIn, currentUser?.username, loadNotifications]);
+  }, [isLoggedIn, currentUser?.username]);
 
   // Initialize push notifications when app loads
   useEffect(() => {
