@@ -82,20 +82,23 @@ class FirebaseNotificationService {
           }
         }
       };
-            data: notification.data || {}
-          },
-          fcmOptions: {
-            link: '/'
-          }
-        }
-      };
 
       const response = await this.admin.messaging().send(message);
-      console.log('✅ Push notification sent:', response);
-      return { success: true, messageId: response };
+      console.log('✅ Push notification sent successfully:', response);
+      
+      return { 
+        success: true, 
+        messageId: response,
+        token: fcmToken 
+      };
     } catch (error) {
       console.error('❌ Error sending push notification:', error);
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.message,
+        errorCode: error.code,
+        token: fcmToken
+      };
     }
   }
 
