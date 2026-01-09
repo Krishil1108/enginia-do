@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.9.0'; // Updated VAPID key from Firebase Console (Jan 9, 2026)
+const CACHE_VERSION = 'v3.10.0'; // Fixed VAPID key typo (71Flg not 7iFIg)
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [

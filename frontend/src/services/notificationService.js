@@ -94,7 +94,7 @@ class NotificationService {
       // Get FCM token
       console.log('Requesting FCM token...');
       const token = await getToken(messaging, {
-        vapidKey: 'BIJvVGEUhnp0YmaFoETOxZV0OpZs8Kg8VRgxy9xM9R3Ud2TorbxqEbSIhhRL6ee3VuCTw_289OHvcfkPWH7iFIg'
+        vapidKey: 'BIJvVGEUhnp0YmaFoETOxZV0OpZs8Kg8VRgxy9xM9R3Ud2TorbxqEbSIhhRL6ee3VuCTw_289OHvcfkPWH71Flg'
       });
 
       if (token) {
