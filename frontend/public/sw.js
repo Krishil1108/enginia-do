@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v1.9.4-' + Date.now(); // Fix: Added fcmToken field to User model
+const CACHE_VERSION = 'v1.9.5-' + Date.now(); // Updated: Firebase config to engine-11-a08c8 + auto-enable notifications
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const urlsToCache = [
   '/'

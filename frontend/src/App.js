@@ -282,14 +282,14 @@ const TaskManagementSystem = () => {
         // Initialize notification service
         const initialized = await notificationService.initialize();
         
-        if (initialized) {
+        if (initialized && isLoggedIn && currentUser) {
           // Check current subscription status
           const status = await notificationService.getSubscriptionStatus();
-          setPushNotificationsEnabled(status.subscribed);
-          setNotificationPermission(status.permission);
           
           if (status.subscribed) {
             console.log('Push notifications are already enabled');
+            setPushNotificationsEnabled(true);
+            setNotificationPermission(status.permission);
             
             // Re-register subscription with backend in case server restarted
             console.log('Re-registering subscription with backend...');
@@ -299,6 +299,10 @@ const TaskManagementSystem = () => {
             } else {
               console.warn('⚠️ Failed to re-register subscription, may need to re-enable');
             }
+          } else {
+            // Auto-enable push notifications on login
+            console.log('🔔 Auto-enabling push notifications...');
+            await enablePushNotifications();
           }
         }
       } catch (error) {
@@ -332,7 +336,7 @@ const TaskManagementSystem = () => {
         navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
       }
     };
-  }, [currentUser]);
+  }, [isLoggedIn, currentUser]);
 
   // PWA Installation handling
   useEffect(() => {
@@ -3545,34 +3549,20 @@ Priority: ${task.priority}`;
           </h3>
           
           <div className="space-y-4">
-            {/* Enable/Disable Notifications */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            {/* Push Notifications Status (Always Enabled) */}
+            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
               <div>
-                <h4 className="font-medium text-gray-900">Push Notifications</h4>
+                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  Push Notifications
+                </h4>
                 <p className="text-sm text-gray-600">
-                  Receive notifications for task updates, assignments, and reminders
+                  Notifications are automatically enabled for all task updates, assignments, and reminders
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {pushNotificationsEnabled ? (
-                  <button
-                    onClick={disablePushNotifications}
-                    disabled={loading}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50"
-                  >
-                    {loading ? 'Disabling...' : 'Disable'}
-                  </button>
-                ) : (
-                  <button
-                    onClick={enablePushNotifications}
-                    disabled={loading || !('serviceWorker' in navigator && 'PushManager' in window)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Enabling...' : 'Enable'}
-                  </button>
-                )}
-                <span className="text-xs text-gray-500">
-                  Status: {pushNotificationsEnabled ? 'Enabled' : 'Disabled'}
+                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                  ✓ Always Active
                 </span>
               </div>
             </div>

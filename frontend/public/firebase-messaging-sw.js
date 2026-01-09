@@ -5,13 +5,13 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-comp
 
 // Initialize Firebase in the service worker
 firebase.initializeApp({
-  apiKey: "AIzaSyBmVWT4dd3m-H9Wf5ksBSmGA6AKiqk1Nkg",
-  authDomain: "trido-11.firebaseapp.com",
-  projectId: "trido-11",
-  storageBucket: "trido-11.firebasestorage.app",
-  messagingSenderId: "543027789224",
-  appId: "1:543027789224:web:8b9e94f68379b0b1e7319d",
-  measurementId: "G-7D624BB27G"
+  apiKey: "AIzaSyCQ6eqxmHSvtlSpb280cGUQJyhQuh6RH9Q",
+  authDomain: "engine-11-a08c8.firebaseapp.com",
+  projectId: "engine-11-a08c8",
+  storageBucket: "engine-11-a08c8.firebasestorage.app",
+  messagingSenderId: "554554618350",
+  appId: "1:554554618350:web:8eee6501172e862fd41eff",
+  measurementId: "G-Y149J2PC6F"
 });
 
 const messaging = firebase.messaging();
