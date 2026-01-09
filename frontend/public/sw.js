@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // AUTO-VERSIONED - Updates automatically on every deployment
-const CACHE_VERSION = 'v2.0.2-' + Date.now(); // Cleanup: Removed all trido references, using engine-11-a08c8 exclusively
+const CACHE_VERSION = 'v2.1.0-' + Date.now(); // Enhanced: Live sync + direct browser notification fallback + auto-show on events
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [

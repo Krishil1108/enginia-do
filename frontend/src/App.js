@@ -269,9 +269,15 @@ const TaskManagementSystem = () => {
       loadProjects();
       loadAssociates();
       loadExternalUsers();
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(loadNotifications, 30000);
-      return () => clearInterval(interval);
+      // Poll for new data every 5 seconds for instant sync
+      const notificationInterval = setInterval(loadNotifications, 5000);
+      const taskInterval = setInterval(loadTasks, 5000);
+      const projectInterval = setInterval(loadProjects, 5000);
+      return () => {
+        clearInterval(notificationInterval);
+        clearInterval(taskInterval);
+        clearInterval(projectInterval);
+      };
     }
   }, [isLoggedIn, currentUser?.username]);
 
@@ -1103,7 +1109,29 @@ const TaskManagementSystem = () => {
       );
       
       if (!hasSuccess) {
-        console.warn('⚠️ All push notification attempts failed');
+        console.warn('⚠️ All push notification attempts failed - trying direct browser notification');
+        
+        // Fallback: Show direct browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            const directNotif = new Notification(notificationData.title, {
+              body: notificationData.body,
+              icon: '/favicon.ico',
+              badge: '/favicon.ico',
+              tag: `task-${taskData._id || taskData.id}-${Date.now()}`,
+              requireInteraction: true,
+              vibrate: [200, 100, 200],
+              data: notificationData.data
+            });
+            directNotif.onclick = () => {
+              window.focus();
+              directNotif.close();
+            };
+            console.log('✅ Direct browser notification shown as fallback');
+          } catch (notifError) {
+            console.error('❌ Failed to show direct notification:', notifError);
+          }
+        }
       } else {
         console.log('🎉 At least one push notification succeeded');
       }
