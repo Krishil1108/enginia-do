@@ -112,7 +112,6 @@ const TaskManagementSystem = () => {
   const [tasks, setTasks] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const notificationIntervalRef = useRef(null);
   const [copiedTaskData, setCopiedTaskData] = useState('');
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showSubtaskModal, setShowSubtaskModal] = useState(false);
@@ -288,7 +287,7 @@ const TaskManagementSystem = () => {
     }
   }, []); // Remove fetchUserPermissions from dependency array to prevent infinite loop
 
-  // Load data when logged in
+  // Load data when logged in - NO POLLING
   useEffect(() => {
     if (isLoggedIn && currentUser?.username) {
       loadTasks();
@@ -299,49 +298,6 @@ const TaskManagementSystem = () => {
       loadExternalUsers();
     }
   }, [isLoggedIn, currentUser?.username, loadNotifications]);
-
-  // Background notification polling - separate from data loading
-  useEffect(() => {
-    if (isLoggedIn && currentUser?.username) {
-      // Clear any existing interval first
-      if (notificationIntervalRef.current) {
-        clearInterval(notificationIntervalRef.current);
-      }
-      
-      // Start background polling - runs independently
-      notificationIntervalRef.current = setInterval(() => {
-        if (currentUser?.username) {
-          axios.get(`${API_URL}/notifications/user/${currentUser.username}`)
-            .then(response => {
-              const newNotifications = response.data;
-              const newUnreadCount = newNotifications.filter(n => !n.isRead).length;
-              
-              setNotifications(prev => {
-                const prevStr = JSON.stringify(prev);
-                const newStr = JSON.stringify(newNotifications);
-                return prevStr !== newStr ? newNotifications : prev;
-              });
-              
-              setUnreadCount(prev => prev !== newUnreadCount ? newUnreadCount : prev);
-            })
-            .catch(err => console.error('Background notification poll error:', err));
-        }
-      }, 10000);
-      
-      return () => {
-        if (notificationIntervalRef.current) {
-          clearInterval(notificationIntervalRef.current);
-          notificationIntervalRef.current = null;
-        }
-      };
-    } else {
-      // Clear interval when logged out
-      if (notificationIntervalRef.current) {
-        clearInterval(notificationIntervalRef.current);
-        notificationIntervalRef.current = null;
-      }
-    }
-  }, [isLoggedIn, currentUser?.username]);
 
   // Initialize push notifications when app loads
   useEffect(() => {

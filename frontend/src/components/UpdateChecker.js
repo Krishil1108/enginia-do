@@ -36,11 +36,13 @@ const UpdateChecker = () => {
         }
       });
 
-      // Check for updates periodically - every 5 minutes
+      // Check for updates aggressively - every 10 seconds
       const checkForUpdates = () => {
         navigator.serviceWorker.getRegistration().then((registration) => {
           if (registration) {
-            registration.update().catch(() => {});
+            registration.update().catch(err => {
+              console.error('⚠️ Update check failed:', err);
+            });
           }
         });
       };
@@ -48,10 +50,10 @@ const UpdateChecker = () => {
       // Initial check
       checkForUpdates();
 
-      // Check for updates every 5 minutes
-      const intervalId = setInterval(checkForUpdates, 300000);
+      // Check for updates very frequently - every 10 seconds
+      const intervalId = setInterval(checkForUpdates, 10000);
 
-      // Check for updates when page becomes visible (but silently)
+      // Check for updates when page becomes visible
       const handleVisibilityChange = () => {
         if (!document.hidden) {
           checkForUpdates();
@@ -60,10 +62,26 @@ const UpdateChecker = () => {
 
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
+      // Force check on focus
+      const handleFocus = () => {
+        checkForUpdates();
+      };
+
+      window.addEventListener('focus', handleFocus);
+      
+      // Check on page load
+      const handleLoad = () => {
+        checkForUpdates();
+      };
+      
+      window.addEventListener('load', handleLoad);
+
       // Cleanup
       return () => {
         clearInterval(intervalId);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
+        document.removeEventListener('focus', handleFocus);
+        window.removeEventListener('load', handleLoad);
       };
     }
   }, []);
