@@ -55,8 +55,55 @@ class FirebaseNotificationService {
           title: notification.title || 'Task Update',
           body: notification.body || 'You have a new notification'
         },
-        data: notification.data || {},
-        token: fcmToken
+        data: {
+          ...notification.data,
+          // Ensure data is stringified for compatibility
+          click_action: 'FLUTTER_NOTIFICATION_CLICK'
+        },
+        token: fcmToken,
+        // Android specific options for background notifications
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: 'task_updates',
+            priority: 'high',
+            defaultSound: true,
+            defaultVibrateTimings: true,
+            visibility: 'public',
+            tag: `task-${notification.data?.taskId || Date.now()}`
+          }
+        },
+        // iOS specific options
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                title: notification.title || 'Task Update',
+                body: notification.body || 'You have a new notification'
+              },
+              sound: 'default',
+              badge: 1,
+              'content-available': 1
+            }
+          }
+        },
+        // Web push specific options
+        webpush: {
+          notification: {
+            title: notification.title || 'Task Update',
+            body: notification.body || 'You have a new notification',
+            icon: '/favicon.ico',
+            badge: '/favicon.ico',
+            requireInteraction: true,
+            vibrate: [200, 100, 200],
+            tag: `task-${notification.data?.taskId || Date.now()}`,
+            renotify: true,
+            data: notification.data || {}
+          },
+          fcmOptions: {
+            link: '/'
+          }
+        }
       };
 
       const response = await this.admin.messaging().send(message);

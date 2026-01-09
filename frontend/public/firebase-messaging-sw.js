@@ -3,6 +3,17 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
+// Keep service worker alive
+self.addEventListener('install', (event) => {
+  console.log('🔥 Firebase SW installing...');
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  console.log('🔥 Firebase SW activated');
+  event.waitUntil(clients.claim());
+});
+
 // Initialize Firebase in the service worker
 firebase.initializeApp({
   apiKey: "AIzaSyCQ6eqxmHSvtlSpb280cGUQJyhQuh6RH9Q",
@@ -19,12 +30,12 @@ const messaging = firebase.messaging();
 // Track recent notifications to prevent duplicates
 const recentNotifications = new Map();
 
-// Handle background messages
+// Handle background messages (when app is closed or in background)
 messaging.onBackgroundMessage((payload) => {
-  console.log('🔔 Received background message:', payload);
+  console.log('🔔 [BACKGROUND] Received message:', payload);
 
-  const notificationTitle = payload.notification?.title || 'Enjinia-do Notification';
-  const notificationBody = payload.notification?.body || '';
+  const notificationTitle = payload.notification?.title || payload.data?.title || 'Enginia-do Notification';
+  const notificationBody = payload.notification?.body || payload.data?.body || '';
   
   // Check for duplicate notifications (5-second window)
   const notificationKey = `${notificationTitle}_${notificationBody}`;
@@ -32,7 +43,7 @@ messaging.onBackgroundMessage((payload) => {
   const lastShown = recentNotifications.get(notificationKey);
   
   if (lastShown && (now - lastShown) < 5000) {
-    console.log('⏭️ Skipping duplicate background notification');
+    console.log('⏭️ [BACKGROUND] Skipping duplicate notification');
     return;
   }
   
@@ -50,19 +61,27 @@ messaging.onBackgroundMessage((payload) => {
     body: notificationBody,
     icon: '/favicon.ico',
     badge: '/favicon.ico',
-    tag: `task-${payload.data?.taskId || 'default'}-${now}`, // Unique tag with timestamp
+    tag: `task-${payload.data?.taskId || 'default'}-${now}`,
     requireInteraction: true,
     vibrate: [200, 100, 200, 100, 200],
     renotify: true,
+    silent: false,
     data: payload.data || {},
     actions: [
-      { action: 'view', title: '👁️ View', icon: '/favicon.ico' },
-      { action: 'dismiss', title: '❌ Dismiss', icon: '/favicon.ico' }
+      { action: 'view', title: '👁️ View' },
+      { action: 'dismiss', title: '❌ Dismiss' }
     ]
   };
 
-  console.log('📢 Showing background notification:', notificationTitle);
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  console.log('📢 [BACKGROUND] Showing notification:', notificationTitle);
+  
+  return self.registration.showNotification(notificationTitle, notificationOptions)
+    .then(() => {
+      console.log('✅ [BACKGROUND] Notification displayed successfully');
+    })
+    .catch((error) => {
+      console.error('❌ [BACKGROUND] Failed to show notification:', error);
+    });
 });
 
 // Handle notification clicks
