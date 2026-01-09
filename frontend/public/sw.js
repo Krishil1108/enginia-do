@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.2.0'; // Fix: Static version to prevent refresh loops
+const CACHE_VERSION = 'v3.3.0'; // Fix: Non-aggressive update checker
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [
@@ -12,8 +12,13 @@ console.log('🚀 Service Worker starting with cache version:', CACHE_NAME);
 // IMMEDIATELY skip waiting - don't wait for old SW to close
 self.skipWaiting();
 
-// Force clear all old caches on startup
+// Handle messages from clients
 self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('⏭️ Skip waiting requested - activating immediately');
+    self.skipWaiting();
+  }
+  
   if (event.data && event.data.type === 'FORCE_UPDATE') {
     console.log('🔄 Force cache update requested');
     event.waitUntil(
