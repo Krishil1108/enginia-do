@@ -102,6 +102,28 @@ const taskSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  statusHistory: [{
+    fromStatus: {
+      type: String,
+      default: ''
+    },
+    toStatus: {
+      type: String,
+      required: true
+    },
+    note: {
+      type: String,
+      default: ''
+    },
+    changedBy: {
+      type: String,
+      required: true
+    },
+    changedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   completedAt: {
     type: Date
   },

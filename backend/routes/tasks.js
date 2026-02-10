@@ -79,14 +79,37 @@ router.put('/:id', async (req, res) => {
       delete updateData.reminder;
     }
     
+    // Get the current task to check if status is changing
+    const currentTask = await Task.findById(req.params.id);
+    if (!currentTask) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Check if status is changing and track it in history
+    if (updateData.status && updateData.status !== currentTask.status) {
+      const statusHistoryEntry = {
+        fromStatus: currentTask.status,
+        toStatus: updateData.status,
+        note: updateData.statusChangeNote || updateData.completionReason || updateData.overdueReason || '',
+        changedBy: updateData.assignedBy || 'System', // Use assignedBy as the user making the change
+        changedAt: new Date()
+      };
+      
+      // Initialize statusHistory if it doesn't exist
+      if (!updateData.statusHistory) {
+        updateData.statusHistory = currentTask.statusHistory || [];
+      }
+      
+      // Add new entry to status history
+      updateData.statusHistory.push(statusHistoryEntry);
+    }
+    
     const task = await Task.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true, runValidators: true }
     );
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
+    
     res.json(task);
   } catch (error) {
     console.error('Error updating task:', error);

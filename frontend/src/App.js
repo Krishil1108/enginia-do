@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical, Settings } from 'lucide-react';
+import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical, Settings, ClipboardList } from 'lucide-react';
 import API_URL from './config';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -184,6 +184,8 @@ const TaskManagementSystem = () => {
   const [pendingStatusChange, setPendingStatusChange] = useState(null);
   const [showTaskDetailsModal, setShowTaskDetailsModal] = useState(false);
   const [taskDetails, setTaskDetails] = useState(null);
+  const [showNoteTimelineModal, setShowNoteTimelineModal] = useState(false);
+  const [noteTimelineTask, setNoteTimelineTask] = useState(null);
   
   // PWA Installation states
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -1953,7 +1955,8 @@ Priority: ${task.priority}`;
         ...selectedTask,
         status: 'Completed',
         completionReason: completionReason,
-        completedAt: new Date().toISOString()
+        completedAt: new Date().toISOString(),
+        assignedBy: currentUser.username // Pass current user for tracking
       };
       
       await axios.put(`${API_URL}/tasks/${selectedTask._id}`, updatedTask);
@@ -1990,7 +1993,8 @@ Priority: ${task.priority}`;
       const updatedTask = {
         ...selectedTask,
         status: 'Overdue',
-        overdueReason: overdueReason
+        overdueReason: overdueReason,
+        assignedBy: currentUser.username // Pass current user for tracking
       };
       
       await axios.put(`${API_URL}/tasks/${selectedTask._id}`, updatedTask);
@@ -2058,7 +2062,7 @@ Priority: ${task.priority}`;
         outDate: task.outDate,
         team: task.team || '',
         associates: Array.isArray(task.associates) ? task.associates : [],
-        assignedBy: task.assignedBy,
+        assignedBy: currentUser.username, // Pass current user as the one making the change
         assignedTo: task.assignedTo,
         assignedToMultiple: task.assignedToMultiple || [],
         isAssociate: task.isAssociate || false,
@@ -3049,6 +3053,17 @@ Priority: ${task.priority}`;
                               <Eye className="w-4 h-4" />
                             </button>
 
+                            {/* Note Tracking - Show status change history */}
+                            <button
+                              onClick={() => {
+                                setNoteTimelineTask(task);
+                                setShowNoteTimelineModal(true);
+                              }}
+                              className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
+                              title="Note Tracking"
+                            >
+                              <ClipboardList className="w-4 h-4" />
+                            </button>
 
 
                             {/* Edit button - always visible for editable tasks */}
@@ -3154,6 +3169,18 @@ Priority: ${task.priority}`;
                 title="Edit Task"
               >
                 <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              
+              {/* Note Tracking button */}
+              <button
+                onClick={() => {
+                  setNoteTimelineTask(task);
+                  setShowNoteTimelineModal(true);
+                }}
+                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                title="Note Tracking"
+              >
+                <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               {/* Create Subtask button - for tasks where user can create subtasks */}
@@ -5707,6 +5734,16 @@ Priority: ${task.priority}`;
                             </svg>
                           </button>
                           <button
+                            onClick={() => {
+                              setNoteTimelineTask(task);
+                              setShowNoteTimelineModal(true);
+                            }}
+                            className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
+                            title="Note Tracking"
+                          >
+                            <ClipboardList className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => copyTaskToClipboard(task)}
                             className="p-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded transition-colors"
                             title="Copy Task Details"
@@ -6256,6 +6293,19 @@ Priority: ${task.priority}`;
                             title="Edit task"
                           >
                             <Edit2 className="w-4 h-4" />
+                          </button>
+                          
+                          {/* Note Tracking Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNoteTimelineTask(task);
+                              setShowNoteTimelineModal(true);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1"
+                            title="Note Tracking"
+                          >
+                            <ClipboardList className="w-4 h-4" />
                           </button>
                           
                           {/* Create Subtask Button */}
@@ -8478,6 +8528,155 @@ Priority: ${task.priority}`;
           )}
         </div>
       </div>
+
+      {/* Note Timeline Modal */}
+      {showNoteTimelineModal && noteTimelineTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="bg-indigo-50 border-b border-indigo-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="w-6 h-6 text-indigo-600" />
+                <h2 className="text-xl font-semibold text-indigo-900">Note Tracking</h2>
+              </div>
+              <button 
+                onClick={() => { 
+                  setShowNoteTimelineModal(false); 
+                  setNoteTimelineTask(null); 
+                }} 
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Task Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-1">
+                  Task: <span className="font-semibold text-gray-900">{noteTimelineTask.title}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Project: <span className="font-semibold text-gray-900">{getProjectName(noteTimelineTask.project)}</span>
+                </p>
+              </div>
+
+              {/* Status History Timeline */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Status Change History
+                </h3>
+                
+                <div className="overflow-y-auto max-h-96 pr-2">
+                  {noteTimelineTask.statusHistory && noteTimelineTask.statusHistory.length > 0 ? (
+                    <div className="space-y-4">
+                      {/* Reverse the array to show latest first */}
+                      {[...noteTimelineTask.statusHistory].reverse().map((history, index) => {
+                        const isLatest = index === 0;
+                        return (
+                          <div key={index} className="relative">
+                            {/* Timeline line */}
+                            {index !== noteTimelineTask.statusHistory.length - 1 && (
+                              <div className="absolute left-4 top-10 bottom-0 w-0.5 bg-gray-200"></div>
+                            )}
+                            
+                            {/* Timeline item */}
+                            <div className="flex gap-4">
+                              {/* Timeline dot */}
+                              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                                isLatest ? 'bg-indigo-100 ring-4 ring-indigo-50' : 'bg-gray-100'
+                              }`}>
+                                {history.toStatus === 'Completed' ? (
+                                  <CheckCircle className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
+                                ) : history.toStatus === 'Overdue' ? (
+                                  <XCircle className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
+                                ) : (
+                                  <Clock className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
+                                )}
+                              </div>
+                              
+                              {/* Timeline content */}
+                              <div className={`flex-1 pb-6 ${isLatest ? 'bg-indigo-50' : 'bg-gray-50'} rounded-lg p-4`}>
+                                {/* Status change */}
+                                <div className="flex items-center gap-2 mb-2">
+                                  {history.fromStatus && (
+                                    <>
+                                      <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700 border border-gray-200">
+                                        {history.fromStatus}
+                                      </span>
+                                      <span className="text-gray-400">→</span>
+                                    </>
+                                  )}
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                    history.toStatus === 'Completed' ? 'bg-green-100 text-green-700 border border-green-200' :
+                                    history.toStatus === 'Overdue' ? 'bg-red-100 text-red-700 border border-red-200' :
+                                    history.toStatus === 'In Progress' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                                    history.toStatus === 'In Checking' ? 'bg-pink-100 text-pink-700 border border-pink-200' :
+                                    'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                                  }`}>
+                                    {history.toStatus}
+                                  </span>
+                                  {isLatest && (
+                                    <span className="ml-auto text-xs font-semibold text-indigo-600">Latest</span>
+                                  )}
+                                </div>
+                                
+                                {/* Note */}
+                                {history.note && (
+                                  <div className="mb-3">
+                                    <p className="text-sm text-gray-700 bg-white rounded px-3 py-2 border border-gray-200">
+                                      {history.note}
+                                    </p>
+                                  </div>
+                                )}
+                                
+                                {/* Meta info */}
+                                <div className="flex items-center gap-3 text-xs text-gray-500">
+                                  <div className="flex items-center gap-1">
+                                    <User className="w-3 h-3" />
+                                    <span>{history.changedBy}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>{new Date(history.changedAt).toLocaleDateString()}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{new Date(history.changedAt).toLocaleTimeString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <ClipboardList className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No status changes recorded yet</p>
+                      <p className="text-xs mt-1">Status changes will appear here when the task status is updated</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Close button */}
+              <div className="pt-4 border-t">
+                <button
+                  onClick={() => { 
+                    setShowNoteTimelineModal(false); 
+                    setNoteTimelineTask(null); 
+                  }}
+                  className="w-full px-6 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PWA Installation Prompt - Enhanced for Mobile */}
       {showInstallPrompt && !isInstalled && (

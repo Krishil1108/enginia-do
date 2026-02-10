@@ -1,9 +1,18 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
+
+// Create temp directory for MOM documents
+const tempDir = path.join(__dirname, 'temp');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+  console.log('📁 Created temp directory for MOM documents');
+}
 
 // Middleware
 app.use(cors());
@@ -43,6 +52,7 @@ const associateRoutes = require('./routes/associates');
 const externalUserRoutes = require('./routes/externalUsers');
 const migrationRoutes = require('./routes/migration');
 const adminRoutes = require('./routes/admin');
+const momRoutes = require('./routes/mom');
 
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
@@ -52,6 +62,7 @@ app.use('/api/associates', associateRoutes);
 app.use('/api/external-users', externalUserRoutes);
 app.use('/api/migration', migrationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/mom', momRoutes);
 
 // Health check endpoints for keep-alive
 app.get('/health', (req, res) => {
