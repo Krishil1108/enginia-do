@@ -3198,6 +3198,30 @@ Priority: ${task.priority}`;
               >
                 <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
+
+              {/* View Details button */}
+              <button
+                onClick={() => {
+                  setTaskDetails(task);
+                  setShowTaskDetailsModal(true);
+                }}
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="View Details"
+              >
+                <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              
+              {/* Create MOM button */}
+              <button
+                onClick={() => {
+                  setSelectedTaskForMOM(task);
+                  setShowMOMModal(true);
+                }}
+                className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                title="Create MOM"
+              >
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
               
               {/* Create Subtask button - for tasks where user can create subtasks */}
               {task.assignedTo === currentUser?.username && (isAdmin() || getMyTeamMembers().length > 0) && (
