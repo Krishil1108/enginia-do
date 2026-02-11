@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import API_URL from '../config';
 
 const MOMHistory = () => {
   const [tasksWithMoms, setTasksWithMoms] = useState([]);
@@ -18,7 +18,7 @@ const MOMHistory = () => {
   const fetchTasksWithMoms = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/mom/tasks-with-moms`);
+      const response = await axios.get(`${API_URL}/mom/tasks-with-moms`);
       setTasksWithMoms(response.data.tasks || []);
       setError(null);
     } catch (err) {
@@ -32,7 +32,7 @@ const MOMHistory = () => {
   const fetchMomHistory = async (taskId) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/mom/history/${taskId}`);
+      const response = await axios.get(`${API_URL}/mom/history/${taskId}`);
       setMomHistory(response.data.moms || []);
       setError(null);
     } catch (err) {
@@ -59,7 +59,7 @@ const MOMHistory = () => {
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/mom/${momId}`);
+      await axios.delete(`${API_URL}/mom/${momId}`);
       await fetchMomHistory(selectedTask._id);
       await fetchTasksWithMoms();
       alert('MOM deleted successfully');
@@ -73,7 +73,7 @@ const MOMHistory = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_BASE_URL}/api/mom/regenerate-docx-from-template/${momId}`,
+        `${API_URL}/mom/regenerate-docx-from-template/${momId}`,
         { images: [] }
       );
 
