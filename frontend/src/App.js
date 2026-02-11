@@ -13,6 +13,7 @@ import notificationService from './services/notificationService';
 import UpdateChecker from './components/UpdateChecker';
 import CustomDialog from './components/CustomDialog';
 import AdminDashboard from './components/AdminDashboard';
+import MOMHistory from './components/MOMHistory';
 
 // Server optimization for render.com deployment
 const keepServerAlive = () => {
@@ -6874,6 +6875,19 @@ Priority: ${task.priority}`;
                   </div>
                 </button>
               )}
+
+              {/* MOM History */}
+              <button
+                onClick={() => { setCurrentView('mom-history'); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'mom-history' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-teal-50 hover:text-teal-600'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  MOM History
+                </div>
+              </button>
               
               {/* Admin Reports - Based on permission */}
               {userPermissions.adminReports && (
@@ -7002,6 +7016,19 @@ Priority: ${task.priority}`;
                 </button>
               )}
 
+              {/* MOM History */}
+              <button
+                onClick={() => { setCurrentView('mom-history'); setShowAdvancedMenu(false); }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'mom-history' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-teal-50 hover:text-teal-600'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  MOM History
+                </div>
+              </button>
+
               {/* Admin Reports - Based on permission */}
               {userPermissions.adminReports && (
                 <button
@@ -7059,6 +7086,7 @@ Priority: ${task.priority}`;
         {currentView === 'associate-tasks' && <AssociateTasksView />}
         {currentView === 'external-tasks' && <ExternalTasksView />}
         {currentView === 'confidential-tasks' && userPermissions.confidentialTasks && <ConfidentialTasksView />}
+        {currentView === 'mom-history' && <MOMHistory />}
         {currentView === 'admin-dashboard' && userPermissions.adminPanel && <AdminDashboard currentUser={currentUser} onBack={() => setCurrentView('my-tasks')} />}
         {currentView === 'admin-reports' && userPermissions.adminReports && <AdminReportsView />}
         {currentView === 'settings' && <NotificationSettingsView />}
