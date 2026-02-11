@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { X, FileText, Upload } from 'lucide-react';
 import API_URL from '../config';
+import MOMPreview from './MOMPreview';
 
 const MOMModal = ({ isOpen, onClose, task }) => {
   const [formData, setFormData] = useState({
@@ -321,30 +322,36 @@ const MOMModal = ({ isOpen, onClose, task }) => {
               </div>
             </div>
 
-            {/* Meeting Notes */}
-            <div className="border border-orange-300 rounded-lg p-4 bg-orange-50">
-              <div className="flex items-center gap-2 mb-3">
+            {/* Meeting Notes --- STEP 1 */}
+            <div className="border-2 border-orange-300 rounded-lg p-4 bg-orange-50">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="bg-orange-600 text-white px-3 py-1 rounded text-sm font-bold">
+                  STEP 1
+                </span>
                 <h3 className="text-lg font-semibold text-gray-900">Meeting Notes</h3>
                 <span className="text-xs text-gray-600">(Supports English, Gujarati, or improper English)</span>
               </div>
               <textarea
                 value={formData.rawContent}
                 onChange={(e) => setFormData({ ...formData, rawContent: e.target.value })}
-                placeholder="આજે મીટીંગ સારી રહી... or write in English (proper or improper)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                rows={8}
+                placeholder="Enter numbered meeting points:&#10;1. First discussion point&#10;2. Second discussion point&#10;3. Third discussion point&#10;&#10;Supports formats: 1. 1) 1: 1-&#10;Can write in Gujarati or improper English - will be automatically corrected!"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono text-sm"
+                rows={10}
               />
               <p className="text-xs text-orange-700 mt-2 flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Tip: You can write in Gujarati or improper English - it will be automatically corrected!
+                {formData.rawContent ? `${formData.rawContent.split(/\n\s*\d+[.):)\-]/).length - 1} discussion point(s) detected` : 'Enter numbered discussion points'}
               </p>
             </div>
 
-            {/* Construction Site Images */}
-            <div className="border border-blue-300 rounded-lg p-4 bg-blue-50">
-              <div className="flex items-center gap-2 mb-3">
+            {/* Construction Site Images --- STEP 2 */}
+            <div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold">
+                  STEP 2
+                </span>
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -355,7 +362,7 @@ const MOMModal = ({ isOpen, onClose, task }) => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Upload construction site photos, diagrams, or screenshots. These will be included in your MOM document.
+                Upload construction site photos - they will be included in your document
               </p>
               <label className="cursor-pointer">
                 <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:bg-blue-100 transition">
@@ -363,10 +370,10 @@ const MOMModal = ({ isOpen, onClose, task }) => {
                   {formData.images.length === 0 ? (
                     <>
                       <p className="text-sm font-medium text-blue-900">No images uploaded yet</p>
-                      <p className="text-xs text-gray-600 mt-1">Click "Upload Images" to add photos</p>
+                      <p className="text-xs text-gray-600 mt-1">Click to select images</p>
                     </>
                   ) : (
-                    <p className="text-sm font-medium text-blue-900">{formData.images.length} image(s) uploaded</p>
+                    <p className="text-sm font-medium text-blue-900">{formData.images.length} image(s) uploaded ✓</p>
                   )}
                 </div>
                 <input
@@ -377,18 +384,11 @@ const MOMModal = ({ isOpen, onClose, task }) => {
                   className="hidden"
                 />
               </label>
-              <button
-                onClick={() => document.querySelector('input[type="file"]').click()}
-                className="w-full mt-3 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center gap-2"
-              >
-                <Upload className="w-4 h-4" />
-                Upload Images
-              </button>
 
               {formData.images.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   {formData.images.map((image, index) => (
-                    <div key={index} className="relative border rounded-lg overflow-hidden">
+                    <div key={index} className="relative border-2 border-blue-200 rounded-lg overflow-hidden">
                       <img
                         src={image.url}
                         alt={image.fileName}
@@ -409,6 +409,99 @@ const MOMModal = ({ isOpen, onClose, task }) => {
               )}
             </div>
 
+            {/* STEP 3: Generate Preview */}
+            {!showPreview && (
+              <div className="border-2 border-orange-200 rounded-lg p-6 bg-gradient-to-r from-orange-50 to-yellow-50">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="bg-orange-600 text-white px-3 py-1 rounded text-sm font-bold">
+                    STEP 3
+                  </span>
+                  <h3 className="text-lg font-semibold text-gray-900">Generate Preview</h3>
+                </div>
+                <p className="text-sm text-gray-700 mb-4">
+                  Click below to see exactly how your MOM will appear in the final document
+                </p>
+                <button
+                  onClick={handleGeneratePreview}
+                  disabled={!formData.rawContent.trim()}
+                  className="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-bold text-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Generate Preview
+                </button>
+              </div>
+            )}
+
+            {/* Preview Display */}
+            {showPreview && (
+              <div className="space-y-4">
+                <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Preview Ready
+                    </h3>
+                    <button
+                      onClick={() => setShowPreview(false)}
+                      className="text-sm text-gray-600 hover:text-gray-800 underline"
+                    >
+                      Edit Content
+                    </button>
+                  </div>
+                  
+                  <MOMPreview
+                    content={formData.rawContent}
+                    images={formData.images}
+                    metadata={{
+                      title: formData.title,
+                      date: formData.date,
+                      time: formData.time,
+                      location: formData.location,
+                      attendees: formData.attendees,
+                      companyName: formData.companyName
+                    }}
+                  />
+                </div>
+
+                {/* Action Buttons after Preview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <button
+                    onClick={handleProcessText}
+                    disabled={loading}
+                    className="py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {loading ? 'Processing...' : 'Process Text'}
+                  </button>
+                  <button
+                    onClick={handleSaveToHistory}
+                    disabled={loading}
+                    className="py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    {loading ? 'Saving...' : 'Save to History'}
+                  </button>
+                  <button
+                    onClick={handleGenerateDocument}
+                    disabled={loading}
+                    className="py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <FileText className="w-5 h-5" />
+                    {loading ? 'Generating...' : 'Download Word'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Processed Text Display */}
             {showProcessedText && processedContent && (
               <div className="border border-green-300 rounded-lg p-4 bg-green-50">
@@ -422,45 +515,11 @@ const MOMModal = ({ isOpen, onClose, task }) => {
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="border-t pt-6 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <button
-                  onClick={handleProcessText}
-                  disabled={loading || !formData.rawContent.trim()}
-                  className="py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {loading ? 'Processing...' : 'Process Text'}
-                </button>
-                <button
-                  onClick={handleSaveToHistory}
-                  disabled={loading || !formData.rawContent.trim()}
-                  className="py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                  {loading ? 'Saving...' : 'Save to History'}
-                </button>
-                <button
-                  onClick={handleGenerateDocument}
-                  disabled={loading || !formData.rawContent.trim()}
-                  className="py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <FileText className="w-5 h-5" />
-                  {loading ? 'Generating...' : 'Download Word'}
-                </button>
-              </div>
-              <p className="text-xs text-gray-600 text-center bg-gray-50 p-3 rounded">
-                💡 Note: Word documents are generated with your letterhead template and include uploaded images. 
-                Edit in Word and convert to PDF as needed.
-              </p>
+            {/* Cancel Button */}
+            <div className="border-t pt-4">
               <button
                 onClick={onClose}
-                className="w-full py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                className="w-full py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium"
               >
                 Cancel
               </button>
