@@ -7,6 +7,16 @@ const Task = require('../models/Task');
 const textProcessingService = require('../services/textProcessingService');
 const wordTemplatePdfService = require('../services/wordTemplatePdfService');
 
+const normalizeAttendees = (attendees = []) =>
+  attendees
+    .map((attendee) => (typeof attendee === 'string' ? { name: attendee } : attendee))
+    .filter((attendee) => attendee && attendee.name);
+
+const normalizeImages = (images = []) =>
+  images
+    .map((image) => (typeof image === 'string' ? { data: image } : image))
+    .filter((image) => image && image.data);
+
 /**
  * POST /api/mom/process-text
  * Process and correct meeting notes text
@@ -69,17 +79,20 @@ router.post('/save', async (req, res) => {
     // Extract discussion points
     const discussionPoints = textProcessingService.extractDiscussionPoints(processedContent);
 
+    const normalizedAttendees = normalizeAttendees(attendees);
+    const normalizedImages = normalizeImages(images);
+
     // Create MOM
     const mom = new MOM({
       task: taskId,
       companyName,
       visitDate: new Date(visitDate),
       location,
-      attendees: attendees || [],
+      attendees: normalizedAttendees,
       discussionPoints,
       rawContent,
       processedContent,
-      images: images || [],
+      images: normalizedImages,
       createdBy
     });
 
