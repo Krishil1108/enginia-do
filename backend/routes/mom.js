@@ -134,16 +134,19 @@ router.post('/generate-docx-from-template', async (req, res) => {
       });
     }
 
-    // Fetch MOM
-    const mom = await MOM.findById(momId);
+    // Fetch MOM with task populated
+    const mom = await MOM.findById(momId).populate('task', 'title');
     if (!mom) {
       return res.status(404).json({ error: 'MOM not found' });
     }
 
     // Prepare data for template
     const templateData = {
+      projectName: mom.task?.title || mom.companyName, // Use task title as project name
       companyName: mom.companyName,
+      dateOfVisit: mom.formattedVisitDate || new Date(mom.visitDate).toLocaleDateString(),
       visitDate: mom.formattedVisitDate || new Date(mom.visitDate).toLocaleDateString(),
+      siteLocation: mom.location, // Map to siteLocation for template
       location: mom.location,
       attendees: mom.attendees,
       rawContent: mom.rawContent,

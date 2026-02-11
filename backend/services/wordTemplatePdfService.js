@@ -112,15 +112,25 @@ class WordTemplatePdfService {
 
       // Prepare template data
       const templateData = {
+        projectName: data.projectName || data.companyName || '',
         companyName: data.companyName || '',
-        visitDate: data.visitDate || '',
-        location: data.location || '',
+        dateOfVisit: data.dateOfVisit || data.visitDate || '',
+        visitDate: data.visitDate || data.dateOfVisit || '',
+        siteLocation: data.siteLocation || data.location || '',
+        location: data.location || data.siteLocation || '',
         attendees: data.attendees || [],
         discussionPoints: this.parseDiscussionPoints(data.processedContent || data.rawContent || ''),
         rawContent: data.rawContent || '',
         processedContent: data.processedContent || '',
         images: data.images ? data.images.map(img => img.data) : []
       };
+
+      console.log('📄 Template data for Word document:', {
+        projectName: templateData.projectName,
+        dateOfVisit: templateData.dateOfVisit,
+        siteLocation: templateData.siteLocation,
+        attendeesCount: templateData.attendees.length
+      });
 
       // Render document
       doc.render(templateData);
