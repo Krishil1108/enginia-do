@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { X, FileText, Upload, Eye } from 'lucide-react';
+import { X, FileText, Upload } from 'lucide-react';
 import API_URL from '../config';
-import MOMPreview from './MOMPreview';
 
 const MOMModal = ({ isOpen, onClose, task }) => {
   const [formData, setFormData] = useState({
@@ -18,10 +17,8 @@ const MOMModal = ({ isOpen, onClose, task }) => {
 
   const [attendeeInput, setAttendeeInput] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
-
+  const [processedContent, setProcessedContent] = useState('');
+  const [showProcessedText, setShowProcessedText] = useState(false);
   const handleAddAttendee = () => {
     if (attendeeInput.trim()) {
       setFormData({
@@ -63,6 +60,69 @@ const MOMModal = ({ isOpen, onClose, task }) => {
       ...formData,
       images: formData.images.filter((_, i) => i !== index)
     });
+  };
+
+  const handleProcessText = async () => {
+    if (!formData.rawContent.trim()) {
+      setError('Please enter meeting content');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.post(`${API_URL}/mom/process-text`, {
+        text: formData.rawContent
+      });
+
+      if (response.data.success) {
+        setProcessedContent(response.data.data.processedText);
+        setShowProcessedText(true);
+        setSuccessMessage('Text processed successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      }
+    } catch (err) {
+      console.error('Error processing text:', err);
+      setError(err.response?.data?.error || 'Failed to process text');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveToHistory = async () => {
+    if (!formData.rawContent.trim()) {
+      setError('Please enter meeting content');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.post(`${API_URL}/mom/save`, {
+        taskId: task?._id,
+        title: formData.title,
+        date: formData.date,
+        time: formData.time,
+        location: formData.location,
+        attendees: formData.attendees,
+        rawContent: formData.rawContent,
+        companyName: formData.companyName
+      });
+
+      if (response.data.success) {
+        setSuccessMessage('MOM saved to history successfully!');
+        setProcessedContent(response.data.data.processedText);
+        setShowProcessedText(true);
+        setTimeout(() => setSuccessMessage(null), 3000);
+      }
+    } catch (err) {
+      console.error('Error saving to history:', err);
+      setError(err.response?.data?.error || 'Failed to save to history');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGeneratePreview = () => {
@@ -257,39 +317,53 @@ const MOMModal = ({ isOpen, onClose, task }) => {
               </div>
             </div>
 
-            {/* STEP 1: Meeting Notes */}
+            {/* Meeting Notes */}
             <div className="border border-orange-300 rounded-lg p-4 bg-orange-50">
               <div className="flex items-center gap-2 mb-3">
-                <span className="bg-orange-600 text-white px-3 py-1 rounded text-sm font-bold">
-                  STEP 1
-                </span>
                 <h3 className="text-lg font-semibold text-gray-900">Meeting Notes</h3>
+                <span className="text-xs text-gray-600">(Supports English, Gujarati, or improper English)</span>
               </div>
               <textarea
                 value={formData.rawContent}
                 onChange={(e) => setFormData({ ...formData, rawContent: e.target.value })}
-                placeholder="Enter discussion points (e.g., 1. First point, 2. Second point...)"
+                placeholder="આજે મીટીંગ સારી રહી... or write in English (proper or improper)"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 rows={8}
               />
-              <p className="text-xs text-gray-600 mt-2">
-                💡 Use numbered points (1., 2., 3.) for discussion items. Supports English, Gujarati, or improper English.
+              <p className="text-xs text-orange-700 mt-2 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Tip: You can write in Gujarati or improper English - it will be automatically corrected!
               </p>
             </div>
 
-            {/* STEP 2: Images */}
+            {/* Construction Site Images */}
             <div className="border border-blue-300 rounded-lg p-4 bg-blue-50">
               <div className="flex items-center gap-2 mb-3">
-                <span className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold">
-                  STEP 2
-                </span>
-                <h3 className="text-lg font-semibold text-gray-900">Images (Optional)</h3>
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <h3 className="text-lg font-semibold text-gray-900">Construction Site Images</h3>
+                <span className="text-xs text-gray-600">(Optional)</span>
               </div>
+              <p className="text-xs text-blue-700 mb-3 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Upload construction site photos, diagrams, or screenshots. These will be included in your MOM document.
+              </p>
               <label className="cursor-pointer">
                 <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:bg-blue-100 transition">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-sm text-gray-600">Click to upload images</p>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB each</p>
+                  {formData.images.length === 0 ? (
+                    <>
+                      <p className="text-sm font-medium text-blue-900">No images uploaded yet</p>
+                      <p className="text-xs text-gray-600 mt-1">Click "Upload Images" to add photos</p>
+                    </>
+                  ) : (
+                    <p className="text-sm font-medium text-blue-900">{formData.images.length} image(s) uploaded</p>
+                  )}
                 </div>
                 <input
                   type="file"
@@ -299,6 +373,13 @@ const MOMModal = ({ isOpen, onClose, task }) => {
                   className="hidden"
                 />
               </label>
+              <button
+                onClick={() => document.querySelector('input[type="file"]').click()}
+                className="w-full mt-3 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Images
+              </button>
 
               {formData.images.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
@@ -324,50 +405,62 @@ const MOMModal = ({ isOpen, onClose, task }) => {
               )}
             </div>
 
-            {/* STEP 3: Generate Preview */}
-            <div>
-              <button
-                onClick={handleGeneratePreview}
-                disabled={!formData.rawContent.trim()}
-                className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-lg font-semibold hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Eye className="w-5 h-5" />
-                STEP 3: Generate Preview
-              </button>
-            </div>
-
-            {/* Preview Section */}
-            {showPreview && (
-              <div className="border-t pt-6">
-                <MOMPreview
-                  content={formData.rawContent}
-                  images={formData.images}
-                  metadata={{
-                    title: formData.title,
-                    date: formData.date,
-                    time: formData.time,
-                    location: formData.location
-                  }}
-                />
-
-                <div className="mt-6 flex gap-4">
-                  <button
-                    onClick={handleGenerateDocument}
-                    disabled={loading}
-                    className="flex-1 py-3 bg-green-600 text-white rounded-lg text-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    <FileText className="w-5 h-5" />
-                    {loading ? 'Generating...' : 'Download Word Document'}
-                  </button>
-                  <button
-                    onClick={() => setShowPreview(false)}
-                    className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                  >
-                    Edit
-                  </button>
+            {/* Processed Text Display */}
+            {showProcessedText && processedContent && (
+              <div className="border border-green-300 rounded-lg p-4 bg-green-50">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">✨ Processed Content</h3>
+                <div className="bg-white p-4 rounded border border-green-200 whitespace-pre-wrap text-sm">
+                  {processedContent}
                 </div>
+                <p className="text-xs text-green-700 mt-2">
+                  ✓ Text has been improved with proper grammar and formatting
+                </p>
               </div>
             )}
+
+            {/* Action Buttons */}
+            <div className="border-t pt-6 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  onClick={handleProcessText}
+                  disabled={loading || !formData.rawContent.trim()}
+                  className="py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {loading ? 'Processing...' : 'Process Text'}
+                </button>
+                <button
+                  onClick={handleSaveToHistory}
+                  disabled={loading || !formData.rawContent.trim()}
+                  className="py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  {loading ? 'Saving...' : 'Save to History'}
+                </button>
+                <button
+                  onClick={handleGenerateDocument}
+                  disabled={loading || !formData.rawContent.trim()}
+                  className="py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-5 h-5" />
+                  {loading ? 'Generating...' : 'Download Word'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 text-center bg-gray-50 p-3 rounded">
+                💡 Note: Word documents are generated with your letterhead template and include uploaded images. 
+                Edit in Word and convert to PDF as needed.
+              </p>
+              <button
+                onClick={onClose}
+                className="w-full py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>
