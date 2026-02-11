@@ -142,16 +142,21 @@ router.post('/generate-docx-from-template', async (req, res) => {
 
     // Prepare data for template
     const templateData = {
-      projectName: mom.task?.title || mom.companyName, // Use task title as project name
+      meetingTitle: mom.task?.title || mom.companyName, // {meetingTitle}
+      meetingDate: mom.formattedVisitDate || new Date(mom.visitDate).toLocaleDateString(), // {meetingDate}
+      meetingLocation: mom.location, // {meetingLocation}
+      documentTitle: 'Minutes of Meeting', // {documentTitle}
+      attendees: mom.attendees, // {#attendees}{name}{/attendees}
+      rawContent: mom.rawContent,
+      processedContent: mom.processedContent,
+      images: mom.images,
+      // Legacy fields for backward compatibility
+      projectName: mom.task?.title || mom.companyName,
       companyName: mom.companyName,
       dateOfVisit: mom.formattedVisitDate || new Date(mom.visitDate).toLocaleDateString(),
       visitDate: mom.formattedVisitDate || new Date(mom.visitDate).toLocaleDateString(),
-      siteLocation: mom.location, // Map to siteLocation for template
-      location: mom.location,
-      attendees: mom.attendees,
-      rawContent: mom.rawContent,
-      processedContent: mom.processedContent,
-      images: mom.images
+      siteLocation: mom.location,
+      location: mom.location
     };
 
     // Generate documents

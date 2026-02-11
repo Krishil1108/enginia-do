@@ -112,24 +112,31 @@ class WordTemplatePdfService {
 
       // Prepare template data
       const templateData = {
+        meetingTitle: data.meetingTitle || data.projectName || data.companyName || '',
+        meetingDate: data.meetingDate || data.dateOfVisit || data.visitDate || '',
+        meetingLocation: data.meetingLocation || data.siteLocation || data.location || '',
+        documentTitle: data.documentTitle || 'Minutes of Meeting',
+        attendees: data.attendees || [],
+        discussionPoints: this.parseDiscussionPoints(data.processedContent || data.rawContent || ''),
+        rawContent: data.rawContent || '',
+        processedContent: data.processedContent || '',
+        images: data.images ? data.images.map(img => img.data) : [],
+        // Legacy field support
         projectName: data.projectName || data.companyName || '',
         companyName: data.companyName || '',
         dateOfVisit: data.dateOfVisit || data.visitDate || '',
         visitDate: data.visitDate || data.dateOfVisit || '',
         siteLocation: data.siteLocation || data.location || '',
-        location: data.location || data.siteLocation || '',
-        attendees: data.attendees || [],
-        discussionPoints: this.parseDiscussionPoints(data.processedContent || data.rawContent || ''),
-        rawContent: data.rawContent || '',
-        processedContent: data.processedContent || '',
-        images: data.images ? data.images.map(img => img.data) : []
+        location: data.location || data.siteLocation || ''
       };
 
       console.log('📄 Template data for Word document:', {
-        projectName: templateData.projectName,
-        dateOfVisit: templateData.dateOfVisit,
-        siteLocation: templateData.siteLocation,
-        attendeesCount: templateData.attendees.length
+        meetingTitle: templateData.meetingTitle,
+        meetingDate: templateData.meetingDate,
+        meetingLocation: templateData.meetingLocation,
+        documentTitle: templateData.documentTitle,
+        attendeesCount: templateData.attendees.length,
+        discussionPointsCount: templateData.discussionPoints.length
       });
 
       // Render document
