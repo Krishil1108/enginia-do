@@ -179,7 +179,7 @@ const MOMPreview = ({ content, images = [], metadata = {}, momData }) => {
           <div>
             <p className="text-blue-700">Attendees</p>
             <p className="text-xl font-bold text-blue-900">
-              {momData.attendees?.length || 0}
+              {(displayMetadata?.attendees?.length || 0)}
             </p>
           </div>
           <div>
