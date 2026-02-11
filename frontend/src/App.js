@@ -14,6 +14,7 @@ import UpdateChecker from './components/UpdateChecker';
 import CustomDialog from './components/CustomDialog';
 import AdminDashboard from './components/AdminDashboard';
 import MOMHistory from './components/MOMHistory';
+import MOMModal from './components/MOMModal';
 
 // Server optimization for render.com deployment
 const keepServerAlive = () => {
@@ -187,6 +188,8 @@ const TaskManagementSystem = () => {
   const [taskDetails, setTaskDetails] = useState(null);
   const [showNoteTimelineModal, setShowNoteTimelineModal] = useState(false);
   const [noteTimelineTask, setNoteTimelineTask] = useState(null);
+  const [showMOMModal, setShowMOMModal] = useState(false);
+  const [selectedTaskForMOM, setSelectedTaskForMOM] = useState(null);
   
   // PWA Installation states
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -3064,6 +3067,18 @@ Priority: ${task.priority}`;
                               title="Note Tracking"
                             >
                               <ClipboardList className="w-4 h-4" />
+                            </button>
+
+                            {/* Create MOM button */}
+                            <button
+                              onClick={() => {
+                                setSelectedTaskForMOM(task);
+                                setShowMOMModal(true);
+                              }}
+                              className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded transition-colors"
+                              title="Create MOM"
+                            >
+                              <FileText className="w-4 h-4" />
                             </button>
 
 
@@ -8783,6 +8798,16 @@ Priority: ${task.priority}`;
           </div>
         </div>
       )}
+
+      {/* MOM Modal */}
+      <MOMModal
+        isOpen={showMOMModal}
+        onClose={() => {
+          setShowMOMModal(false);
+          setSelectedTaskForMOM(null);
+        }}
+        task={selectedTaskForMOM}
+      />
     </div>
   );
 };

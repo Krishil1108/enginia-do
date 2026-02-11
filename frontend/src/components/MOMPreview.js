@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 
-const MOMPreview = ({ momData, images = [] }) => {
+const MOMPreview = ({ content, images = [], metadata = {}, momData }) => {
   const [discussionPoints, setDiscussionPoints] = useState([]);
 
   useEffect(() => {
-    if (momData && momData.processedContent) {
-      parseDiscussionPoints(momData.processedContent);
+    // Support both formats: new (content prop) and old (momData.processedContent)
+    const textContent = content || (momData && momData.processedContent);
+    if (textContent) {
+      parseDiscussionPoints(textContent);
     }
-  }, [momData]);
+  }, [content, momData]);
 
-  const parseDiscussionPoints = (content) => {
+  const parseDiscussionPoints = (textContent) => {
     const points = [];
     
     // Match numbered points with various formats: 1., 1), 1:, 1-
     const pointRegex = /(?:^|\n)\s*(\d+)[.):)\-]\s*(.+?)(?=(?:\n\s*\d+[.):)\-]|\n\s*$|$))/gs;
     
     let match;
-    while ((match = pointRegex.exec(content)) !== null) {
+    while ((match = pointRegex.exec(textContent)) !== null) {
       const point = match[2].trim();
       if (point) {
         points.push({ number: match[1], text: point });
@@ -24,14 +26,17 @@ const MOMPreview = ({ momData, images = [] }) => {
     }
 
     // If no numbered points found, treat entire content as one point
-    if (points.length === 0 && content.trim()) {
-      points.push({ number: '1', text: content.trim() });
+    if (points.length === 0 && textContent.trim()) {
+      points.push({ number: '1', text: textContent.trim() });
     }
 
     setDiscussionPoints(points);
   };
 
-  if (!momData) {
+  // Use either the new metadata prop or momData (for backward compatibility)
+  const displayMetadata = metadata || momData || {};
+
+  if (!content && !momData) {
     return (
       <div className="text-center text-gray-500 p-8">
         No MOM data to preview
@@ -49,28 +54,28 @@ const MOMPreview = ({ momData, images = [] }) => {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-gray-50 p-4 rounded">
           <p className="text-sm font-medium text-gray-600 mb-1">Visit Date</p>
-          <p className="text-lg text-gray-900">{momData.visitDate || 'N/A'}</p>
+          <p className="text-lg text-gray-900">{displayMetadata.date || displayMetadata.visitDate || 'N/A'}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded">
           <p className="text-sm font-medium text-gray-600 mb-1">Location</p>
-          <p className="text-lg text-gray-900">{momData.location || 'Routine'}</p>
+          <p className="text-lg text-gray-900">{displayMetadata.location || 'Routine'}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded">
           <p className="text-sm font-medium text-gray-600 mb-1">Company</p>
-          <p className="text-lg text-gray-900">{momData.companyName || 'N/A'}</p>
+          <p className="text-lg text-gray-900">{displayMetadata.companyName || 'N/A'}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded">
           <p className="text-sm font-medium text-gray-600 mb-1">Title</p>
-          <p className="text-lg text-gray-900">{momData.title || 'Minutes of Meeting'}</p>
+          <p className="text-lg text-gray-900">{displayMetadata.title || 'Minutes of Meeting'}</p>
         </div>
       </div>
 
       {/* Attendees */}
-      {momData.attendees && momData.attendees.length > 0 && (
+      {displayMetadata.attendees && displayMetadata.attendees.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">Attendees</h3>
           <div className="flex flex-wrap gap-2">
-            {momData.attendees.map((attendee, index) => (
+            {displayMetadata.attendees.map((attendee, index) => (
               <span
                 key={index}
                 className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
