@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const MOM = require('../models/MOM');
 const Task = require('../models/Task');
 const textProcessingService = require('../services/textProcessingService');
@@ -149,11 +151,25 @@ router.post('/generate-docx-from-template', async (req, res) => {
     }
     await mom.save();
 
-    res.json({
-      success: true,
-      docPath,
-      pdfPath,
-      message: 'Documents generated successfully'
+    // Send the docx file as download
+    if (!fs.existsSync(docPath)) {
+      return res.status(404).json({ error: 'Generated document file not found' });
+    }
+
+    // Set headers for file download
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}.docx"`);
+    
+    // Stream the file
+    const fileStream = fs.createReadStream(docPath);
+    fileStream.pipe(res);
+    
+    // Clean up temp file after sending (optional)
+    fileStream.on('end', () => {
+      fs.unlinkSync(docPath);
+      if (pdfPath && fs.existsSync(pdfPath)) {
+        fs.unlinkSync(pdfPath);
+      }
     });
   } catch (error) {
     console.error('❌ Document generation error:', error);

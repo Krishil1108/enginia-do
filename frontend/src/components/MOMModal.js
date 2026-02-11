@@ -4,7 +4,7 @@ import { X, FileText, Upload } from 'lucide-react';
 import API_URL from '../config';
 import MOMPreview from './MOMPreview';
 
-const MOMModal = ({ isOpen, onClose, task }) => {
+const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
   const [formData, setFormData] = useState({
     title: 'Minutes of Meeting',
     date: new Date().toLocaleDateString('en-IN'),
@@ -95,8 +95,19 @@ const MOMModal = ({ isOpen, onClose, task }) => {
   };
 
   const handleSaveToHistory = async () => {
+    // Validate required fields
+    if (!task?._id) {
+      setError('No task selected. Please open MOM from a task.');
+      return;
+    }
+
     if (!formData.rawContent.trim()) {
       setError('Please enter meeting content');
+      return;
+    }
+
+    if (!currentUser?._id) {
+      setError('User not authenticated');
       return;
     }
 
@@ -104,66 +115,106 @@ const MOMModal = ({ isOpen, onClose, task }) => {
       setLoading(true);
       setError(null);
 
-      const response = await axios.post(`${API_URL}/mom/save`, {
-        taskId: task?._id,
-        title: formData.title,
-        date: formData.date,
-        time: formData.time,
-        location: formData.location,
-        attendees: formData.attendees,
-        rawContent: formData.rawContent,
-        companyName: formData.companyName
-      });
+      const payload = {
+        taskId: task._id,
+        companyName: formData.companyName || 'Company Name',
+        visitDate: formData.date,
+        location: formData.location || 'Not specified',
+        attendees: formData.attendees || [],
+        rawContent: formData.rawContent.trim(),
+        processedContent: (processedContent && processedContent.trim()) || formData.rawContent.trim(),
+        images: (formData.images || []).map(img => img.data),
+        createdBy: currentUser._id
+      };
+
+      console.log('Saving MOM with payload:', { ...payload, images: `[${payload.images.length} images]` });
+
+      const response = await axios.post(`${API_URL}/mom/save`, payload);
 
       if (response.data.success) {
         setSuccessMessage('MOM saved to history successfully!');
-        setProcessedContent(response.data.data.processedText);
-        setShowProcessedText(true);
         setTimeout(() => setSuccessMessage(null), 3000);
       }
     } catch (err) {
       console.error('Error saving to history:', err);
-      setError(err.response?.data?.error || 'Failed to save to history');
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to save to history';
+      const details = err.response?.data?.details || err.response?.data?.required?.join(', ');
+      setError(details ? `${errorMsg}: ${details}` : errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGenerateDocument = async () => {
+    // Validate required fields
+    if (!task?._id) {
+      setError('No task selected. Please open MOM from a task.');
+      return;
+    }
+
+    if (!formData.rawContent.trim()) {
+      setError('Please enter meeting content');
+      return;
+    }
+
+    if (!currentUser?._id) {
+      setError('User not authenticated');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      const response = await axios.post(`${API_URL}/mom/generate-docx-from-template`, {
-        taskId: task?._id,
-        title: formData.title,
-        date: formData.date,
-        time: formData.time,
-        location: formData.location,
-        attendees: formData.attendees,
-        rawContent: processedContent || formData.rawContent,
-        companyName: formData.companyName,
-        images: formData.images.map(img => img.data)
+      // Step 1: Save MOM to get momId
+      const payload = {
+        taskId: task._id,
+        companyName: formData.companyName || 'Company Name',
+        visitDate: formData.date,
+        location: formData.location || 'Not specified',
+        attendees: formData.attendees || [],
+        rawContent: formData.rawContent.trim(),
+        processedContent: (processedContent && processedContent.trim()) || formData.rawContent.trim(),
+        images: (formData.images || []).map(img => img.data),
+        createdBy: currentUser._id
+      };
+
+      console.log('Saving MOM for document generation:', { ...payload, images: `[${payload.images.length} images]` });
+
+      const saveResponse = await axios.post(`${API_URL}/mom/save`, payload);
+
+      if (!saveResponse.data.success || !saveResponse.data.mom?._id) {
+        throw new Error('Failed to save MOM');
+      }
+
+      const momId = saveResponse.data.mom._id;
+
+      // Step 2: Generate document using momId
+      const docResponse = await axios.post(`${API_URL}/mom/generate-docx-from-template`, {
+        momId
       }, {
         responseType: 'blob'
       });
 
       // Download the file
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([docResponse.data]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `MOM_${task?.title || 'Meeting'}_${Date.now()}.docx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
 
-      setSuccessMessage('Document generated successfully!');
+      setSuccessMessage('Document generated and saved successfully!');
       setTimeout(() => {
         onClose();
       }, 2000);
     } catch (err) {
       console.error('Error generating document:', err);
-      setError(err.response?.data?.error || 'Failed to generate document');
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to generate document';
+      const details = err.response?.data?.details || err.response?.data?.required?.join(', ');
+      setError(details ? `${errorMsg}: ${details}` : errorMsg);
     } finally {
       setLoading(false);
     }

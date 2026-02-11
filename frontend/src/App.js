@@ -8831,6 +8831,7 @@ Priority: ${task.priority}`;
           setSelectedTaskForMOM(null);
         }}
         task={selectedTaskForMOM}
+        currentUser={currentUser}
       />
     </div>
   );
