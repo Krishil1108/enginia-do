@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical, Settings, ClipboardList } from 'lucide-react';
+import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical, Settings, ClipboardList, Briefcase } from 'lucide-react';
 import API_URL from './config';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -3078,7 +3078,7 @@ Priority: ${task.priority}`;
                               className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded transition-colors"
                               title="Create MOM"
                             >
-                              <FileText className="w-4 h-4" />
+                              <Briefcase className="w-4 h-4" />
                             </button>
 
 
@@ -3220,7 +3220,7 @@ Priority: ${task.priority}`;
                 className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
                 title="Create MOM"
               >
-                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               {/* Create Subtask button - for tasks where user can create subtasks */}
@@ -6923,7 +6923,7 @@ Priority: ${task.priority}`;
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
+                  <Briefcase className="w-4 h-4" />
                   MOM History
                 </div>
               </button>
@@ -7063,7 +7063,7 @@ Priority: ${task.priority}`;
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
+                  <Briefcase className="w-4 h-4" />
                   MOM History
                 </div>
               </button>
