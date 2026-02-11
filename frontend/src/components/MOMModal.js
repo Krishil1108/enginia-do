@@ -19,6 +19,10 @@ const MOMModal = ({ isOpen, onClose, task }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [processedContent, setProcessedContent] = useState('');
   const [showProcessedText, setShowProcessedText] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+
   const handleAddAttendee = () => {
     if (attendeeInput.trim()) {
       setFormData({
