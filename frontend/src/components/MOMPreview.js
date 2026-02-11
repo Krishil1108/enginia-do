@@ -120,25 +120,27 @@ const MOMPreview = ({ content, images = [], metadata = {}, momData }) => {
         </div>
       )}
 
-      {/* Raw vs Processed Content Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Raw Content</h3>
-          <div className="bg-gray-50 p-4 rounded border border-gray-300 h-64 overflow-y-auto">
-            <pre className="whitespace-pre-wrap text-sm text-gray-700">
-              {momData.rawContent || 'No raw content'}
-            </pre>
+      {/* Raw vs Processed Content Comparison - Only show if momData exists */}
+      {momData && (momData.rawContent || momData.processedContent) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Raw Content</h3>
+            <div className="bg-gray-50 p-4 rounded border border-gray-300 h-64 overflow-y-auto">
+              <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                {momData.rawContent || 'No raw content'}
+              </pre>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Processed Content</h3>
+            <div className="bg-green-50 p-4 rounded border border-green-300 h-64 overflow-y-auto">
+              <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                {momData.processedContent || 'No processed content'}
+              </pre>
+            </div>
           </div>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Processed Content</h3>
-          <div className="bg-green-50 p-4 rounded border border-green-300 h-64 overflow-y-auto">
-            <pre className="whitespace-pre-wrap text-sm text-gray-700">
-              {momData.processedContent || 'No processed content'}
-            </pre>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Images Preview */}
       {images && images.length > 0 && (
