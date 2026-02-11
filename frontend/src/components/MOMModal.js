@@ -81,9 +81,9 @@ const MOMModal = ({ isOpen, onClose, task }) => {
       });
 
       if (response.data.success) {
-        setProcessedContent(response.data.data.processedText);
+        setProcessedContent(response.data.processedText);
         setShowProcessedText(true);
-        setSuccessMessage('Text processed successfully!');
+        setSuccessMessage('Text processed and improved with AI!');
         setTimeout(() => setSuccessMessage(null), 3000);
       }
     } catch (err) {
@@ -141,7 +141,7 @@ const MOMModal = ({ isOpen, onClose, task }) => {
         time: formData.time,
         location: formData.location,
         attendees: formData.attendees,
-        rawContent: formData.rawContent,
+        rawContent: processedContent || formData.rawContent,
         companyName: formData.companyName,
         images: formData.images.map(img => img.data)
       }, {
@@ -411,7 +411,7 @@ const MOMModal = ({ isOpen, onClose, task }) => {
                   </div>
                   
                   <MOMPreview
-                    content={formData.rawContent}
+                    content={processedContent || formData.rawContent}
                     images={formData.images}
                     metadata={{
                       title: formData.title,
@@ -422,6 +422,12 @@ const MOMModal = ({ isOpen, onClose, task }) => {
                       companyName: formData.companyName
                     }}
                   />
+                  
+                  {processedContent && (
+                    <div className="mt-3 text-sm text-green-700 bg-green-50 p-3 rounded border border-green-200">
+                      <span className="font-semibold">✨ AI Enhanced:</span> Text has been improved with proper grammar and formatting
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons after Preview */}
