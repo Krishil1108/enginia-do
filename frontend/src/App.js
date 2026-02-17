@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical, Settings, ClipboardList, Briefcase } from 'lucide-react';
+import { Calendar, Users, Bell, MessageCircle, Plus, Edit2, Trash2, Filter, Check, Clock, AlertCircle, X, LogOut, User, Mail, Lock, Menu, CheckCircle, XCircle, LayoutGrid, List, Eye, Download, FileText, BarChart3, TrendingUp, FolderKanban, UserPlus, Search, MoreVertical, Settings, ClipboardList, Briefcase, ChevronDown, ChevronUp } from 'lucide-react';
 import API_URL from './config';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -163,6 +163,17 @@ const TaskManagementSystem = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState('table'); // 'cards' or 'table'
+  
+  // Summary cards collapsed state for each view (default: collapsed)
+  const [summaryCardsCollapsed, setSummaryCardsCollapsed] = useState({
+    'my-tasks': true,
+    'all-tasks': true,
+    'assigned-by-me': true,
+    'team-subtasks': true,
+    'associate-tasks': true,
+    'external-tasks': true,
+    'confidential-tasks': true
+  });
   
   // Admin reporting states
   const [showAdminReports, setShowAdminReports] = useState(false);
@@ -1714,7 +1725,14 @@ Priority: ${task.priority}`;
     
         console.log(`   ✅ Search state updated for ${viewName}`);
         console.log(`📊 [Summary] Current debounce setting: ${SEARCH_DEBOUNCE_DELAY}ms - Adjust line 76 to change timing`);
-  }, [SEARCH_DEBOUNCE_DELAY]);  const filterTasksBySearch = useCallback((tasks, searchTerm) => {
+  }, [SEARCH_DEBOUNCE_DELAY]);
+
+  // Toggle summary cards collapsed state
+  const toggleSummaryCards = useCallback((viewName) => {
+    setSummaryCardsCollapsed(prev => ({ ...prev, [viewName]: !prev[viewName] }));
+  }, []);
+
+  const filterTasksBySearch = useCallback((tasks, searchTerm) => {
     if (!searchTerm?.trim()) return tasks;
     const term = searchTerm.toLowerCase();
     return tasks.filter(task => {
@@ -3359,43 +3377,64 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pending</p>
-                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => toggleSummaryCards('my-tasks')}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Summary
+            </h3>
+            {summaryCardsCollapsed['my-tasks'] ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          
+          {!summaryCardsCollapsed['my-tasks'] && (
+            <div className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                      <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                      <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+                    </div>
+                    <Users className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm font-medium">Completed</p>
+                      <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+                    </div>
+                    <CheckCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-red-100 text-sm font-medium">Overdue</p>
+                      <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+                    </div>
+                    <AlertCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
               </div>
-              <Clock className="w-12 h-12 opacity-50" />
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">In Progress</p>
-                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
-              </div>
-              <Users className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
-              </div>
-              <CheckCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Overdue</p>
-                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
-              </div>
-              <AlertCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Filters */}
@@ -4689,43 +4728,64 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pending</p>
-                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => toggleSummaryCards('all-tasks')}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Summary
+            </h3>
+            {summaryCardsCollapsed['all-tasks'] ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          
+          {!summaryCardsCollapsed['all-tasks'] && (
+            <div className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                      <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                      <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+                    </div>
+                    <Users className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm font-medium">Completed</p>
+                      <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+                    </div>
+                    <CheckCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-red-100 text-sm font-medium">Overdue</p>
+                      <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+                    </div>
+                    <AlertCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
               </div>
-              <Clock className="w-12 h-12 opacity-50" />
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">In Progress</p>
-                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
-              </div>
-              <Users className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
-              </div>
-              <CheckCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Overdue</p>
-                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
-              </div>
-              <AlertCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
+          )}
         </div>
         
         {/* Search Bar */}
@@ -4962,43 +5022,64 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pending</p>
-                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => toggleSummaryCards('assigned-by-me')}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Summary
+            </h3>
+            {summaryCardsCollapsed['assigned-by-me'] ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          
+          {!summaryCardsCollapsed['assigned-by-me'] && (
+            <div className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                      <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                      <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+                    </div>
+                    <Users className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm font-medium">Completed</p>
+                      <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+                    </div>
+                    <CheckCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-red-100 text-sm font-medium">Overdue</p>
+                      <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+                    </div>
+                    <AlertCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
               </div>
-              <Clock className="w-12 h-12 opacity-50" />
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">In Progress</p>
-                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
-              </div>
-              <Users className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
-              </div>
-              <CheckCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Overdue</p>
-                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
-              </div>
-              <AlertCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
+          )}
         </div>
         
         {/* Filters */}
@@ -5237,43 +5318,64 @@ Priority: ${task.priority}`;
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pending</p>
-                <p className="text-4xl font-bold mt-2">{pendingSubtasks.length}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => toggleSummaryCards('team-subtasks')}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Summary
+            </h3>
+            {summaryCardsCollapsed['team-subtasks'] ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          
+          {!summaryCardsCollapsed['team-subtasks'] && (
+            <div className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                      <p className="text-4xl font-bold mt-2">{pendingSubtasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                      <p className="text-4xl font-bold mt-2">{inProgressSubtasks.length}</p>
+                    </div>
+                    <Users className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm font-medium">Completed</p>
+                      <p className="text-4xl font-bold mt-2">{completedSubtasks.length}</p>
+                    </div>
+                    <CheckCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-red-100 text-sm font-medium">Overdue</p>
+                      <p className="text-4xl font-bold mt-2">{overdueSubtasks.length}</p>
+                    </div>
+                    <AlertCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
               </div>
-              <Clock className="w-12 h-12 opacity-50" />
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">In Progress</p>
-                <p className="text-4xl font-bold mt-2">{inProgressSubtasks.length}</p>
-              </div>
-              <Users className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-4xl font-bold mt-2">{completedSubtasks.length}</p>
-              </div>
-              <CheckCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Overdue</p>
-                <p className="text-4xl font-bold mt-2">{overdueSubtasks.length}</p>
-              </div>
-              <AlertCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Subtasks Table */}
@@ -5381,43 +5483,64 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pending</p>
-                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => toggleSummaryCards('associate-tasks')}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Summary
+            </h3>
+            {summaryCardsCollapsed['associate-tasks'] ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          
+          {!summaryCardsCollapsed['associate-tasks'] && (
+            <div className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                      <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                      <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+                    </div>
+                    <Users className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm font-medium">Completed</p>
+                      <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+                    </div>
+                    <CheckCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-red-100 text-sm font-medium">Overdue</p>
+                      <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+                    </div>
+                    <AlertCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
               </div>
-              <Clock className="w-12 h-12 opacity-50" />
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">In Progress</p>
-                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
-              </div>
-              <Users className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
-              </div>
-              <CheckCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Overdue</p>
-                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
-              </div>
-              <AlertCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
+          )}
         </div>
         
         {/* Export and View Toggle */}
@@ -5979,43 +6102,64 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pending</p>
-                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => toggleSummaryCards('external-tasks')}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Summary
+            </h3>
+            {summaryCardsCollapsed['external-tasks'] ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          
+          {!summaryCardsCollapsed['external-tasks'] && (
+            <div className="p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                      <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                      <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+                    </div>
+                    <Users className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm font-medium">Completed</p>
+                      <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+                    </div>
+                    <CheckCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-red-100 text-sm font-medium">Overdue</p>
+                      <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+                    </div>
+                    <AlertCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
               </div>
-              <Clock className="w-12 h-12 opacity-50" />
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">In Progress</p>
-                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
-              </div>
-              <Users className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
-              </div>
-              <CheckCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Overdue</p>
-                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
-              </div>
-              <AlertCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
+          )}
         </div>
         
         {/* Export and View Toggle */}
@@ -6509,52 +6653,73 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pending</p>
-                <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => toggleSummaryCards('confidential-tasks')}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Summary
+            </h3>
+            {summaryCardsCollapsed['confidential-tasks'] ? (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          
+          {!summaryCardsCollapsed['confidential-tasks'] && (
+            <div className="p-6 pt-0">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm font-medium">Pending</p>
+                      <p className="text-4xl font-bold mt-2">{pendingTasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">In Progress</p>
+                      <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-pink-400 to-pink-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-pink-100 text-sm font-medium">In Checking</p>
+                      <p className="text-4xl font-bold mt-2">{inCheckingTasks.length}</p>
+                    </div>
+                    <Clock className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm font-medium">Completed</p>
+                      <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
+                    </div>
+                    <CheckCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-red-100 text-sm font-medium">Overdue</p>
+                      <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
+                    </div>
+                    <AlertCircle className="w-12 h-12 opacity-50" />
+                  </div>
+                </div>
               </div>
-              <Clock className="w-12 h-12 opacity-50" />
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">In Progress</p>
-                <p className="text-4xl font-bold mt-2">{inProgressTasks.length}</p>
-              </div>
-              <Clock className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-pink-400 to-pink-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-pink-100 text-sm font-medium">In Checking</p>
-                <p className="text-4xl font-bold mt-2">{inCheckingTasks.length}</p>
-              </div>
-              <Clock className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
-                <p className="text-4xl font-bold mt-2">{completedTasks.length}</p>
-              </div>
-              <CheckCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-red-400 to-red-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Overdue</p>
-                <p className="text-4xl font-bold mt-2">{overdueTasks.length}</p>
-              </div>
-              <AlertCircle className="w-12 h-12 opacity-50" />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Export and View Toggle */}
