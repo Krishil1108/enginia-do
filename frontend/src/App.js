@@ -111,6 +111,7 @@ const TaskManagementSystem = () => {
   
   // App state
   const [currentView, setCurrentView] = useState('my-tasks');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Sidebar open by default on desktop
   const [tasks, setTasks] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -6979,6 +6980,15 @@ Priority: ${task.priority}`;
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
+              {/* Sidebar Toggle Button - Desktop only */}
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="hidden md:block p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enjinia-do</h1>
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-lg">
                 <User className="w-4 h-4 text-blue-600" />
@@ -7068,146 +7078,6 @@ Priority: ${task.priority}`;
               </div>
             </div>
           )}
-
-          {/* Desktop Navigation - Permission Based */}
-          <div className="hidden md:block mt-3 pb-2 border-t pt-3">
-            <div className="flex flex-wrap gap-2 overflow-x-auto">
-              {/* My Tasks - Based on permission (show while loading as fallback) */}
-              {(userPermissions.myTasks || permissionsLoading) && (
-                <button
-                  onClick={() => { setCurrentView('my-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'my-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  My Tasks
-                </button>
-              )}
-              
-              {/* All Tasks - Based on permission */}
-              {userPermissions.allTasks && (
-                <button
-                  onClick={() => { setCurrentView('all-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  All Tasks
-                </button>
-              )}
-              
-              {/* Assigned By Me - Based on permission */}
-              {userPermissions.assignedByMe && (
-                <button
-                  onClick={() => { setCurrentView('assigned-by-me'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Assigned By Me
-                </button>
-              )}
-              
-              {/* Associate Tasks - Based on permission */}
-              {userPermissions.associateTasks && (
-                <button
-                  onClick={() => { setCurrentView('associate-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'associate-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Associate Tasks
-                </button>
-              )}
-
-              {/* External Tasks - Based on permission */}
-              {userPermissions.externalTasks && (
-                <button
-                  onClick={() => { setCurrentView('external-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'external-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  External Tasks
-                </button>
-              )}
-
-              {/* Confidential Tasks - Based on permission */}
-              {userPermissions.confidentialTasks && (
-                <button
-                  onClick={() => { setCurrentView('confidential-tasks'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Confidential Tasks
-                  </div>
-                </button>
-              )}
-
-              {/* MOM History */}
-              <button
-                onClick={() => { setCurrentView('mom-history'); }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentView === 'mom-history' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-teal-50 hover:text-teal-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4" />
-                  MOM History
-                </div>
-              </button>
-              
-              {/* Admin Reports - Based on permission */}
-              {userPermissions.adminReports && (
-                <button
-                  onClick={() => { setCurrentView('admin-reports'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'admin-reports' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" />
-                    Admin Reports
-                  </div>
-                </button>
-              )}
-
-              {/* Admin Panel - Based on permission */}
-              {userPermissions.adminPanel && (
-                <button
-                  onClick={() => { setCurrentView('admin-dashboard'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'admin-dashboard' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
-                    Admin Panel
-                  </div>
-                </button>
-              )}
-              
-              {/* Settings - Based on permission */}
-              {userPermissions.settings && (
-                <button
-                  onClick={() => { setCurrentView('settings'); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'settings' ? 'bg-gray-600 text-white' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4" />
-                    Settings
-                  </div>
-                </button>
-              )}
-            </div>
-          </div>
 
           {/* Mobile Navigation - Permission Based */}
           {showAdvancedMenu && (
@@ -7351,18 +7221,188 @@ Priority: ${task.priority}`;
         </div>
       </div>
 
+      {/* Desktop Sidebar - Permission Based */}
+      <div className="hidden md:flex">
+        {/* Sidebar */}
+        <div
+          className={`fixed left-0 top-[73px] h-[calc(100vh-73px)] bg-white border-r border-gray-200 shadow-lg transition-all duration-300 z-20 overflow-y-auto ${
+            isSidebarOpen ? 'w-64' : 'w-0'
+          }`}
+        >
+          <div className={`p-4 ${isSidebarOpen ? 'block' : 'hidden'}`}>
+            <nav className="space-y-1">
+              {/* My Tasks - Based on permission (show while loading as fallback) */}
+              {(userPermissions.myTasks || permissionsLoading) && (
+                <button
+                  onClick={() => { setCurrentView('my-tasks'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'my-tasks'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <ClipboardList className="w-5 h-5" />
+                  <span>My Tasks</span>
+                </button>
+              )}
+              
+              {/* All Tasks - Based on permission */}
+              {userPermissions.allTasks && (
+                <button
+                  onClick={() => { setCurrentView('all-tasks'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'all-tasks'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <LayoutGrid className="w-5 h-5" />
+                  <span>All Tasks</span>
+                </button>
+              )}
+              
+              {/* Assigned By Me - Based on permission */}
+              {userPermissions.assignedByMe && (
+                <button
+                  onClick={() => { setCurrentView('assigned-by-me'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'assigned-by-me'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <UserPlus className="w-5 h-5" />
+                  <span>Assigned By Me</span>
+                </button>
+              )}
+              
+              {/* Associate Tasks - Based on permission */}
+              {userPermissions.associateTasks && (
+                <button
+                  onClick={() => { setCurrentView('associate-tasks'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'associate-tasks'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Users className="w-5 h-5" />
+                  <span>Associate Tasks</span>
+                </button>
+              )}
+
+              {/* External Tasks - Based on permission */}
+              {userPermissions.externalTasks && (
+                <button
+                  onClick={() => { setCurrentView('external-tasks'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'external-tasks'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Mail className="w-5 h-5" />
+                  <span>External Tasks</span>
+                </button>
+              )}
+
+              {/* Confidential Tasks - Based on permission */}
+              {userPermissions.confidentialTasks && (
+                <button
+                  onClick={() => { setCurrentView('confidential-tasks'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'confidential-tasks'
+                      ? 'bg-orange-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
+                  }`}
+                >
+                  <Lock className="w-5 h-5" />
+                  <span>Confidential Tasks</span>
+                </button>
+              )}
+
+              <div className="border-t border-gray-200 my-2"></div>
+
+              {/* MOM History */}
+              <button
+                onClick={() => { setCurrentView('mom-history'); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  currentView === 'mom-history'
+                    ? 'bg-teal-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-teal-50 hover:text-teal-600'
+                }`}
+              >
+                <Briefcase className="w-5 h-5" />
+                <span>MOM History</span>
+              </button>
+              
+              {/* Admin Reports - Based on permission */}
+              {userPermissions.adminReports && (
+                <button
+                  onClick={() => { setCurrentView('admin-reports'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'admin-reports'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                  }`}
+                >
+                  <BarChart3 className="w-5 h-5" />
+                  <span>Admin Reports</span>
+                </button>
+              )}
+
+              {/* Admin Panel - Based on permission */}
+              {userPermissions.adminPanel && (
+                <button
+                  onClick={() => { setCurrentView('admin-dashboard'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'admin-dashboard'
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                  }`}
+                >
+                  <Settings className="w-5 h-5" />
+                  <span>Admin Panel</span>
+                </button>
+              )}
+              
+              {/* Settings - Based on permission */}
+              {userPermissions.settings && (
+                <button
+                  onClick={() => { setCurrentView('settings'); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentView === 'settings'
+                      ? 'bg-gray-600 text-white shadow-md'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Bell className="w-5 h-5" />
+                  <span>Settings</span>
+                </button>
+              )}
+            </nav>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 pb-20 sm:pb-8">
-        {currentView === 'my-tasks' && <MyTasksDashboard />}
-        {currentView === 'all-tasks' && <AllTasksView />}
-        {currentView === 'assigned-by-me' && <AssignedByMeView />}
-        {currentView === 'associate-tasks' && <AssociateTasksView />}
-        {currentView === 'external-tasks' && <ExternalTasksView />}
-        {currentView === 'confidential-tasks' && userPermissions.confidentialTasks && <ConfidentialTasksView />}
-        {currentView === 'mom-history' && <MOMHistory />}
-        {currentView === 'admin-dashboard' && userPermissions.adminPanel && <AdminDashboard currentUser={currentUser} onBack={() => setCurrentView('my-tasks')} />}
-        {currentView === 'admin-reports' && userPermissions.adminReports && <AdminReportsView />}
-        {currentView === 'settings' && <NotificationSettingsView />}
+      <div
+        className={`transition-all duration-300 ${
+          isSidebarOpen ? 'md:ml-64' : 'md:ml-0'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 pb-20 sm:pb-8">
+          {currentView === 'my-tasks' && <MyTasksDashboard />}
+          {currentView === 'all-tasks' && <AllTasksView />}
+          {currentView === 'assigned-by-me' && <AssignedByMeView />}
+          {currentView === 'associate-tasks' && <AssociateTasksView />}
+          {currentView === 'external-tasks' && <ExternalTasksView />}
+          {currentView === 'confidential-tasks' && userPermissions.confidentialTasks && <ConfidentialTasksView />}
+          {currentView === 'mom-history' && <MOMHistory />}
+          {currentView === 'admin-dashboard' && userPermissions.adminPanel && <AdminDashboard currentUser={currentUser} onBack={() => setCurrentView('my-tasks')} />}
+          {currentView === 'admin-reports' && userPermissions.adminReports && <AdminReportsView />}
+          {currentView === 'settings' && <NotificationSettingsView />}
+        </div>
       </div>
 
       {/* Notifications Panel */}
