@@ -165,6 +165,28 @@ const TaskManagementSystem = () => {
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState('table'); // 'cards' or 'table'
   
+  // Sort state for each view
+  const [sortOrder, setSortOrder] = useState({
+    'my-tasks': 'newest',
+    'all-tasks': 'newest',
+    'assigned-by-me': 'newest',
+    'team-subtasks': 'newest',
+    'associate-tasks': 'newest',
+    'external-tasks': 'newest',
+    'confidential-tasks': 'newest'
+  });
+  
+  // Sort state for each view
+  const [sortOrder, setSortOrder] = useState({
+    'my-tasks': 'newest',
+    'all-tasks': 'newest',
+    'assigned-by-me': 'newest',
+    'team-subtasks': 'newest',
+    'associate-tasks': 'newest',
+    'external-tasks': 'newest',
+    'confidential-tasks': 'newest'
+  });
+  
   // Summary cards collapsed state for each view (default: opened)
   const [summaryCardsCollapsed, setSummaryCardsCollapsed] = useState({
     'my-tasks': false,
@@ -2135,6 +2157,21 @@ Priority: ${task.priority}`;
   };
 
 
+  // Sort tasks helper function
+  const sortTasks = (tasksToSort, viewName) => {
+    const order = sortOrder[viewName] || 'newest';
+    const sorted = [...tasksToSort].sort((a, b) => {
+      const dateA = new Date(a.inDate || a.createdDate || a.assignedDate);
+      const dateB = new Date(b.inDate || b.createdDate || b.assignedDate);
+      
+      if (order === 'oldest') {
+        return dateA - dateB; // oldest first
+      } else {
+        return dateB - dateA; // newest first (default)
+      }
+    });
+    return sorted;
+  };
 
   const getFilteredTasks = () => {
     return tasks.filter(task => {
@@ -2148,20 +2185,21 @@ Priority: ${task.priority}`;
       if (filters.priority && task.priority !== filters.priority) return false;
       if (filters.severity && task.severity !== filters.severity) return false;
       
-      // Handle status filtering with special logic for overdue
+      // Handle task status filtering (workflow status)
       if (filters.status) {
-        if (filters.status === 'Overdue') {
-          // For overdue filter, include tasks with "Overdue" status OR tasks past due date that aren't completed
-          const dueDate = new Date(task.outDate);
-          dueDate.setHours(23, 59, 59, 999); // Set to 11:59:59.999 PM
-          const isPastDue = new Date() > dueDate && task.status !== 'Completed';
-          if (!(task.status === 'Overdue' || isPastDue)) return false;
-        } else {
-          // For other statuses, check exact match (but exclude tasks that are past due)
-          const dueDate = new Date(task.outDate);
-          dueDate.setHours(23, 59, 59, 999);
-          const isPastDue = new Date() > dueDate && task.status !== 'Completed';
-          if (isPastDue || task.status !== filters.status) return false;
+        if (task.status !== filters.status) return false;
+      }
+      
+      // Handle due date status filtering
+      if (filters.dueStatus) {
+        const dueDate = new Date(task.outDate);
+        dueDate.setHours(23, 59, 59, 999);
+        const isPastDue = new Date() > dueDate && task.status !== 'Completed';
+        
+        if (filters.dueStatus === 'Overdue') {
+          if (!isPastDue) return false;
+        } else if (filters.dueStatus === 'On Time') {
+          if (!isPastDue) return false;
         }
       }
       
@@ -3344,20 +3382,21 @@ Priority: ${task.priority}`;
       if (filters.priority && task.priority !== filters.priority) return false;
       if (filters.severity && task.severity !== filters.severity) return false;
       
-      // Handle status filtering with special logic for overdue
+      // Handle task status filtering (workflow status)
       if (filters.status) {
-        if (filters.status === 'Overdue') {
-          // For overdue filter, include tasks with "Overdue" status OR tasks past due date that aren't completed
-          const dueDate = new Date(task.outDate);
-          dueDate.setHours(23, 59, 59, 999); // Set to 11:59:59.999 PM
-          const isPastDue = new Date() > dueDate && task.status !== 'Completed';
-          if (!(task.status === 'Overdue' || isPastDue)) return false;
-        } else {
-          // For other statuses, check exact match (but exclude tasks that are past due)
-          const dueDate = new Date(task.outDate);
-          dueDate.setHours(23, 59, 59, 999);
-          const isPastDue = new Date() > dueDate && task.status !== 'Completed';
-          if (isPastDue || task.status !== filters.status) return false;
+        if (task.status !== filters.status) return false;
+      }
+      
+      // Handle due date status filtering
+      if (filters.dueStatus) {
+        const dueDate = new Date(task.outDate);
+        dueDate.setHours(23, 59, 59, 999);
+        const isPastDue = new Date() > dueDate && task.status !== 'Completed';
+        
+        if (filters.dueStatus === 'Overdue') {
+          if (!isPastDue) return false;
+        } else if (filters.dueStatus === 'On Time') {
+          if (!isPastDue) return false;
         }
       }
       
@@ -3367,8 +3406,11 @@ Priority: ${task.priority}`;
     // Apply search to filtered tasks
     const searchedTasks = filterTasksBySearch(filteredMyTasks, searchTerms['my-tasks']);
     
-    // Apply pagination to searched tasks
-    const paginatedTasks = paginateTasks(searchedTasks, currentPages['my-tasks']);
+    // Apply sorting to searched tasks
+    const sortedTasks = sortTasks(searchedTasks, 'my-tasks');
+    
+    // Apply pagination to sorted tasks
+    const paginatedTasks = paginateTasks(sortedTasks, currentPages['my-tasks']);
     
     const pendingTasks = paginatedTasks.filter(t => t.status === 'Pending');
     const inProgressTasks = paginatedTasks.filter(t => t.status === 'In Progress');
@@ -3465,7 +3507,7 @@ Priority: ${task.priority}`;
           </button>
           {showFilters && (
             <div className="px-6 pb-6">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
                   <select
@@ -3511,7 +3553,7 @@ Priority: ${task.priority}`;
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Task Status</label>
               <select
                 value={filters.status || ''}
                 onChange={(e) => setFilters({...filters, status: e.target.value})}
@@ -3522,6 +3564,18 @@ Priority: ${task.priority}`;
                 <option value="In Progress">In Progress</option>
                 <option value="In Checking">In Checking</option>
                 <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Due Status</label>
+              <select
+                value={filters.dueStatus || ''}
+                onChange={(e) => setFilters({...filters, dueStatus: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="On Time">On Time</option>
                 <option value="Overdue">Overdue</option>
               </select>
             </div>
@@ -3539,8 +3593,22 @@ Priority: ${task.priority}`;
           )}
         </div>
 
-        {/* Export and View Toggle */}
-        <div className="flex justify-end items-center gap-4">
+        {/* Sort, Export and View Toggle */}
+        <div className="flex justify-between items-center gap-4">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Sort By:</label>
+            <select
+              value={sortOrder['my-tasks']}
+              onChange={(e) => setSortOrder({...sortOrder, 'my-tasks': e.target.value})}
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4">
           {/* Export Button */}
           <button
             onClick={() => exportTaskList(filteredMyTasks, 'excel', 'my_tasks')}
@@ -4723,8 +4791,11 @@ Priority: ${task.priority}`;
     // Apply search to all tasks
     const searchedTasks = filterTasksBySearch(allTasks, searchTerms['all-tasks']);
     
-    // Apply pagination to searched tasks
-    const paginatedTasks = paginateTasks(searchedTasks, currentPages['all-tasks']);
+    // Apply sorting
+    const sortedTasks = sortTasks(searchedTasks, 'all-tasks');
+    
+    // Apply pagination to sorted tasks
+    const paginatedTasks = paginateTasks(sortedTasks, currentPages['all-tasks']);
     
     // Calculate stats from searched tasks (before pagination)
     const pendingTasks = searchedTasks.filter(t => t.status === 'Pending');
@@ -4801,11 +4872,25 @@ Priority: ${task.priority}`;
           </div>
         </div>
         
-        {/* Export and View Toggle */}
-        <div className="flex justify-end items-center gap-4">
+        {/* Sort, Export and View Toggle */}
+        <div className="flex justify-between items-center gap-4">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Sort By:</label>
+            <select
+              value={sortOrder['all-tasks']}
+              onChange={(e) => setSortOrder({...sortOrder, 'all-tasks': e.target.value})}
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4">
           {/* Export Button */}
           <button
-            onClick={() => exportTaskList(searchedTasks, 'excel', 'all_tasks')}
+            onClick={() => exportTaskList(sortedTasks, 'excel', 'all_tasks')}
             className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
@@ -5015,21 +5100,42 @@ Priority: ${task.priority}`;
       if (filters.project && task.project !== filters.project) return false;
       if (filters.priority && task.priority !== filters.priority) return false;
       if (filters.severity && task.severity !== filters.severity) return false;
-      if (filters.status && task.status !== filters.status) return false;
+      
+      // Handle task status filtering (workflow status)
+      if (filters.status) {
+        if (task.status !== filters.status) return false;
+      }
+      
+      // Handle due date status filtering
+      if (filters.dueStatus) {
+        const dueDate = new Date(task.outDate);
+        dueDate.setHours(23, 59, 59, 999);
+        const isPastDue = new Date() > dueDate && task.status !== 'Completed';
+        
+        if (filters.dueStatus === 'Overdue') {
+          if (!isPastDue) return false;
+        } else if (filters.dueStatus === 'On Time') {
+          if (isPastDue) return false;
+        }
+      }
+      
       return true;
     });
     
     // Apply search to filtered tasks
     const searchedTasks = filterTasksBySearch(filteredTasks, searchTerms['assigned-by-me']);
     
-    // Apply pagination to searched tasks
-    const paginatedTasks = paginateTasks(searchedTasks, currentPages['assigned-by-me']);
+    // Apply sorting
+    const sortedTasks = sortTasks(searchedTasks, 'assigned-by-me');
     
-    // Calculate stats from searched tasks (before pagination)
-    const pendingTasks = searchedTasks.filter(t => t.status === 'Pending');
-    const inProgressTasks = searchedTasks.filter(t => t.status === 'In Progress');
-    const completedTasks = searchedTasks.filter(t => t.status === 'Completed');
-    const overdueTasks = searchedTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+    // Apply pagination to sorted tasks
+    const paginatedTasks = paginateTasks(sortedTasks, currentPages['assigned-by-me']);
+    
+    // Calculate stats from sorted tasks (before pagination)
+    const pendingTasks = sortedTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = sortedTasks.filter(t => t.status === 'In Progress');
+    const completedTasks = sortedTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = sortedTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
 
     return (
       <div className="space-y-6">
@@ -5167,7 +5273,7 @@ Priority: ${task.priority}`;
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Task Status</label>
               <select
                 value={filters.status || ''}
                 onChange={(e) => setFilters({...filters, status: e.target.value})}
@@ -5178,6 +5284,18 @@ Priority: ${task.priority}`;
                 <option value="In Progress">In Progress</option>
                 <option value="In Checking">In Checking</option>
                 <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Due Status</label>
+              <select
+                value={filters.dueStatus || ''}
+                onChange={(e) => setFilters({...filters, dueStatus: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="On Time">On Time</option>
                 <option value="Overdue">Overdue</option>
               </select>
             </div>
@@ -5214,11 +5332,25 @@ Priority: ${task.priority}`;
           )}
         </div>
         
-        {/* Export and View Toggle */}
-        <div className="flex justify-end items-center gap-4">
+        {/* Sort, Export and View Toggle */}
+        <div className="flex justify-between items-center gap-4">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Sort By:</label>
+            <select
+              value={sortOrder['assigned-by-me']}
+              onChange={(e) => setSortOrder({...sortOrder, 'assigned-by-me': e.target.value})}
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4">
           {/* Export Button */}
           <button
-            onClick={() => exportTaskList(searchedTasks, 'excel', 'assigned_by_me')}
+            onClick={() => exportTaskList(sortedTasks, 'excel', 'assigned_by_me')}
             className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
@@ -5246,7 +5378,7 @@ Priority: ${task.priority}`;
 
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900">
-            Tasks You Assigned ({searchedTasks.length})
+            Tasks You Assigned ({sortedTasks.length})
           </h3>
         </div>
 
@@ -5255,7 +5387,7 @@ Priority: ${task.priority}`;
             <TableView tasks={paginatedTasks} />
             <PaginationControls 
               viewName="assigned-by-me"
-              totalTasks={searchedTasks}
+              totalTasks={sortedTasks}
               currentPage={currentPages['assigned-by-me']}
             />
           </>
@@ -5267,7 +5399,7 @@ Priority: ${task.priority}`;
               ))}
             </div>
 
-            {searchedTasks.length === 0 && searchTerms['assigned-by-me'] && (
+            {sortedTasks.length === 0 && searchTerms['assigned-by-me'] && (
               <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
                 <Users className="w-12 h-12 mx-auto text-gray-300 mb-4" />
                 <p className="text-gray-500">No tasks found matching "{searchTerms['assigned-by-me']}"</p>
@@ -5289,7 +5421,7 @@ Priority: ${task.priority}`;
             {/* Pagination Controls for Cards View */}
             <PaginationControls 
               viewName="assigned-by-me"
-              totalTasks={searchedTasks}
+              totalTasks={sortedTasks}
               currentPage={currentPages['assigned-by-me']}
             />
           </>
@@ -5318,14 +5450,17 @@ Priority: ${task.priority}`;
     // Apply search to subtasks
     const searchedSubtasks = filterTasksBySearch(mySubtasks, searchTerms['team-subtasks']);
     
-    // Apply pagination to searched subtasks
-    const paginatedSubtasks = paginateTasks(searchedSubtasks, currentPages['team-subtasks']);
+    // Apply sorting
+    const sortedSubtasks = sortTasks(searchedSubtasks, 'team-subtasks');
     
-    // Calculate stats from searched subtasks (before pagination)
-    const pendingSubtasks = searchedSubtasks.filter(t => t.status === 'Pending');
-    const inProgressSubtasks = searchedSubtasks.filter(t => t.status === 'In Progress');
-    const completedSubtasks = searchedSubtasks.filter(t => t.status === 'Completed');
-    const overdueSubtasks = searchedSubtasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+    // Apply pagination to sorted subtasks
+    const paginatedSubtasks = paginateTasks(sortedSubtasks, currentPages['team-subtasks']);
+    
+    // Calculate stats from sorted subtasks (before pagination)
+    const pendingSubtasks = sortedSubtasks.filter(t => t.status === 'Pending');
+    const inProgressSubtasks = sortedSubtasks.filter(t => t.status === 'In Progress');
+    const completedSubtasks = sortedSubtasks.filter(t => t.status === 'Completed');
+    const overdueSubtasks = sortedSubtasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
 
     return (
       <div className="space-y-6">
@@ -5402,13 +5537,29 @@ Priority: ${task.priority}`;
           </div>
         </div>
 
+        {/* Sort and Export Controls */}
+        <div className="flex justify-between items-center gap-4">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Sort By:</label>
+            <select
+              value={sortOrder['team-subtasks']}
+              onChange={(e) => setSortOrder({...sortOrder, 'team-subtasks': e.target.value})}
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+        </div>
+
         {/* Subtasks Table */}
         {viewMode === 'table' ? (
           <>
             <TableView tasks={paginatedSubtasks} />
             <PaginationControls 
               viewName="team-subtasks"
-              totalTasks={searchedSubtasks}
+              totalTasks={sortedSubtasks}
               currentPage={currentPages['team-subtasks']}
             />
           </>
@@ -5423,13 +5574,13 @@ Priority: ${task.priority}`;
             {/* Pagination Controls for Cards View */}
             <PaginationControls 
               viewName="team-subtasks"
-              totalTasks={searchedSubtasks}
+              totalTasks={sortedSubtasks}
               currentPage={currentPages['team-subtasks']}
             />
           </>
         )}
 
-        {searchedSubtasks.length === 0 && searchTerms['team-subtasks'] && (
+        {sortedSubtasks.length === 0 && searchTerms['team-subtasks'] && (
           <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
             <Users className="w-12 h-12 mx-auto text-gray-300 mb-4" />
             <p className="text-gray-500">No subtasks found matching "{searchTerms['team-subtasks']}"</p>
@@ -5477,6 +5628,20 @@ Priority: ${task.priority}`;
     if (associateFilters.status) {
       associateTasks = associateTasks.filter(t => t.status === associateFilters.status);
     }
+    if (associateFilters.dueStatus) {
+      associateTasks = associateTasks.filter(t => {
+        const dueDate = new Date(t.outDate);
+        dueDate.setHours(23, 59, 59, 999);
+        const isPastDue = new Date() > dueDate && t.status !== 'Completed';
+        
+        if (associateFilters.dueStatus === 'Overdue') {
+          return isPastDue;
+        } else if (associateFilters.dueStatus === 'On Time') {
+          return !isPastDue;
+        }
+        return true;
+      });
+    }
     if (associateFilters.assignedBy) {
       associateTasks = associateTasks.filter(t => t.assignedBy === associateFilters.assignedBy);
     }
@@ -5492,14 +5657,17 @@ Priority: ${task.priority}`;
     // Apply search to filtered associate tasks
     const searchedAssociateTasks = filterTasksBySearch(associateTasks, searchTerms['associate-tasks']);
     
-    // Apply pagination to searched associate tasks
-    const paginatedAssociateTasks = paginateTasks(searchedAssociateTasks, currentPages['associate-tasks']);
+    // Apply sorting
+    const sortedAssociateTasks = sortTasks(searchedAssociateTasks, 'associate-tasks');
     
-    // Calculate stats from searched tasks (before pagination)
-    const pendingTasks = searchedAssociateTasks.filter(t => t.status === 'Pending');
-    const inProgressTasks = searchedAssociateTasks.filter(t => t.status === 'In Progress');
-    const completedTasks = searchedAssociateTasks.filter(t => t.status === 'Completed');
-    const overdueTasks = searchedAssociateTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+    // Apply pagination to sorted associate tasks
+    const paginatedAssociateTasks = paginateTasks(sortedAssociateTasks, currentPages['associate-tasks']);
+    
+    // Calculate stats from sorted tasks (before pagination)
+    const pendingTasks = sortedAssociateTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = sortedAssociateTasks.filter(t => t.status === 'In Progress');
+    const completedTasks = sortedAssociateTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = sortedAssociateTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
     
     // Get unique associate names for filter
     const uniqueAssociates = [...new Set(tasks.filter(t => t.isAssociate && t.associateDetails?.name).map(t => t.associateDetails.name))];
@@ -5573,11 +5741,25 @@ Priority: ${task.priority}`;
           </div>
         </div>
         
-        {/* Export and View Toggle */}
-        <div className="flex justify-end items-center gap-4">
+        {/* Sort, Export and View Toggle */}
+        <div className="flex justify-between items-center gap-4">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Sort By:</label>
+            <select
+              value={sortOrder['associate-tasks']}
+              onChange={(e) => setSortOrder({...sortOrder, 'associate-tasks': e.target.value})}
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4">
           {/* Export Button */}
           <button
-            onClick={() => exportTaskList(searchedAssociateTasks, 'excel', 'associate_tasks')}
+            onClick={() => exportTaskList(sortedAssociateTasks, 'excel', 'associate_tasks')}
             className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
@@ -5686,7 +5868,7 @@ Priority: ${task.priority}`;
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Task Status</label>
               <select
                 value={associateFilters.status || ''}
                 onChange={(e) => setAssociateFilters({...associateFilters, status: e.target.value})}
@@ -5697,6 +5879,18 @@ Priority: ${task.priority}`;
                 <option value="In Progress">In Progress</option>
                 <option value="In Checking">In Checking</option>
                 <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Due Status</label>
+              <select
+                value={associateFilters.dueStatus || ''}
+                onChange={(e) => setAssociateFilters({...associateFilters, dueStatus: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">All</option>
+                <option value="On Time">On Time</option>
                 <option value="Overdue">Overdue</option>
               </select>
             </div>
@@ -6102,6 +6296,20 @@ Priority: ${task.priority}`;
     if (externalFilters.status) {
       externalTasks = externalTasks.filter(t => t.status === externalFilters.status);
     }
+    if (externalFilters.dueStatus) {
+      externalTasks = externalTasks.filter(t => {
+        const dueDate = new Date(t.outDate);
+        dueDate.setHours(23, 59, 59, 999);
+        const isPastDue = new Date() > dueDate && t.status !== 'Completed';
+        
+        if (externalFilters.dueStatus === 'Overdue') {
+          return isPastDue;
+        } else if (externalFilters.dueStatus === 'On Time') {
+          return !isPastDue;
+        }
+        return true;
+      });
+    }
     if (externalFilters.assignedBy) {
       externalTasks = externalTasks.filter(t => t.assignedBy === externalFilters.assignedBy);
     }
@@ -6117,14 +6325,17 @@ Priority: ${task.priority}`;
     // Apply search to filtered external tasks
     const searchedExternalTasks = filterTasksBySearch(externalTasks, searchTerms['external-tasks']);
     
-    // Apply pagination to searched external tasks
-    const paginatedExternalTasks = paginateTasks(searchedExternalTasks, currentPages['external-tasks']);
+    // Apply sorting
+    const sortedExternalTasks = sortTasks(searchedExternalTasks, 'external-tasks');
     
-    // Calculate stats from searched tasks (before pagination)
-    const pendingTasks = searchedExternalTasks.filter(t => t.status === 'Pending');
-    const inProgressTasks = searchedExternalTasks.filter(t => t.status === 'In Progress');
-    const completedTasks = searchedExternalTasks.filter(t => t.status === 'Completed');
-    const overdueTasks = searchedExternalTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+    // Apply pagination to sorted external tasks
+    const paginatedExternalTasks = paginateTasks(sortedExternalTasks, currentPages['external-tasks']);
+    
+    // Calculate stats from sorted tasks (before pagination)
+    const pendingTasks = sortedExternalTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = sortedExternalTasks.filter(t => t.status === 'In Progress');
+    const completedTasks = sortedExternalTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = sortedExternalTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
     
     // Get unique external user names for filter
     const uniqueExternalUsers = [...new Set(tasks.filter(t => t.isExternalUser && t.externalUserDetails?.name).map(t => t.externalUserDetails.name))];
@@ -6198,11 +6409,25 @@ Priority: ${task.priority}`;
           </div>
         </div>
         
-        {/* Export and View Toggle */}
-        <div className="flex justify-end items-center gap-4">
+        {/* Sort, Export and View Toggle */}
+        <div className="flex justify-between items-center gap-4">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Sort By:</label>
+            <select
+              value={sortOrder['external-tasks']}
+              onChange={(e) => setSortOrder({...sortOrder, 'external-tasks': e.target.value})}
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4">
           {/* Export Button */}
           <button
-            onClick={() => exportTaskList(searchedExternalTasks, 'excel', 'external_tasks')}
+            onClick={() => exportTaskList(sortedExternalTasks, 'excel', 'external_tasks')}
             className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
@@ -6315,7 +6540,7 @@ Priority: ${task.priority}`;
 
                 {/* Status Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Task Status</label>
                   <select
                     value={externalFilters.status || ''}
                     onChange={(e) => setExternalFilters({...externalFilters, status: e.target.value || null})}
@@ -6326,6 +6551,19 @@ Priority: ${task.priority}`;
                     <option value="In Progress">In Progress</option>
                     <option value="In Checking">In Checking</option>
                     <option value="Completed">Completed</option>
+                  </select>
+                </div>
+
+                {/* Due Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Status</label>
+                  <select
+                    value={externalFilters.dueStatus || ''}
+                    onChange={(e) => setExternalFilters({...externalFilters, dueStatus: e.target.value || null})}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">All Due Status</option>
+                    <option value="On Time">On Time</option>
                     <option value="Overdue">Overdue</option>
                   </select>
                 </div>
@@ -6676,15 +6914,18 @@ Priority: ${task.priority}`;
     // Apply search to confidential tasks
     const searchedConfidentialTasks = filterTasksBySearch(confidentialTasks, searchTerms['confidential-tasks']);
 
-    // Apply pagination to searched confidential tasks
-    const paginatedConfidentialTasks = paginateTasks(searchedConfidentialTasks, currentPages['confidential-tasks']);
+    // Apply sorting
+    const sortedConfidentialTasks = sortTasks(searchedConfidentialTasks, 'confidential-tasks');
 
-    // Calculate stats from searched confidential tasks (before pagination)
-    const pendingTasks = searchedConfidentialTasks.filter(t => t.status === 'Pending');
-    const inProgressTasks = searchedConfidentialTasks.filter(t => t.status === 'In Progress');
-    const inCheckingTasks = searchedConfidentialTasks.filter(t => t.status === 'In Checking');
-    const completedTasks = searchedConfidentialTasks.filter(t => t.status === 'Completed');
-    const overdueTasks = searchedConfidentialTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
+    // Apply pagination to sorted confidential tasks
+    const paginatedConfidentialTasks = paginateTasks(sortedConfidentialTasks, currentPages['confidential-tasks']);
+
+    // Calculate stats from sorted confidential tasks (before pagination)
+    const pendingTasks = sortedConfidentialTasks.filter(t => t.status === 'Pending');
+    const inProgressTasks = sortedConfidentialTasks.filter(t => t.status === 'In Progress');
+    const inCheckingTasks = sortedConfidentialTasks.filter(t => t.status === 'In Checking');
+    const completedTasks = sortedConfidentialTasks.filter(t => t.status === 'Completed');
+    const overdueTasks = sortedConfidentialTasks.filter(t => t.status === 'Overdue' || (new Date(t.outDate) < new Date() && t.status !== 'Completed'));
 
     return (
       <div className="space-y-6">
@@ -6764,11 +7005,25 @@ Priority: ${task.priority}`;
           </div>
         </div>
 
-        {/* Export and View Toggle */}
-        <div className="flex justify-end items-center gap-4">
+        {/* Sort, Export and View Toggle */}
+        <div className="flex justify-between items-center gap-4">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Sort By:</label>
+            <select
+              value={sortOrder['confidential-tasks']}
+              onChange={(e) => setSortOrder({...sortOrder, 'confidential-tasks': e.target.value})}
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4">
           {/* Export Button */}
           <button
-            onClick={() => exportTaskList(searchedConfidentialTasks, 'excel', 'confidential_tasks')}
+            onClick={() => exportTaskList(sortedConfidentialTasks, 'excel', 'confidential_tasks')}
             className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
@@ -6794,7 +7049,7 @@ Priority: ${task.priority}`;
           </div>
         </div>
 
-        {searchedConfidentialTasks.length > 0 ? (
+        {sortedConfidentialTasks.length > 0 ? (
           <>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 bg-orange-50">
@@ -6802,7 +7057,7 @@ Priority: ${task.priority}`;
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  Confidential Tasks ({searchedConfidentialTasks.length})
+                  Confidential Tasks ({sortedConfidentialTasks.length})
                 </h3>
               </div>
 
@@ -6819,7 +7074,7 @@ Priority: ${task.priority}`;
               )}
             </div>
 
-            {searchTerms['confidential-tasks'] && searchedConfidentialTasks.length === 0 && (
+            {searchTerms['confidential-tasks'] && sortedConfidentialTasks.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-gray-500 mb-4">No confidential tasks match your search</p>
                 <button 
@@ -6834,7 +7089,7 @@ Priority: ${task.priority}`;
             {/* Pagination Controls */}
             <PaginationControls 
               viewName="confidential-tasks"
-              totalTasks={searchedConfidentialTasks}
+              totalTasks={sortedConfidentialTasks}
               currentPage={currentPages['confidential-tasks']}
             />
           </>

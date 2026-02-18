@@ -18,6 +18,7 @@ const RoleManagement = ({ currentUser, onBack }) => {
       associateTasks: false,
       externalTasks: false,
       confidentialTasks: false,
+      momHistory: false,
       adminReports: false,
       adminPanel: false,
       settings: true
@@ -32,6 +33,7 @@ const RoleManagement = ({ currentUser, onBack }) => {
     associateTasks: 'Associate Tasks',
     externalTasks: 'External Tasks',
     confidentialTasks: 'Confidential Tasks',
+    momHistory: 'MOM History',
     adminReports: 'Admin Reports',
     adminPanel: 'Admin Panel',
     settings: 'Settings'
@@ -91,6 +93,7 @@ const RoleManagement = ({ currentUser, onBack }) => {
         associateTasks: false,
         externalTasks: false,
         confidentialTasks: false,
+        momHistory: false,
         adminReports: false,
         adminPanel: false,
         settings: true
@@ -361,6 +364,7 @@ const getPermissionDescription = (key) => {
     associateTasks: 'Access associate task management',
     externalTasks: 'Manage external user tasks',
     confidentialTasks: 'Access confidential tasks (owners only)',
+    momHistory: 'View and manage MOM (Minutes of Meeting)',
     adminReports: 'Generate and view admin reports',
     adminPanel: 'Access admin user/role management',
     settings: 'Access notification and system settings'
