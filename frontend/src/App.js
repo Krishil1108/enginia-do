@@ -3378,23 +3378,19 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <button
             onClick={() => toggleSummaryCards('my-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                Summary Statistics
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Summary Statistics
+            </h3>
             {summaryCardsCollapsed['my-tasks'] ? (
-              <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-y-0.5" />
+              <ChevronDown className="w-5 h-5" />
             ) : (
-              <ChevronUp className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:-translate-y-0.5" />
+              <ChevronUp className="w-5 h-5" />
             )}
           </button>
           
@@ -4739,23 +4735,19 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <button
             onClick={() => toggleSummaryCards('all-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                Summary Statistics
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Summary Statistics
+            </h3>
             {summaryCardsCollapsed['all-tasks'] ? (
-              <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-y-0.5" />
+              <ChevronDown className="w-5 h-5" />
             ) : (
-              <ChevronUp className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:-translate-y-0.5" />
+              <ChevronUp className="w-5 h-5" />
             )}
           </button>
           
@@ -5042,23 +5034,19 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <button
             onClick={() => toggleSummaryCards('assigned-by-me')}
-            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                Summary Statistics
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Summary Statistics
+            </h3>
             {summaryCardsCollapsed['assigned-by-me'] ? (
-              <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-y-0.5" />
+              <ChevronDown className="w-5 h-5" />
             ) : (
-              <ChevronUp className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:-translate-y-0.5" />
+              <ChevronUp className="w-5 h-5" />
             )}
           </button>
           
@@ -5348,23 +5336,19 @@ Priority: ${task.priority}`;
         </div>
 
         {/* Stats */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <button
             onClick={() => toggleSummaryCards('team-subtasks')}
-            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                Summary Statistics
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Summary Statistics
+            </h3>
             {summaryCardsCollapsed['team-subtasks'] ? (
-              <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-y-0.5" />
+              <ChevronDown className="w-5 h-5" />
             ) : (
-              <ChevronUp className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:-translate-y-0.5" />
+              <ChevronUp className="w-5 h-5" />
             )}
           </button>
           
@@ -5523,23 +5507,19 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <button
             onClick={() => toggleSummaryCards('associate-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                Summary Statistics
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Summary Statistics
+            </h3>
             {summaryCardsCollapsed['associate-tasks'] ? (
-              <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-y-0.5" />
+              <ChevronDown className="w-5 h-5" />
             ) : (
-              <ChevronUp className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:-translate-y-0.5" />
+              <ChevronUp className="w-5 h-5" />
             )}
           </button>
           
@@ -6152,23 +6132,19 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <button
             onClick={() => toggleSummaryCards('external-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                Summary Statistics
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Summary Statistics
+            </h3>
             {summaryCardsCollapsed['external-tasks'] ? (
-              <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-y-0.5" />
+              <ChevronDown className="w-5 h-5" />
             ) : (
-              <ChevronUp className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:-translate-y-0.5" />
+              <ChevronUp className="w-5 h-5" />
             )}
           </button>
           
@@ -6713,23 +6689,19 @@ Priority: ${task.priority}`;
     return (
       <div className="space-y-6">
         {/* Stats */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <button
             onClick={() => toggleSummaryCards('confidential-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-xl"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                Summary Statistics
-              </h3>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Summary Statistics
+            </h3>
             {summaryCardsCollapsed['confidential-tasks'] ? (
-              <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:translate-y-0.5" />
+              <ChevronDown className="w-5 h-5" />
             ) : (
-              <ChevronUp className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-all duration-300 group-hover:-translate-y-0.5" />
+              <ChevronUp className="w-5 h-5" />
             )}
           </button>
           
