@@ -3625,6 +3625,7 @@ Priority: ${task.priority}`;
             </button>
           </div>
         </div>
+        </div>
 
         {viewMode === 'table' ? (
           <>
@@ -3735,8 +3736,8 @@ Priority: ${task.priority}`;
           totalTasks={searchedTasks}
           currentPage={currentPages['my-tasks']}
         />
-          </div>
-        )}
+        </div>
+      )}
       </div>
     );
   };
@@ -4904,6 +4905,7 @@ Priority: ${task.priority}`;
             </button>
           </div>
         </div>
+        </div>
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -5364,6 +5366,7 @@ Priority: ${task.priority}`;
             </button>
           </div>
         </div>
+        </div>
 
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -5772,6 +5775,7 @@ Priority: ${task.priority}`;
             Table View
             </button>
           </div>
+        </div>
         </div>
 
         {/* Filters */}
@@ -6441,6 +6445,7 @@ Priority: ${task.priority}`;
             </button>
           </div>
         </div>
+        </div>
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -7036,6 +7041,7 @@ Priority: ${task.priority}`;
               Table View
             </button>
           </div>
+        </div>
         </div>
 
         {sortedConfidentialTasks.length > 0 ? (
