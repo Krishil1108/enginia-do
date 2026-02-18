@@ -3381,7 +3381,7 @@ Priority: ${task.priority}`;
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
           <button
             onClick={() => toggleSummaryCards('my-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
@@ -4742,7 +4742,7 @@ Priority: ${task.priority}`;
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
           <button
             onClick={() => toggleSummaryCards('all-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
@@ -5045,7 +5045,7 @@ Priority: ${task.priority}`;
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
           <button
             onClick={() => toggleSummaryCards('assigned-by-me')}
-            className="group w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
@@ -5351,7 +5351,7 @@ Priority: ${task.priority}`;
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
           <button
             onClick={() => toggleSummaryCards('team-subtasks')}
-            className="group w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
@@ -5526,7 +5526,7 @@ Priority: ${task.priority}`;
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
           <button
             onClick={() => toggleSummaryCards('associate-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
@@ -6155,7 +6155,7 @@ Priority: ${task.priority}`;
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
           <button
             onClick={() => toggleSummaryCards('external-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
@@ -6716,7 +6716,7 @@ Priority: ${task.priority}`;
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
           <button
             onClick={() => toggleSummaryCards('confidential-tasks')}
-            className="group w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+            className="group w-full px-4 sm:px-6 py-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors duration-300">
@@ -6990,15 +6990,8 @@ Priority: ${task.priority}`;
               </button>
               
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enjinia-do</h1>
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-lg">
-                <User className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-900">{currentUser.name}</span>
-                <span className="text-xs text-blue-600 px-2 py-0.5 bg-blue-100 rounded">
-                  {currentUser.position || currentUser.department}
-                </span>
-              </div>
-              {/* Mobile user info */}
-              <div className="lg:hidden flex items-center gap-1 px-2 py-1 bg-blue-50 rounded text-xs">
+              {/* Mobile user info - only shown when sidebar is closed on mobile */}
+              <div className="md:hidden flex items-center gap-1 px-2 py-1 bg-blue-50 rounded text-xs">
                 <User className="w-3 h-3 text-blue-600" />
                 <span className="text-blue-900 font-medium">{currentUser.name.split(' ')[0]}</span>
               </div>
@@ -7229,6 +7222,31 @@ Priority: ${task.priority}`;
             isSidebarOpen ? 'w-64' : 'w-20'
           }`}
         >
+          {/* User Info Header in Sidebar */}
+          <div className={`border-b border-gray-200 p-3 ${
+            isSidebarOpen ? '' : 'flex justify-center'
+          }`}>
+            {isSidebarOpen ? (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <User className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{currentUser.name}</p>
+                  <p className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded inline-block mt-1">
+                    {currentUser.position || currentUser.department}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center" title={currentUser.name}>
+                <span className="text-white text-sm font-bold">
+                  {currentUser.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
+
           <div className="p-2">
             <nav className="space-y-1">
               {/* My Tasks - Based on permission (show while loading as fallback) */}
