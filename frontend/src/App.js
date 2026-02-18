@@ -6951,22 +6951,17 @@ Priority: ${task.priority}`;
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* Sidebar Toggle Button - Desktop only */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Sidebar Toggle Button - All screens */}
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="hidden md:block p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                 title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
               >
                 <Menu className="w-5 h-5" />
               </button>
               
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enjinia-do</h1>
-              {/* Mobile user info - only shown when sidebar is closed on mobile */}
-              <div className="md:hidden flex items-center gap-1 px-2 py-1 bg-blue-50 rounded text-xs">
-                <User className="w-3 h-3 text-blue-600" />
-                <span className="text-blue-900 font-medium">{currentUser.name.split(' ')[0]}</span>
-              </div>
             </div>
             
             <div className="flex items-center gap-1 sm:gap-3">
@@ -7001,22 +6996,6 @@ Priority: ${task.priority}`;
               >
                 <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-
-              <button
-                onClick={() => setShowAdvancedMenu(!showAdvancedMenu)}
-                className="md:hidden p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm sm:text-base"
-                title="Logout"
-              >
-                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
             </div>
           </div>
           
@@ -7045,158 +7024,53 @@ Priority: ${task.priority}`;
           )}
 
           {/* Mobile Navigation - Permission Based */}
-          {showAdvancedMenu && (
-            <div className="md:hidden mt-3 flex flex-wrap gap-1 sm:gap-2 pb-2 border-t pt-3 overflow-x-auto">
-              {/* My Tasks - Based on permission (show while loading as fallback) */}
-              {(userPermissions.myTasks || permissionsLoading) && (
-                <button
-                  onClick={() => { setCurrentView('my-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'my-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  My Tasks
-                </button>
-              )}
-              
-              {/* All Tasks - Based on permission */}
-              {userPermissions.allTasks && (
-                <button
-                  onClick={() => { setCurrentView('all-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'all-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  All Tasks
-                </button>
-              )}
-              
-              {/* Assigned By Me - Based on permission */}
-              {userPermissions.assignedByMe && (
-                <button
-                  onClick={() => { setCurrentView('assigned-by-me'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'assigned-by-me' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Assigned By Me
-                </button>
-              )}
-              
-              {/* Associate Tasks - Based on permission */}
-              {userPermissions.associateTasks && (
-                <button
-                  onClick={() => { setCurrentView('associate-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'associate-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Associate Tasks
-                </button>
-              )}
 
-              {/* External Tasks - Based on permission */}
-              {userPermissions.externalTasks && (
-                <button
-                  onClick={() => { setCurrentView('external-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'external-tasks' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  External Tasks
-                </button>
-              )}
-
-              {/* Confidential Tasks - Based on permission */}
-              {userPermissions.confidentialTasks && (
-                <button
-                  onClick={() => { setCurrentView('confidential-tasks'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'confidential-tasks' ? 'bg-orange-600 text-white' : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Confidential Tasks
-                  </div>
-                </button>
-              )}
-
-              {/* MOM History */}
-              <button
-                onClick={() => { setCurrentView('mom-history'); setShowAdvancedMenu(false); }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentView === 'mom-history' ? 'bg-teal-600 text-white' : 'text-gray-600 hover:bg-teal-50 hover:text-teal-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4" />
-                  MOM History
-                </div>
-              </button>
-
-              {/* Admin Reports - Based on permission */}
-              {userPermissions.adminReports && (
-                <button
-                  onClick={() => { setCurrentView('admin-reports'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'admin-reports' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" />
-                    Admin Reports
-                  </div>
-                </button>
-              )}
-
-              {/* Admin Panel - Based on permission */}
-              {userPermissions.adminPanel && (
-                <button
-                  onClick={() => { setCurrentView('admin-dashboard'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'admin-dashboard' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
-                    Admin Panel
-                  </div>
-                </button>
-              )}
-
-              {/* Settings - Based on permission */}
-              {userPermissions.settings && (
-                <button
-                  onClick={() => { setCurrentView('settings'); setShowAdvancedMenu(false); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    currentView === 'settings' ? 'bg-gray-600 text-white' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4" />
-                    Settings
-                  </div>
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Desktop Sidebar - Permission Based */}
-      <div className="hidden md:flex">
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Mobile & Desktop */}
+      <div>
         {/* Sidebar */}
         <div
-          className={`fixed left-0 top-[73px] h-[calc(100vh-73px)] bg-white border-r border-gray-200 shadow-lg transition-all duration-300 z-20 overflow-y-auto ${
-            isSidebarOpen ? 'w-64' : 'w-20'
+          className={`fixed left-0 bg-white border-r border-gray-200 shadow-lg transition-all duration-300 z-50 flex flex-col ${
+            /* Mobile: slide-in overlay */
+            'md:top-[73px] md:h-[calc(100vh-73px)]'
+          } ${
+            /* Mobile positioning */
+            'top-0 h-full'
+          } ${
+            /* Mobile: slide from left */
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } ${
+            /* Desktop: normal sidebar */
+            'md:translate-x-0'
+          } ${
+            /* Width control */
+            isSidebarOpen ? 'w-64' : 'md:w-20 w-64'
           }`}
         >
+          {/* Mobile Header in Sidebar */}
+          <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-200">
+            <h2 className="text-lg font-bold text-gray-900">Menu</h2>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
           {/* User Info Header in Sidebar */}
           <div className={`border-b border-gray-200 p-3 ${
-            isSidebarOpen ? '' : 'flex justify-center'
+            isSidebarOpen ? '' : 'md:flex md:justify-center hidden'
           }`}>
             {isSidebarOpen ? (
               <div className="flex items-center gap-3">
@@ -7211,7 +7085,7 @@ Priority: ${task.priority}`;
                 </div>
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center" title={currentUser.name}>
+              <div className="w-10 h-10 rounded-full bg-blue-600 hidden md:flex items-center justify-center" title={currentUser.name}>
                 <span className="text-white text-sm font-bold">
                   {currentUser.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </span>
@@ -7219,12 +7093,15 @@ Priority: ${task.priority}`;
             )}
           </div>
 
-          <div className="p-2">
+          <div className="flex-1 overflow-y-auto p-2">
             <nav className="space-y-1">
               {/* My Tasks - Based on permission (show while loading as fallback) */}
               {(userPermissions.myTasks || permissionsLoading) && (
                 <button
-                  onClick={() => { setCurrentView('my-tasks'); }}
+                  onClick={() => { 
+                    setCurrentView('my-tasks');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="My Tasks"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'my-tasks'
@@ -7240,7 +7117,10 @@ Priority: ${task.priority}`;
               {/* All Tasks - Based on permission */}
               {userPermissions.allTasks && (
                 <button
-                  onClick={() => { setCurrentView('all-tasks'); }}
+                  onClick={() => { 
+                    setCurrentView('all-tasks');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="All Tasks"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'all-tasks'
@@ -7256,7 +7136,10 @@ Priority: ${task.priority}`;
               {/* Assigned By Me - Based on permission */}
               {userPermissions.assignedByMe && (
                 <button
-                  onClick={() => { setCurrentView('assigned-by-me'); }}
+                  onClick={() => { 
+                    setCurrentView('assigned-by-me');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="Assigned By Me"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'assigned-by-me'
@@ -7272,7 +7155,10 @@ Priority: ${task.priority}`;
               {/* Associate Tasks - Based on permission */}
               {userPermissions.associateTasks && (
                 <button
-                  onClick={() => { setCurrentView('associate-tasks'); }}
+                  onClick={() => { 
+                    setCurrentView('associate-tasks');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="Associate Tasks"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'associate-tasks'
@@ -7288,7 +7174,10 @@ Priority: ${task.priority}`;
               {/* External Tasks - Based on permission */}
               {userPermissions.externalTasks && (
                 <button
-                  onClick={() => { setCurrentView('external-tasks'); }}
+                  onClick={() => { 
+                    setCurrentView('external-tasks');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="External Tasks"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'external-tasks'
@@ -7304,7 +7193,10 @@ Priority: ${task.priority}`;
               {/* Confidential Tasks - Based on permission */}
               {userPermissions.confidentialTasks && (
                 <button
-                  onClick={() => { setCurrentView('confidential-tasks'); }}
+                  onClick={() => { 
+                    setCurrentView('confidential-tasks');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="Confidential Tasks"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'confidential-tasks'
@@ -7321,7 +7213,10 @@ Priority: ${task.priority}`;
 
               {/* MOM History */}
               <button
-                onClick={() => { setCurrentView('mom-history'); }}
+                onClick={() => { 
+                  setCurrentView('mom-history');
+                  if (window.innerWidth < 768) setIsSidebarOpen(false);
+                }}
                 title="MOM History"
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                   currentView === 'mom-history'
@@ -7336,7 +7231,10 @@ Priority: ${task.priority}`;
               {/* Admin Reports - Based on permission */}
               {userPermissions.adminReports && (
                 <button
-                  onClick={() => { setCurrentView('admin-reports'); }}
+                  onClick={() => { 
+                    setCurrentView('admin-reports');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="Admin Reports"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'admin-reports'
@@ -7352,7 +7250,10 @@ Priority: ${task.priority}`;
               {/* Admin Panel - Based on permission */}
               {userPermissions.adminPanel && (
                 <button
-                  onClick={() => { setCurrentView('admin-dashboard'); }}
+                  onClick={() => { 
+                    setCurrentView('admin-dashboard');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="Admin Panel"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'admin-dashboard'
@@ -7368,7 +7269,10 @@ Priority: ${task.priority}`;
               {/* Settings - Based on permission */}
               {userPermissions.settings && (
                 <button
-                  onClick={() => { setCurrentView('settings'); }}
+                  onClick={() => { 
+                    setCurrentView('settings');
+                    if (window.innerWidth < 768) setIsSidebarOpen(false);
+                  }}
                   title="Settings"
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'settings'
@@ -7381,6 +7285,20 @@ Priority: ${task.priority}`;
                 </button>
               )}
             </nav>
+          </div>
+
+          {/* Logout Button at Bottom */}
+          <div className="border-t border-gray-200 p-3">
+            <button
+              onClick={handleLogout}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all text-red-600 hover:bg-red-50 ${
+                !isSidebarOpen ? 'justify-center' : ''
+              }`}
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              {isSidebarOpen && <span className="whitespace-nowrap">Logout</span>}
+            </button>
           </div>
         </div>
       </div>

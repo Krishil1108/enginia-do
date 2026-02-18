@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.12.2'; // Summary Statistics bars now exactly match Filters styling
+const CACHE_VERSION = 'v3.12.3'; // Mobile sidebar overlay with logout at bottom + clean header
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [
