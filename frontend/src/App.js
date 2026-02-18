@@ -3405,42 +3405,42 @@ Priority: ${task.priority}`;
                 : 'max-h-96 opacity-100'
             }`}
           >
-            <div className="p-3 sm:p-6 pt-0">
+            <div className="p-3 sm:p-4 pt-0">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-yellow-100 text-xs sm:text-sm font-medium mb-1">Pending</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-6 h-6 sm:w- 7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">In Progress</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Completed</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Overdue</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
                   </div>
                 </div>
               </div>
@@ -4766,42 +4766,42 @@ Priority: ${task.priority}`;
                 : 'max-h-96 opacity-100'
             }`}
           >
-            <div className="p-3 sm:p-6 pt-0">
+            <div className="p-3 sm:p-4 pt-0">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-yellow-100 text-xs sm:text-sm font-medium mb-1">Pending</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">In Progress</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Completed</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Overdue</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
                   </div>
                 </div>
               </div>
@@ -5069,42 +5069,42 @@ Priority: ${task.priority}`;
                 : 'max-h-96 opacity-100'
             }`}
           >
-            <div className="p-3 sm:p-6 pt-0">
+            <div className="p-3 sm:p-4 pt-0">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-yellow-100 text-xs sm:text-sm font-medium mb-1">Pending</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">In Progress</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Completed</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Overdue</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
                   </div>
                 </div>
               </div>
@@ -5375,42 +5375,42 @@ Priority: ${task.priority}`;
                 : 'max-h-96 opacity-100'
             }`}
           >
-            <div className="p-3 sm:p-6 pt-0">
+            <div className="p-3 sm:p-4 pt-0">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-yellow-100 text-xs sm:text-sm font-medium mb-1">Pending</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingSubtasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingSubtasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">In Progress</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressSubtasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressSubtasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Completed</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{completedSubtasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{completedSubtasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Overdue</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueSubtasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueSubtasks.length}</p>
                   </div>
                 </div>
               </div>
@@ -5550,42 +5550,42 @@ Priority: ${task.priority}`;
                 : 'max-h-96 opacity-100'
             }`}
           >
-            <div className="p-3 sm:p-6 pt-0">
+            <div className="p-3 sm:p-4 pt-0">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-yellow-100 text-xs sm:text-sm font-medium mb-1">Pending</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">In Progress</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Completed</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Overdue</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
                   </div>
                 </div>
               </div>
@@ -6179,42 +6179,42 @@ Priority: ${task.priority}`;
                 : 'max-h-96 opacity-100'
             }`}
           >
-            <div className="p-3 sm:p-6 pt-0">
+            <div className="p-3 sm:p-4 pt-0">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-yellow-100 text-xs sm:text-sm font-medium mb-1">Pending</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">In Progress</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Completed</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Overdue</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
                   </div>
                 </div>
               </div>
@@ -6740,51 +6740,51 @@ Priority: ${task.priority}`;
                 : 'max-h-96 opacity-100'
             }`}
           >
-            <div className="p-3 sm:p-6 pt-0">
+            <div className="p-3 sm:p-4 pt-0">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
-                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-yellow-100 text-xs sm:text-sm font-medium mb-1">Pending</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">In Progress</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-pink-400 via-pink-500 to-pink-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-pink-400 via-pink-500 to-pink-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-pink-100 text-xs sm:text-sm font-medium mb-1">In Checking</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{inCheckingTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inCheckingTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <CheckCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-green-100 text-xs sm:text-sm font-medium mb-1">Completed</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
+                      <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <p className="text-red-100 text-xs sm:text-sm font-medium mb-1">Overdue</p>
-                    <p className="text-3xl sm:text-4xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
+                    <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{overdueTasks.length}</p>
                   </div>
                 </div>
               </div>
@@ -7226,23 +7226,24 @@ Priority: ${task.priority}`;
         {/* Sidebar */}
         <div
           className={`fixed left-0 top-[73px] h-[calc(100vh-73px)] bg-white border-r border-gray-200 shadow-lg transition-all duration-300 z-20 overflow-y-auto ${
-            isSidebarOpen ? 'w-64' : 'w-0'
+            isSidebarOpen ? 'w-64' : 'w-20'
           }`}
         >
-          <div className={`p-4 ${isSidebarOpen ? 'block' : 'hidden'}`}>
+          <div className="p-2">
             <nav className="space-y-1">
               {/* My Tasks - Based on permission (show while loading as fallback) */}
               {(userPermissions.myTasks || permissionsLoading) && (
                 <button
                   onClick={() => { setCurrentView('my-tasks'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="My Tasks"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'my-tasks'
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <ClipboardList className="w-5 h-5" />
-                  <span>My Tasks</span>
+                  <ClipboardList className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">My Tasks</span>}
                 </button>
               )}
               
@@ -7250,14 +7251,15 @@ Priority: ${task.priority}`;
               {userPermissions.allTasks && (
                 <button
                   onClick={() => { setCurrentView('all-tasks'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="All Tasks"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'all-tasks'
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <LayoutGrid className="w-5 h-5" />
-                  <span>All Tasks</span>
+                  <LayoutGrid className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">All Tasks</span>}
                 </button>
               )}
               
@@ -7265,14 +7267,15 @@ Priority: ${task.priority}`;
               {userPermissions.assignedByMe && (
                 <button
                   onClick={() => { setCurrentView('assigned-by-me'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="Assigned By Me"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'assigned-by-me'
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <UserPlus className="w-5 h-5" />
-                  <span>Assigned By Me</span>
+                  <UserPlus className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">Assigned By Me</span>}
                 </button>
               )}
               
@@ -7280,14 +7283,15 @@ Priority: ${task.priority}`;
               {userPermissions.associateTasks && (
                 <button
                   onClick={() => { setCurrentView('associate-tasks'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="Associate Tasks"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'associate-tasks'
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <Users className="w-5 h-5" />
-                  <span>Associate Tasks</span>
+                  <Users className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">Associate Tasks</span>}
                 </button>
               )}
 
@@ -7295,14 +7299,15 @@ Priority: ${task.priority}`;
               {userPermissions.externalTasks && (
                 <button
                   onClick={() => { setCurrentView('external-tasks'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="External Tasks"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'external-tasks'
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <Mail className="w-5 h-5" />
-                  <span>External Tasks</span>
+                  <Mail className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">External Tasks</span>}
                 </button>
               )}
 
@@ -7310,14 +7315,15 @@ Priority: ${task.priority}`;
               {userPermissions.confidentialTasks && (
                 <button
                   onClick={() => { setCurrentView('confidential-tasks'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="Confidential Tasks"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'confidential-tasks'
                       ? 'bg-orange-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <Lock className="w-5 h-5" />
-                  <span>Confidential Tasks</span>
+                  <Lock className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">Confidential Tasks</span>}
                 </button>
               )}
 
@@ -7326,28 +7332,30 @@ Priority: ${task.priority}`;
               {/* MOM History */}
               <button
                 onClick={() => { setCurrentView('mom-history'); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                title="MOM History"
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                   currentView === 'mom-history'
                     ? 'bg-teal-600 text-white shadow-md'
                     : 'text-gray-700 hover:bg-teal-50 hover:text-teal-600'
-                }`}
+                } ${!isSidebarOpen ? 'justify-center' : ''}`}
               >
-                <Briefcase className="w-5 h-5" />
-                <span>MOM History</span>
+                <Briefcase className="w-5 h-5 flex-shrink-0" />
+                {isSidebarOpen && <span className="whitespace-nowrap">MOM History</span>}
               </button>
               
               {/* Admin Reports - Based on permission */}
               {userPermissions.adminReports && (
                 <button
                   onClick={() => { setCurrentView('admin-reports'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="Admin Reports"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'admin-reports'
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <BarChart3 className="w-5 h-5" />
-                  <span>Admin Reports</span>
+                  <BarChart3 className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">Admin Reports</span>}
                 </button>
               )}
 
@@ -7355,14 +7363,15 @@ Priority: ${task.priority}`;
               {userPermissions.adminPanel && (
                 <button
                   onClick={() => { setCurrentView('admin-dashboard'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="Admin Panel"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'admin-dashboard'
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <Settings className="w-5 h-5" />
-                  <span>Admin Panel</span>
+                  <Settings className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">Admin Panel</span>}
                 </button>
               )}
               
@@ -7370,14 +7379,15 @@ Priority: ${task.priority}`;
               {userPermissions.settings && (
                 <button
                   onClick={() => { setCurrentView('settings'); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                  title="Settings"
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                     currentView === 'settings'
                       ? 'bg-gray-600 text-white shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  } ${!isSidebarOpen ? 'justify-center' : ''}`}
                 >
-                  <Bell className="w-5 h-5" />
-                  <span>Settings</span>
+                  <Bell className="w-5 h-5 flex-shrink-0" />
+                  {isSidebarOpen && <span className="whitespace-nowrap">Settings</span>}
                 </button>
               )}
             </nav>
@@ -7388,7 +7398,7 @@ Priority: ${task.priority}`;
       {/* Main Content */}
       <div
         className={`transition-all duration-300 ${
-          isSidebarOpen ? 'md:ml-64' : 'md:ml-0'
+          isSidebarOpen ? 'md:ml-64' : 'md:ml-20'
         }`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 pb-20 sm:pb-8">

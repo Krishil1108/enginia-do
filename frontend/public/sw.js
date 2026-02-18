@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.11.8'; // Desktop left sidebar navigation added
+const CACHE_VERSION = 'v3.12.0'; // Made summary cards thinner with reduced padding and icon sizes
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [
