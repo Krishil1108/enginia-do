@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.12.5'; // Fixed status filters + added task sorting (newest/oldest) + MOM History role permission
+const CACHE_VERSION = 'v3.12.6'; // Clickable summary cards in All Tasks view for quick filtering
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [

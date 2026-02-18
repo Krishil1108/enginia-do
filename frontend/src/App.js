@@ -4821,7 +4821,13 @@ Priority: ${task.priority}`;
           >
             <div className="p-3 sm:p-4 pt-0">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div 
+                  onClick={() => {
+                    setFilters({...filters, status: 'Pending', dueStatus: ''});
+                    setShowFilters(true);
+                  }}
+                  className="group bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                >
                   <div className="flex flex-col items-center text-center">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                       <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -4830,7 +4836,13 @@ Priority: ${task.priority}`;
                     <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{pendingTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div 
+                  onClick={() => {
+                    setFilters({...filters, status: 'In Progress', dueStatus: ''});
+                    setShowFilters(true);
+                  }}
+                  className="group bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                >
                   <div className="flex flex-col items-center text-center">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                       <Users className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -4839,7 +4851,13 @@ Priority: ${task.priority}`;
                     <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{inProgressTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div 
+                  onClick={() => {
+                    setFilters({...filters, status: 'Completed', dueStatus: ''});
+                    setShowFilters(true);
+                  }}
+                  className="group bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                >
                   <div className="flex flex-col items-center text-center">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                       <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -4848,7 +4866,13 @@ Priority: ${task.priority}`;
                     <p className="text-2xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">{completedTasks.length}</p>
                   </div>
                 </div>
-                <div className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                <div 
+                  onClick={() => {
+                    setFilters({...filters, status: '', dueStatus: 'Overdue'});
+                    setShowFilters(true);
+                  }}
+                  className="group bg-gradient-to-br from-red-400 via-red-500 to-red-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                >
                   <div className="flex flex-col items-center text-center">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                       <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
