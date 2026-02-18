@@ -176,17 +176,6 @@ const TaskManagementSystem = () => {
     'confidential-tasks': 'newest'
   });
   
-  // Sort state for each view
-  const [sortOrder, setSortOrder] = useState({
-    'my-tasks': 'newest',
-    'all-tasks': 'newest',
-    'assigned-by-me': 'newest',
-    'team-subtasks': 'newest',
-    'associate-tasks': 'newest',
-    'external-tasks': 'newest',
-    'confidential-tasks': 'newest'
-  });
-  
   // Summary cards collapsed state for each view (default: opened)
   const [summaryCardsCollapsed, setSummaryCardsCollapsed] = useState({
     'my-tasks': false,
