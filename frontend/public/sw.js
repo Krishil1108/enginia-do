@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.12.8'; // Fixed date format handling in MOM save functionality
+const CACHE_VERSION = 'v3.12.9'; // Fixed search bar layout - repositioned and adjusted to avoid sidebar overlap
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [

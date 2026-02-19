@@ -7240,15 +7240,11 @@ Priority: ${task.priority}`;
             
             <div className="flex items-center gap-1 sm:gap-3">
               <button
-                onClick={() => {
-                  setFormData({...formData, assignedBy: currentUser.username});
-                  setShowTaskModal(true);
-                }}
-                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
+                onClick={() => setShowSearchBar(!showSearchBar)}
+                className="p-2 sm:p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Search Tasks"
               >
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Assign Task</span>
-                <span className="sm:hidden">Add</span>
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               
               <button
@@ -7262,23 +7258,30 @@ Priority: ${task.priority}`;
                   </span>
                 )}
               </button>
-
+              
               <button
-                onClick={() => setShowSearchBar(!showSearchBar)}
-                className="p-2 sm:p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Search Tasks"
+                onClick={() => {
+                  setFormData({...formData, assignedBy: currentUser.username});
+                  setShowTaskModal(true);
+                }}
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
               >
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Assign Task</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </div>
           </div>
           
-          {/* Collapsible Search Bar */}
-          {/* Collapsible Search Bar */}
+          {/* Collapsible Search Bar - Positioned to avoid sidebar overlap */}
           {showSearchBar && (
-            <div className="mt-3 pb-3 border-t pt-3 bg-gray-50 rounded-lg">
+            <div 
+              className={`mt-3 pb-3 border-t pt-3 bg-gray-50 rounded-lg transition-all duration-300 ${
+                isSidebarOpen ? 'md:ml-64' : 'md:ml-20'
+              }`}
+            >
               <div className="flex items-center gap-3 px-4">
-                <Search className="w-4 h-4 text-gray-400" />
+                <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 <input
                   type="text"
                   placeholder={`Search ${currentView === 'my-tasks' ? 'my' : currentView === 'all-tasks' ? 'all' : currentView === 'assigned-by-me' ? 'assigned by me' : currentView === 'associate-tasks' ? 'associate' : currentView === 'external-tasks' ? 'external' : currentView === 'confidential-tasks' ? 'confidential' : ''} tasks...`}
@@ -7289,7 +7292,7 @@ Priority: ${task.priority}`;
                 />
                 <button
                   onClick={() => setShowSearchBar(false)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
