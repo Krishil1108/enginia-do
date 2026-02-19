@@ -101,6 +101,36 @@ router.post('/save', async (req, res) => {
 
     console.log('✅ Task found:', task.title);
 
+    // Parse visit date - handle various formats
+    let parsedDate;
+    try {
+      // Try ISO format first (YYYY-MM-DD)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(visitDate)) {
+        parsedDate = new Date(visitDate + 'T00:00:00.000Z');
+      } 
+      // Try DD/MM/YYYY format
+      else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(visitDate)) {
+        const [day, month, year] = visitDate.split('/');
+        parsedDate = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00.000Z`);
+      }
+      // Fallback to Date parsing
+      else {
+        parsedDate = new Date(visitDate);
+      }
+      
+      if (isNaN(parsedDate.getTime())) {
+        throw new Error('Invalid date');
+      }
+      
+      console.log(`📅 Parsed visit date: ${visitDate} -> ${parsedDate.toISOString()}`);
+    } catch (dateError) {
+      console.error('❌ Date parsing error:', dateError);
+      return res.status(400).json({ 
+        error: 'Invalid date format',
+        details: `Could not parse date: ${visitDate}`
+      });
+    }
+
     // Extract discussion points
     const discussionPoints = textProcessingService.extractDiscussionPoints(processedContent);
     console.log(`📋 Extracted ${discussionPoints.length} discussion points`);
@@ -115,7 +145,7 @@ router.post('/save', async (req, res) => {
     const mom = new MOM({
       task: taskId,
       companyName,
-      visitDate: new Date(visitDate),
+      visitDate: parsedDate,
       location,
       attendees: normalizedAttendees,
       discussionPoints,

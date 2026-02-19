@@ -5,6 +5,23 @@ import API_URL from '../config';
 import MOMPreview from './MOMPreview';
 
 const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
+  // Helper function to convert date to ISO format (YYYY-MM-DD)
+  const toISODate = (dateStr) => {
+    if (!dateStr) return new Date().toISOString().split('T')[0];
+    // If already in ISO format, return as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    // If in DD/MM/YYYY or DD/M/YYYY format, convert
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      return `${year}-${month}-${day}`;
+    }
+    // Fallback: try to parse as Date
+    return new Date(dateStr).toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     title: 'Minutes of Meeting',
     date: new Date().toLocaleDateString('en-IN'),
@@ -118,7 +135,7 @@ const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
       const payload = {
         taskId: task._id,
         companyName: formData.companyName || 'Company Name',
-        visitDate: formData.date,
+        visitDate: toISODate(formData.date), // Convert to ISO format
         location: formData.location || 'Not specified',
         attendees: formData.attendees || [],
         rawContent: formData.rawContent.trim(),
@@ -170,7 +187,7 @@ const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
       const payload = {
         taskId: task._id,
         companyName: formData.companyName || 'Company Name',
-        visitDate: formData.date,
+        visitDate: toISODate(formData.date), // Convert to ISO format
         location: formData.location || 'Not specified',
         attendees: formData.attendees || [],
         rawContent: formData.rawContent.trim(),
