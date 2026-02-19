@@ -1,6 +1,6 @@
 // Service Worker for Task Management System
 // STATIC VERSION - Only changes on deployment, not every page load
-const CACHE_VERSION = 'v3.12.9'; // Fixed search bar layout - repositioned and adjusted to avoid sidebar overlap
+const CACHE_VERSION = 'v3.13.0'; // Changed search bar to inline expansion (right to left) instead of dropdown below header
 const CACHE_NAME = 'task-manager-' + CACHE_VERSION;
 const FIREBASE_PROJECT_ID = 'engine-11-a08c8'; // Current Firebase project
 const urlsToCache = [

@@ -7224,8 +7224,8 @@ Priority: ${task.priority}`;
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-[60] shadow-sm">
         <div className="px-3 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               {/* Sidebar Toggle Button - All screens */}
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -7238,67 +7238,65 @@ Priority: ${task.priority}`;
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Enjinia-do</h1>
             </div>
             
-            <div className="flex items-center gap-1 sm:gap-3">
-              <button
-                onClick={() => setShowSearchBar(!showSearchBar)}
-                className="p-2 sm:p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Search Tasks"
-              >
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 sm:p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-              
-              <button
-                onClick={() => {
-                  setFormData({...formData, assignedBy: currentUser.username});
-                  setShowTaskModal(true);
-                }}
-                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
-              >
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Assign Task</span>
-                <span className="sm:hidden">Add</span>
-              </button>
+            {/* Inline Search Bar - Expands from right to left */}
+            <div className={`flex items-center gap-1 sm:gap-3 transition-all duration-300 ${
+              showSearchBar ? 'flex-1' : ''
+            }`}>
+              {showSearchBar ? (
+                <div className="flex items-center gap-2 flex-1 animate-fadeIn">
+                  <input
+                    type="text"
+                    placeholder={`Search ${currentView === 'my-tasks' ? 'my' : currentView === 'all-tasks' ? 'all' : currentView === 'assigned-by-me' ? 'assigned by me' : currentView === 'associate-tasks' ? 'associate' : currentView === 'external-tasks' ? 'external' : currentView === 'confidential-tasks' ? 'confidential' : ''} tasks...`}
+                    value={searchTerms[currentView] || ''}
+                    onChange={(e) => handleSearchChange(currentView, e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => setShowSearchBar(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                    title="Close Search"
+                  >
+                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowSearchBar(!showSearchBar)}
+                    className="p-2 sm:p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Search Tasks"
+                  >
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative p-2 sm:p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setFormData({...formData, assignedBy: currentUser.username});
+                      setShowTaskModal(true);
+                    }}
+                    className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
+                  >
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Assign Task</span>
+                    <span className="sm:hidden">Add</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
-          
-          {/* Collapsible Search Bar - Positioned to avoid sidebar overlap */}
-          {showSearchBar && (
-            <div 
-              className={`mt-3 pb-3 border-t pt-3 bg-gray-50 rounded-lg transition-all duration-300 ${
-                isSidebarOpen ? 'md:ml-64' : 'md:ml-20'
-              }`}
-            >
-              <div className="flex items-center gap-3 px-4">
-                <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder={`Search ${currentView === 'my-tasks' ? 'my' : currentView === 'all-tasks' ? 'all' : currentView === 'assigned-by-me' ? 'assigned by me' : currentView === 'associate-tasks' ? 'associate' : currentView === 'external-tasks' ? 'external' : currentView === 'confidential-tasks' ? 'confidential' : ''} tasks...`}
-                  value={searchTerms[currentView] || ''}
-                  onChange={(e) => handleSearchChange(currentView, e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  autoFocus
-                />
-                <button
-                  onClick={() => setShowSearchBar(false)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Mobile Navigation - Permission Based */}
 
