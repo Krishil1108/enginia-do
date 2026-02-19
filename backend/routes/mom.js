@@ -50,6 +50,7 @@ router.post('/process-text', async (req, res) => {
  */
 router.post('/save', async (req, res) => {
   try {
+    console.log('📝 Received MOM save request');
     const {
       taskId,
       companyName,
@@ -62,8 +63,29 @@ router.post('/save', async (req, res) => {
       createdBy
     } = req.body;
 
+    console.log('📊 Payload validation:', {
+      taskId: !!taskId,
+      companyName: !!companyName,
+      visitDate: !!visitDate,
+      location: !!location,
+      rawContent: !!rawContent,
+      processedContent: !!processedContent,
+      createdBy: !!createdBy,
+      attendeesCount: attendees?.length || 0,
+      imagesCount: images?.length || 0
+    });
+
     // Validation
     if (!taskId || !companyName || !visitDate || !location || !rawContent || !processedContent || !createdBy) {
+      console.error('❌ Missing required fields:', {
+        taskId: !taskId,
+        companyName: !companyName,
+        visitDate: !visitDate,
+        location: !location,
+        rawContent: !rawContent,
+        processedContent: !processedContent,
+        createdBy: !createdBy
+      });
       return res.status(400).json({ 
         error: 'Missing required fields',
         required: ['taskId', 'companyName', 'visitDate', 'location', 'rawContent', 'processedContent', 'createdBy']
@@ -73,14 +95,21 @@ router.post('/save', async (req, res) => {
     // Verify task exists
     const task = await Task.findById(taskId);
     if (!task) {
+      console.error('❌ Task not found:', taskId);
       return res.status(404).json({ error: 'Task not found' });
     }
 
+    console.log('✅ Task found:', task.title);
+
     // Extract discussion points
     const discussionPoints = textProcessingService.extractDiscussionPoints(processedContent);
+    console.log(`📋 Extracted ${discussionPoints.length} discussion points`);
 
     const normalizedAttendees = normalizeAttendees(attendees);
     const normalizedImages = normalizeImages(images);
+
+    console.log(`👥 Normalized ${normalizedAttendees.length} attendees`);
+    console.log(`🖼️  Normalized ${normalizedImages.length} images`);
 
     // Create MOM
     const mom = new MOM({
@@ -107,9 +136,11 @@ router.post('/save', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ MOM save error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({ 
       error: 'Failed to save MOM',
-      details: error.message 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
@@ -120,25 +151,35 @@ router.post('/save', async (req, res) => {
  */
 router.post('/generate-docx-from-template', async (req, res) => {
   try {
+    console.log('📄 Received document generation request');
     const { momId } = req.body;
 
     if (!momId) {
+      console.error('❌ MOM ID missing in request');
       return res.status(400).json({ error: 'MOM ID is required' });
     }
 
+    console.log('📄 Generating document for MOM:', momId);
+
     // Check if template exists
     if (!wordTemplatePdfService.templateExists()) {
+      console.error('❌ Template not found');
       return res.status(400).json({ 
         error: 'Template not found',
         message: 'Please create backend/templates/mom-template.docx before generating documents'
       });
     }
 
+    console.log('✅ Template found');
+
     // Fetch MOM with task populated
     const mom = await MOM.findById(momId).populate('task', 'title');
     if (!mom) {
+      console.error('❌ MOM not found:', momId);
       return res.status(404).json({ error: 'MOM not found' });
     }
+
+    console.log('✅ MOM found:', mom.companyName);
 
     // Prepare data for template
     const templateData = {
@@ -159,11 +200,16 @@ router.post('/generate-docx-from-template', async (req, res) => {
       location: mom.location
     };
 
+    console.log('📋 Template data prepared with', mom.attendees.length, 'attendees and', mom.images.length, 'images');
+
     // Generate documents
     const timestamp = Date.now();
     const fileName = `MOM_${mom.companyName.replace(/\s+/g, '_')}_${timestamp}`;
     
+    console.log('🔨 Generating document:', fileName);
     const { docPath, pdfPath } = await wordTemplatePdfService.generateDocuments(templateData, fileName);
+
+    console.log('✅ Document generated:', docPath);
 
     // Update MOM with file paths
     mom.generatedDocPath = docPath;
@@ -174,8 +220,11 @@ router.post('/generate-docx-from-template', async (req, res) => {
 
     // Send the docx file as download
     if (!fs.existsSync(docPath)) {
+      console.error('❌ Generated document file not found:', docPath);
       return res.status(404).json({ error: 'Generated document file not found' });
     }
+
+    console.log('📤 Sending document to client');
 
     // Set headers for file download
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
@@ -187,16 +236,23 @@ router.post('/generate-docx-from-template', async (req, res) => {
     
     // Clean up temp file after sending (optional)
     fileStream.on('end', () => {
+      console.log('🗑️  Cleaning up temp files');
       fs.unlinkSync(docPath);
       if (pdfPath && fs.existsSync(pdfPath)) {
         fs.unlinkSync(pdfPath);
       }
     });
+
+    fileStream.on('error', (streamError) => {
+      console.error('❌ File stream error:', streamError);
+    });
   } catch (error) {
     console.error('❌ Document generation error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({ 
       error: 'Failed to generate documents',
-      details: error.message 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

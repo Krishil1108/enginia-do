@@ -16,7 +16,8 @@ if (!fs.existsSync(tempDir)) {
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increase limit for MOM images
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // MongoDB Connection with optimized settings for production
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/enjinia-to-do', {
