@@ -297,7 +297,14 @@ router.get('/history/:taskId', async (req, res) => {
   try {
     const { taskId } = req.params;
 
-    const moms = await MOM.find({ task: taskId })
+    let query;
+    if (taskId === 'unlinked') {
+      query = { $or: [{ task: null }, { task: { $exists: false } }] };
+    } else {
+      query = { task: taskId };
+    }
+
+    const moms = await MOM.find(query)
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 });
 
@@ -325,7 +332,7 @@ router.get('/tasks-with-moms', async (req, res) => {
     const taskIds = await MOM.distinct('task');
 
     // Fetch task details
-    const tasks = await Task.find({ _id: { $in: taskIds } })
+    const tasks = await Task.find({ _id: { $in: taskIds.filter(Boolean) } })
       .populate('project', 'name')
       .populate('assignedTo', 'name email')
       .sort({ updatedAt: -1 });
@@ -340,6 +347,18 @@ router.get('/tasks-with-moms', async (req, res) => {
         };
       })
     );
+
+    // Include unlinked MOMs (no task)
+    const unlinkedCount = await MOM.countDocuments({ $or: [{ task: null }, { task: { $exists: false } }] });
+    if (unlinkedCount > 0) {
+      tasksWithCounts.push({
+        _id: 'unlinked',
+        title: 'Unlinked MOMs',
+        project: null,
+        momCount: unlinkedCount,
+        _isUnlinked: true
+      });
+    }
 
     res.json({
       success: true,

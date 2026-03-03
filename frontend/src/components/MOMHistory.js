@@ -209,7 +209,7 @@ const MOMHistory = ({ currentUser }) => {
               </h2>
               {selectedTask && (
                 <button
-                  onClick={() => handleOpenNewMom(selectedTask)}
+                  onClick={() => handleOpenNewMom(selectedTask._id !== 'unlinked' ? selectedTask : null)}
                   className="flex items-center gap-1 px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium transition"
                 >
                   <Plus className="w-4 h-4" />

@@ -145,7 +145,9 @@ const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
 
       if (response.data.success) {
         setSuccessMessage('MOM saved to history successfully!');
-        setTimeout(() => setSuccessMessage(null), 3000);
+        setTimeout(() => {
+          onClose();
+        }, 1500);
       }
     } catch (err) {
       console.error('Error saving to history:', err);
