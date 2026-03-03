@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_URL from '../config';
+import MOMModal from './MOMModal';
+import { Plus, Search } from 'lucide-react';
 
-const MOMHistory = () => {
+const MOMHistory = ({ currentUser }) => {
   const [tasksWithMoms, setTasksWithMoms] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [momHistory, setMomHistory] = useState([]);
@@ -11,9 +13,54 @@ const MOMHistory = () => {
   const [error, setError] = useState(null);
   const [showMomModal, setShowMomModal] = useState(false);
 
+  // Add New MOM flow
+  const [showTaskPicker, setShowTaskPicker] = useState(false);
+  const [allTasks, setAllTasks] = useState([]);
+  const [taskSearch, setTaskSearch] = useState('');
+  const [taskForNewMom, setTaskForNewMom] = useState(null);
+  const [showMomCreateModal, setShowMomCreateModal] = useState(false);
+
   useEffect(() => {
     fetchTasksWithMoms();
   }, []);
+
+  const fetchAllTasks = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/tasks`);
+      setAllTasks(response.data || []);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+    }
+  };
+
+  const handleOpenNewMom = (preselectedTask = null) => {
+    if (preselectedTask) {
+      setTaskForNewMom(preselectedTask);
+      setShowMomCreateModal(true);
+    } else {
+      fetchAllTasks();
+      setTaskSearch('');
+      setShowTaskPicker(true);
+    }
+  };
+
+  const handleTaskPickerSelect = (task) => {
+    setTaskForNewMom(task);
+    setShowTaskPicker(false);
+    setShowMomCreateModal(true);
+  };
+
+  const handleMomCreated = () => {
+    setShowMomCreateModal(false);
+    setTaskForNewMom(null);
+    fetchTasksWithMoms();
+    if (selectedTask) fetchMomHistory(selectedTask._id);
+  };
+
+  const filteredTasks = allTasks.filter(t =>
+    t.title?.toLowerCase().includes(taskSearch.toLowerCase()) ||
+    t.project?.name?.toLowerCase().includes(taskSearch.toLowerCase())
+  );
 
   const fetchTasksWithMoms = async () => {
     try {
@@ -102,9 +149,18 @@ const MOMHistory = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          Minutes of Meeting History
-        </h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Minutes of Meeting History
+          </h1>
+          <button
+            onClick={() => handleOpenNewMom()}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium shadow-sm transition"
+          >
+            <Plus className="w-4 h-4" />
+            New MOM
+          </button>
+        </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -147,9 +203,20 @@ const MOMHistory = () => {
 
           {/* MOM History */}
           <div className="md:col-span-2 bg-white rounded-lg shadow-md p-4">
-            <h2 className="text-xl font-semibold mb-4">
-              {selectedTask ? `MOMs for: ${selectedTask.title}` : 'Select a task'}
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">
+                {selectedTask ? `MOMs for: ${selectedTask.title}` : 'Select a task'}
+              </h2>
+              {selectedTask && (
+                <button
+                  onClick={() => handleOpenNewMom(selectedTask)}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add MOM
+                </button>
+              )}
+            </div>
             {selectedTask && (
               <>
                 {loading ? (
@@ -215,6 +282,65 @@ const MOMHistory = () => {
             )}
           </div>
         </div>
+
+        {/* Task Picker Modal */}
+        {showTaskPicker && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-lg shadow-xl">
+              <div className="flex items-center justify-between px-6 py-4 border-b">
+                <h2 className="text-xl font-bold text-gray-900">Select Task for New MOM</h2>
+                <button
+                  onClick={() => setShowTaskPicker(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                >
+                  &times;
+                </button>
+              </div>
+              <div className="px-6 py-4">
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search tasks..."
+                    value={taskSearch}
+                    onChange={(e) => setTaskSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-72 overflow-y-auto space-y-1">
+                  {filteredTasks.length === 0 ? (
+                    <p className="text-gray-500 text-sm text-center py-6">No tasks found</p>
+                  ) : (
+                    filteredTasks.map((task) => (
+                      <div
+                        key={task._id}
+                        onClick={() => handleTaskPickerSelect(task)}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-teal-50 cursor-pointer border border-transparent hover:border-teal-200 transition"
+                      >
+                        <div>
+                          <div className="font-medium text-gray-900 text-sm">{task.title}</div>
+                          <div className="text-xs text-gray-500">{task.project?.name || 'No project'}</div>
+                        </div>
+                        <Plus className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create New MOM Modal */}
+        {showMomCreateModal && taskForNewMom && (
+          <MOMModal
+            isOpen={showMomCreateModal}
+            onClose={handleMomCreated}
+            task={taskForNewMom}
+            currentUser={currentUser}
+          />
+        )}
 
         {/* MOM Details Modal */}
         {showMomModal && selectedMom && (

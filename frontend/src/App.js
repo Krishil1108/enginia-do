@@ -7591,7 +7591,7 @@ Priority: ${task.priority}`;
           {currentView === 'associate-tasks' && <AssociateTasksView />}
           {currentView === 'external-tasks' && <ExternalTasksView />}
           {currentView === 'confidential-tasks' && userPermissions.confidentialTasks && <ConfidentialTasksView />}
-          {currentView === 'mom-history' && <MOMHistory />}
+          {currentView === 'mom-history' && <MOMHistory currentUser={currentUser} />}
           {currentView === 'admin-dashboard' && userPermissions.adminPanel && <AdminDashboard currentUser={currentUser} onBack={() => setCurrentView('my-tasks')} />}
           {currentView === 'admin-reports' && userPermissions.adminReports && <AdminReportsView />}
           {currentView === 'settings' && <NotificationSettingsView />}
