@@ -4,7 +4,7 @@ const momSchema = new mongoose.Schema({
   task: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Task',
-    required: true,
+    required: false,
     index: true
   },
   companyName: {

@@ -76,9 +76,8 @@ router.post('/save', async (req, res) => {
     });
 
     // Validation
-    if (!taskId || !companyName || !visitDate || !location || !rawContent || !processedContent || !createdBy) {
+    if (!companyName || !visitDate || !location || !rawContent || !processedContent || !createdBy) {
       console.error('❌ Missing required fields:', {
-        taskId: !taskId,
         companyName: !companyName,
         visitDate: !visitDate,
         location: !location,
@@ -88,18 +87,21 @@ router.post('/save', async (req, res) => {
       });
       return res.status(400).json({ 
         error: 'Missing required fields',
-        required: ['taskId', 'companyName', 'visitDate', 'location', 'rawContent', 'processedContent', 'createdBy']
+        required: ['companyName', 'visitDate', 'location', 'rawContent', 'processedContent', 'createdBy']
       });
     }
 
-    // Verify task exists
-    const task = await Task.findById(taskId);
-    if (!task) {
-      console.error('❌ Task not found:', taskId);
-      return res.status(404).json({ error: 'Task not found' });
+    // Verify task exists (optional)
+    if (taskId) {
+      const task = await Task.findById(taskId);
+      if (!task) {
+        console.error('❌ Task not found:', taskId);
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      console.log('✅ Task found:', task.title);
+    } else {
+      console.log('ℹ️  No task linked to this MOM');
     }
-
-    console.log('✅ Task found:', task.title);
 
     // Parse visit date - handle various formats
     let parsedDate;
@@ -143,7 +145,7 @@ router.post('/save', async (req, res) => {
 
     // Create MOM
     const mom = new MOM({
-      task: taskId,
+      ...(taskId && { task: taskId }),
       companyName,
       visitDate: parsedDate,
       location,

@@ -45,7 +45,7 @@ const MOMHistory = ({ currentUser }) => {
   };
 
   const handleTaskPickerSelect = (task) => {
-    setTaskForNewMom(task);
+    setTaskForNewMom(task || null);
     setShowTaskPicker(false);
     setShowMomCreateModal(true);
   };
@@ -285,7 +285,7 @@ const MOMHistory = ({ currentUser }) => {
 
         {/* Task Picker Modal */}
         {showTaskPicker && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-[70] p-4 pt-16 overflow-y-auto">
             <div className="bg-white rounded-lg w-full max-w-lg shadow-xl">
               <div className="flex items-center justify-between px-6 py-4 border-b">
                 <h2 className="text-xl font-bold text-gray-900">Select Task for New MOM</h2>
@@ -294,6 +294,14 @@ const MOMHistory = ({ currentUser }) => {
                   className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
                 >
                   &times;
+                </button>
+              </div>
+              <div className="px-6 pt-3">
+                <button
+                  onClick={() => handleTaskPickerSelect(null)}
+                  className="w-full py-2 border border-dashed border-gray-400 text-gray-500 rounded-lg hover:bg-gray-50 text-sm font-medium transition"
+                >
+                  Skip — Create MOM without a task
                 </button>
               </div>
               <div className="px-6 py-4">
@@ -333,7 +341,7 @@ const MOMHistory = ({ currentUser }) => {
         )}
 
         {/* Create New MOM Modal */}
-        {showMomCreateModal && taskForNewMom && (
+        {showMomCreateModal && (
           <MOMModal
             isOpen={showMomCreateModal}
             onClose={handleMomCreated}
@@ -344,8 +352,8 @@ const MOMHistory = ({ currentUser }) => {
 
         {/* MOM Details Modal */}
         {showMomModal && selectedMom && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-[70] p-4 pt-6 overflow-y-auto">
+            <div className="bg-white rounded-lg max-w-4xl w-full my-4 mb-8">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-2xl font-bold text-gray-900">

@@ -113,11 +113,6 @@ const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
 
   const handleSaveToHistory = async () => {
     // Validate required fields
-    if (!task?._id) {
-      setError('No task selected. Please open MOM from a task.');
-      return;
-    }
-
     if (!formData.rawContent.trim()) {
       setError('Please enter meeting content');
       return;
@@ -133,7 +128,7 @@ const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
       setError(null);
 
       const payload = {
-        taskId: task._id,
+        ...(task?._id && { taskId: task._id }),
         companyName: formData.companyName || 'Company Name',
         visitDate: toISODate(formData.date), // Convert to ISO format
         location: formData.location || 'Not specified',
@@ -164,11 +159,6 @@ const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
 
   const handleGenerateDocument = async () => {
     // Validate required fields
-    if (!task?._id) {
-      setError('No task selected. Please open MOM from a task.');
-      return;
-    }
-
     if (!formData.rawContent.trim()) {
       setError('Please enter meeting content');
       return;
@@ -185,7 +175,7 @@ const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
 
       // Step 1: Save MOM to get momId
       const payload = {
-        taskId: task._id,
+        ...(task?._id && { taskId: task._id }),
         companyName: formData.companyName || 'Company Name',
         visitDate: toISODate(formData.date), // Convert to ISO format
         location: formData.location || 'Not specified',
@@ -240,8 +230,8 @@ const MOMModal = ({ isOpen, onClose, task, currentUser }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg max-w-5xl w-full my-8 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-[70] p-4 pt-6 overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-5xl w-full my-4 mb-8">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
           <div>
