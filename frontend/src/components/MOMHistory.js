@@ -116,21 +116,26 @@ const MOMHistory = ({ currentUser }) => {
     }
   };
 
-  const handleRegenerateMom = async (momId) => {
+  const handleRegenerateMom = async (mom) => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${API_URL}/mom/regenerate-docx-from-template/${momId}`,
-        { images: [] }
+        `${API_URL}/mom/generate-docx-from-template`,
+        { momId: mom._id },
+        { responseType: 'blob' }
       );
 
-      if (response.data.success && response.data.files.docxFilename) {
-        alert('Document regenerated successfully! Download will start...');
-        // You could implement download logic here
-      }
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `MOM_${mom.companyName || 'Meeting'}_${Date.now()}.docx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Error regenerating MOM:', err);
-      alert('Failed to regenerate document');
+      console.error('Error downloading MOM:', err);
+      alert('Failed to download document');
     } finally {
       setLoading(false);
     }
@@ -253,7 +258,7 @@ const MOMHistory = ({ currentUser }) => {
                               View
                             </button>
                             <button
-                              onClick={() => handleRegenerateMom(mom._id)}
+                              onClick={() => handleRegenerateMom(mom)}
                               className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
                             >
                               Download
@@ -432,7 +437,7 @@ const MOMHistory = ({ currentUser }) => {
                     Close
                   </button>
                   <button
-                    onClick={() => handleRegenerateMom(selectedMom._id)}
+                    onClick={() => handleRegenerateMom(selectedMom)}
                     className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                   >
                     Download Document
