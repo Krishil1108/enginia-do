@@ -8200,7 +8200,7 @@ Priority: ${task.priority}`;
                     </button>
                     
                     {showAssignToDropdown && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                         {users
                           .filter(user => {
                             // Only owners (Vaishal, Nirali) have admin privileges
@@ -8574,7 +8574,7 @@ Priority: ${task.priority}`;
                   </button>
                   
                   {showAssignToDropdown && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {(isAdmin() ? users : getMyTeamMembers()).map(user => (
                         <div key={user._id} className="flex items-center p-2 hover:bg-gray-50">
                           <input
