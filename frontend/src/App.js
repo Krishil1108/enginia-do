@@ -9102,96 +9102,106 @@ Priority: ${task.priority}`;
                 </h3>
                 
                 <div className="overflow-y-auto max-h-96 pr-2">
-                  {noteTimelineTask.statusHistory && noteTimelineTask.statusHistory.length > 0 ? (
-                    <div className="space-y-4">
-                      {/* Reverse the array to show latest first */}
-                      {[...noteTimelineTask.statusHistory].reverse().map((history, index) => {
-                        const isLatest = index === 0;
-                        return (
-                          <div key={index} className="relative">
-                            {/* Timeline line */}
-                            {index !== noteTimelineTask.statusHistory.length - 1 && (
-                              <div className="absolute left-4 top-10 bottom-0 w-0.5 bg-gray-200"></div>
-                            )}
-                            
-                            {/* Timeline item */}
-                            <div className="flex gap-4">
-                              {/* Timeline dot */}
-                              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                                isLatest ? 'bg-indigo-100 ring-4 ring-indigo-50' : 'bg-gray-100'
-                              }`}>
-                                {history.toStatus === 'Completed' ? (
-                                  <CheckCircle className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
-                                ) : history.toStatus === 'Overdue' ? (
-                                  <XCircle className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
-                                ) : (
-                                  <Clock className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
-                                )}
-                              </div>
+                  {(() => {
+                    const timelineEvents = noteTimelineTask ? [
+                      ...(noteTimelineTask.statusHistory || []),
+                      {
+                        isCreation: true,
+                        toStatus: 'Created',
+                        note: noteTimelineTask.description || 'Task created',
+                        changedBy: noteTimelineTask.assignedBy,
+                        changedAt: noteTimelineTask.createdAt || noteTimelineTask.inDate
+                      }
+                    ] : [];
+                    
+                    return timelineEvents.length > 0 ? (
+                      <div className="space-y-4">
+                        {/* Reverse the array to show latest first */}
+                        {[...timelineEvents].reverse().map((history, index) => {
+                          const isLatest = index === 0;
+                          return (
+                            <div key={index} className="relative">
+                              {/* Timeline line */}
+                              {index !== timelineEvents.length - 1 && (
+                                <div className="absolute left-4 top-10 bottom-0 w-0.5 bg-gray-200"></div>
+                              )}
                               
-                              {/* Timeline content */}
-                              <div className={`flex-1 pb-6 ${isLatest ? 'bg-indigo-50' : 'bg-gray-50'} rounded-lg p-4`}>
-                                {/* Status change */}
-                                <div className="flex items-center gap-2 mb-2">
-                                  {history.fromStatus && (
-                                    <>
-                                      <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700 border border-gray-200">
-                                        {history.fromStatus}
-                                      </span>
-                                      <span className="text-gray-400">→</span>
-                                    </>
-                                  )}
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                    history.toStatus === 'Completed' ? 'bg-green-100 text-green-700 border border-green-200' :
-                                    history.toStatus === 'Overdue' ? 'bg-red-100 text-red-700 border border-red-200' :
-                                    history.toStatus === 'In Progress' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                                    history.toStatus === 'In Checking' ? 'bg-pink-100 text-pink-700 border border-pink-200' :
-                                    'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                                  }`}>
-                                    {history.toStatus}
-                                  </span>
-                                  {isLatest && (
-                                    <span className="ml-auto text-xs font-semibold text-indigo-600">Latest</span>
+                              {/* Timeline item */}
+                              <div className="flex gap-4">
+                                {/* Timeline dot */}
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                                  isLatest ? 'bg-indigo-100 ring-4 ring-indigo-50' : 'bg-gray-100'
+                                }`}>
+                                  {history.toStatus === 'Completed' ? (
+                                    <CheckCircle className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
+                                  ) : history.toStatus === 'Overdue' ? (
+                                    <XCircle className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
+                                  ) : history.isCreation ? (
+                                    <Plus className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
+                                  ) : (
+                                    <Clock className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-gray-500'}`} />
                                   )}
                                 </div>
                                 
-                                {/* Note */}
-                                {history.note && (
-                                  <div className="mb-3">
-                                    <p className="text-sm text-gray-700 bg-white rounded px-3 py-2 border border-gray-200">
-                                      {history.note}
-                                    </p>
+                                {/* Timeline content */}
+                                <div className={`flex-1 pb-6 ${isLatest ? 'bg-indigo-50' : 'bg-gray-50'} rounded-lg p-4`}>
+                                  {/* Status change */}
+                                  <div className="flex items-center gap-2 mb-2">
+                                    {history.fromStatus && (
+                                      <>
+                                        <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700 border border-gray-200">
+                                          {history.fromStatus}
+                                        </span>
+                                        <span className="text-gray-400">→</span>
+                                      </>
+                                    )}
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                      history.toStatus === 'Completed' ? 'bg-green-100 text-green-700 border border-green-200' :
+                                      history.toStatus === 'Overdue' ? 'bg-red-100 text-red-700 border border-red-200' :
+                                      history.toStatus === 'In Progress' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                                      history.toStatus === 'In Checking' ? 'bg-pink-100 text-pink-700 border border-pink-200' :
+                                      history.isCreation ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' :
+                                      'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                                    }`}>
+                                      {history.toStatus}
+                                    </span>
+                                    {isLatest && (
+                                      <span className="ml-auto text-xs font-semibold text-indigo-600">Latest</span>
+                                    )}
                                   </div>
-                                )}
-                                
-                                {/* Meta info */}
-                                <div className="flex items-center gap-3 text-xs text-gray-500">
-                                  <div className="flex items-center gap-1">
-                                    <User className="w-3 h-3" />
-                                    <span>{history.changedBy}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
-                                    <span>{new Date(history.changedAt).toLocaleDateString()}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    <span>{new Date(history.changedAt).toLocaleTimeString()}</span>
+                                  
+                                  {/* Note */}
+                                  {history.note && (
+                                    <div className="mb-3">
+                                      <p className="text-sm text-gray-700 bg-white rounded px-3 py-2 border border-gray-200 whitespace-pre-wrap">
+                                        {history.note}
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Meta info */}
+                                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                                    <div className="flex items-center gap-1">
+                                      <User className="w-3 h-3" />
+                                      <span>{history.changedBy}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="w-3 h-3" />
+                                      <span>{history.changedAt ? new Date(history.changedAt).toLocaleDateString() : 'N/A'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      <span>{history.changedAt ? new Date(history.changedAt).toLocaleTimeString() : 'N/A'}</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <ClipboardList className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm">No status changes recorded yet</p>
-                      <p className="text-xs mt-1">Status changes will appear here when the task status is updated</p>
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               </div>
 
