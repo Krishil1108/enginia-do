@@ -2695,160 +2695,259 @@ Priority: ${task.priority}`;
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-              <Users className="w-8 h-8 text-blue-600" />
+      <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-slate-900 font-sans">
+        {/* Inline styles for custom animations */}
+        <style>{`
+          @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+          }
+          .animate-blob {
+            animation: blob 7s infinite;
+          }
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+          .animation-delay-4000 {
+            animation-delay: 4s;
+          }
+        `}</style>
+
+        {/* Animated background elements */}
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob"></div>
+        <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob animation-delay-4000"></div>
+
+        {/* Content Container */}
+        <div className="relative z-10 w-full max-w-5xl flex flex-col md:flex-row bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] overflow-hidden m-4">
+          
+          {/* Left Side: Branding / Unique Element */}
+          <div className="hidden md:flex md:w-5/12 flex-col justify-between p-12 bg-gradient-to-br from-white/10 to-transparent border-r border-white/10 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,white,transparent)] opacity-50"></div>
+            
+            <div className="relative z-10">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl shadow-xl mb-6 border border-white/30">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4 leading-tight">
+                Welcome to <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-teal-200">Enjinia-do</span>
+              </h1>
+              <p className="text-lg text-blue-100 font-medium max-w-sm leading-relaxed">
+                The ultimate workspace to manage, track, and elevate your engineering projects.
+              </p>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Enjinia-do</h1>
-            <p className="text-gray-600 mt-2">
-              {isRegistering ? 'Create your account' : 'Sign in to continue'}
-            </p>
+            
+            <div className="relative z-10 space-y-4">
+              <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm transition-transform hover:scale-105 duration-300">
+                <div className="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold">Lightning Fast</h4>
+                  <p className="text-blue-200 text-sm">Optimized for rapid workflows</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm transition-transform hover:scale-105 duration-300">
+                <div className="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold">Secure & Reliable</h4>
+                  <p className="text-purple-200 text-sm">Your data is safe with us</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {!isRegistering ? (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={loginData.username}
-                    onChange={(e) => setLoginData({...loginData, username: e.target.value})}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your username"
-                    required
-                  />
+          {/* Right Side: Form */}
+          <div className="w-full md:w-7/12 p-8 md:p-14 bg-white flex flex-col justify-center">
+            {/* Mobile Header (Only visible on small screens) */}
+            <div className="md:hidden text-center mb-8">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-100 rounded-2xl mb-4">
+                <Users className="w-7 h-7 text-blue-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">Enjinia-do</h1>
+            </div>
+
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                {isRegistering ? 'Create Account' : 'Welcome Back'}
+              </h2>
+              <p className="text-gray-500">
+                {isRegistering ? 'Join our platform to get started' : 'Please enter your details to sign in.'}
+              </p>
+            </div>
+
+            {!isRegistering ? (
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <input
+                      type="text"
+                      value={loginData.username}
+                      onChange={(e) => setLoginData({...loginData, username: e.target.value})}
+                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      placeholder="Enter your username"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="password"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your password"
-                    required
-                  />
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <input
+                      type="password"
+                      value={loginData.password}
+                      onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-
-              <div className="text-center mt-4">
                 <button
-                  type="button"
-                  onClick={() => setIsRegistering(true)}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gray-900 text-white py-4 rounded-xl hover:bg-black transition-colors font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 duration-200 disabled:opacity-70 disabled:transform-none disabled:shadow-none mt-2"
                 >
-                  Don't have an account? Register
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Signing in...
+                    </span>
+                  ) : 'Sign In'}
                 </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                <input
-                  type="text"
-                  value={registerData.name}
-                  onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Username *</label>
-                <input
-                  type="text"
-                  value={registerData.username}
-                  onChange={(e) => setRegisterData({...registerData, username: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
+                <div className="text-center mt-6">
+                  <p className="text-gray-500 text-sm">
+                    Don't have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setIsRegistering(true)}
+                      className="text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+                    >
+                      Create one
+                    </button>
+                  </p>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label>
+                    <input
+                      type="text"
+                      value={registerData.name}
+                      onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      required
+                      placeholder="John Doe"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                <input
-                  type="email"
-                  value={registerData.email}
-                  onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Username *</label>
+                    <input
+                      type="text"
+                      value={registerData.username}
+                      onChange={(e) => setRegisterData({...registerData, username: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      required
+                      placeholder="johndoe"
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
-                <input
-                  type="password"
-                  value={registerData.password}
-                  onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email *</label>
+                    <input
+                      type="email"
+                      value={registerData.email}
+                      onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      required
+                      placeholder="john@example.com"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Role *</label>
-                <select
-                  value={registerData.role}
-                  onChange={(e) => setRegisterData({...registerData, role: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Team Lead">Team Lead</option>
-                  <option value="Employee">Employee</option>
-                </select>
-              </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password *</label>
+                    <input
+                      type="password"
+                      value={registerData.password}
+                      onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      required
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                <input
-                  type="text"
-                  value={registerData.department}
-                  onChange={(e) => setRegisterData({...registerData, department: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., IT, Sales, HR"
-                />
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role *</label>
+                    <select
+                      value={registerData.role}
+                      onChange={(e) => setRegisterData({...registerData, role: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    >
+                      <option value="Admin">Admin</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Team Lead">Team Lead</option>
+                      <option value="Employee">Employee</option>
+                    </select>
+                  </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
-              >
-                {loading ? 'Creating account...' : 'Register'}
-              </button>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Department</label>
+                    <input
+                      type="text"
+                      value={registerData.department}
+                      onChange={(e) => setRegisterData({...registerData, department: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      placeholder="e.g., IT, Sales, HR"
+                    />
+                  </div>
+                </div>
 
-              <div className="text-center mt-4">
                 <button
-                  type="button"
-                  onClick={() => setIsRegistering(false)}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gray-900 text-white py-4 rounded-xl hover:bg-black transition-colors font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 duration-200 disabled:opacity-70 mt-4"
                 >
-                  Already have an account? Sign in
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Creating account...
+                    </span>
+                  ) : 'Register'}
                 </button>
-              </div>
-            </form>
-          )}
 
+                <div className="text-center mt-6">
+                  <p className="text-gray-500 text-sm">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setIsRegistering(false)}
+                      className="text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                </div>
+              </form>
+            )}
 
+          </div>
         </div>
       </div>
     );
@@ -7222,7 +7321,7 @@ Priority: ${task.priority}`;
       )}
       
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-[60] shadow-sm">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
         <div className="px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
