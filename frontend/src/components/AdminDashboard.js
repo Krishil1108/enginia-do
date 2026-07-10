@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, Users, Shield, ArrowRight, Lock } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import UserManagement from './UserManagement';
 import RoleManagement from './RoleManagement';
 
@@ -131,22 +132,81 @@ const AdminDashboard = ({ currentUser, onBack }) => {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Admin Overview</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-indigo-600 mb-1">Owner Access</div>
-            <div className="text-sm text-gray-600">Full system control</div>
+      {/* Interactive Data Dashboards */}
+      <div className="mt-8">
+        <h3 className="text-2xl font-bold text-gray-800 mb-6">System Overview</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* Role Distribution Donut Chart */}
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.05)] p-6 border border-gray-100">
+            <h4 className="text-lg font-semibold text-gray-700 mb-4">User Role Distribution</h4>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Employees', value: 45 },
+                      { name: 'Managers', value: 12 },
+                      { name: 'Team Leads', value: 8 },
+                      { name: 'Admins', value: 3 },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={90}
+                    paddingAngle={5}
+                    dataKey="value"
+                    animationDuration={1500}
+                    animationEasing="ease-out"
+                  >
+                    {[
+                      { name: 'Employees', value: 45 },
+                      { name: 'Managers', value: 12 },
+                      { name: 'Team Leads', value: 8 },
+                      { name: 'Admins', value: 3 },
+                    ].map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'][index % 4]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle"/>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="bg-white rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600 mb-1">Unlimited</div>
-            <div className="text-sm text-gray-600">Users & roles</div>
+
+          {/* Activity Bar Chart */}
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.05)] p-6 border border-gray-100">
+            <h4 className="text-lg font-semibold text-gray-700 mb-4">Weekly Task Activity</h4>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    { name: 'Mon', Created: 12, Completed: 8 },
+                    { name: 'Tue', Created: 19, Completed: 15 },
+                    { name: 'Wed', Created: 15, Completed: 22 },
+                    { name: 'Thu', Created: 22, Completed: 18 },
+                    { name: 'Fri', Created: 8, Completed: 25 },
+                  ]}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} />
+                  <RechartsTooltip
+                    cursor={{ fill: '#F3F4F6' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend iconType="circle" />
+                  <Bar dataKey="Created" fill="#818CF8" radius={[4, 4, 0, 0]} animationDuration={1500} />
+                  <Bar dataKey="Completed" fill="#34D399" radius={[4, 4, 0, 0]} animationDuration={1500} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="bg-white rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600 mb-1">10</div>
-            <div className="text-sm text-gray-600">Permission types</div>
-          </div>
+
         </div>
       </div>
     </div>

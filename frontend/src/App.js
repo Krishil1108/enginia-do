@@ -2951,6 +2951,20 @@ Priority: ${task.priority}`;
   // Horizontal Task Card for list view
   // Table View Component
   const TableView = ({ tasks, showActions = true, showStats = false, stats, showCopyButton = false }) => {
+    const [expandedRows, setExpandedRows] = useState(new Set());
+    
+    const toggleRow = (taskId) => {
+      setExpandedRows(prev => {
+        const next = new Set(prev);
+        if (next.has(taskId)) {
+          next.delete(taskId);
+        } else {
+          next.add(taskId);
+        }
+        return next;
+      });
+    };
+
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       const day = String(date.getDate()).padStart(2, '0');
@@ -3063,7 +3077,8 @@ Priority: ${task.priority}`;
                 const assignedUser = users.find(u => u.username === task.assignedTo);
                 
                 return (
-                  <tr key={task._id} className="hover:bg-gray-50 transition-colors">
+                  <React.Fragment key={task._id}>
+                    <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <input type="checkbox" className="rounded border-gray-300" />
                     </td>
@@ -3197,16 +3212,13 @@ Priority: ${task.priority}`;
                               <Eye className="w-4 h-4" />
                             </button>
 
-                            {/* Note Tracking - Show status change history */}
+                            {/* Expand Row for Inline Note Timeline */}
                             <button
-                              onClick={() => {
-                                setNoteTimelineTask(task);
-                                setShowNoteTimelineModal(true);
-                              }}
-                              className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
-                              title="Note Tracking"
+                              onClick={() => toggleRow(task._id)}
+                              className={`p-1.5 rounded transition-colors ${expandedRows.has(task._id) ? 'bg-indigo-100 text-indigo-800' : 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50'}`}
+                              title="Toggle Timeline"
                             >
-                              <ClipboardList className="w-4 h-4" />
+                              {expandedRows.has(task._id) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                             </button>
 
                             {/* Create MOM button */}
@@ -3265,7 +3277,69 @@ Priority: ${task.priority}`;
                           </div>
                       </td>
                     )}
-                  </tr>
+                    </tr>
+                    {expandedRows.has(task._id) && (
+                      <tr className="bg-slate-50/50">
+                        <td colSpan={showActions ? "10" : "9"} className="px-6 py-4 border-b-2 border-indigo-100">
+                          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                            <h4 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-indigo-500" /> Note & Timeline Tracking
+                            </h4>
+                            {(() => {
+                              const timelineEvents = [
+                                ...(task.statusHistory || []),
+                                {
+                                  isCreation: true,
+                                  toStatus: 'Created',
+                                  note: task.description || 'Task created',
+                                  changedBy: task.assignedBy,
+                                  changedAt: task.createdAt || task.inDate
+                                }
+                              ];
+                              return timelineEvents.length > 0 ? (
+                                <div className="space-y-4">
+                                  {[...timelineEvents].reverse().map((history, idx) => {
+                                    const isLatest = idx === 0;
+                                    return (
+                                      <div key={idx} className="relative flex gap-4">
+                                        {idx !== timelineEvents.length - 1 && (
+                                          <div className="absolute left-4 top-10 bottom-0 w-0.5 bg-slate-200"></div>
+                                        )}
+                                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                          isLatest ? 'bg-indigo-100 ring-4 ring-white' : 'bg-slate-100 ring-4 ring-white'
+                                        }`}>
+                                          <Clock className={`w-4 h-4 ${isLatest ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                        </div>
+                                        <div className={`flex-1 pb-4 ${isLatest ? 'bg-indigo-50/50' : 'bg-transparent'} rounded-lg p-3 -mt-2`}>
+                                          <div className="flex items-center gap-2 mb-1">
+                                            {history.fromStatus && (
+                                              <>
+                                                <span className="text-xs font-medium text-slate-600">{history.fromStatus}</span>
+                                                <span className="text-slate-400">→</span>
+                                              </>
+                                            )}
+                                            <span className="text-xs font-medium text-slate-800">{history.toStatus}</span>
+                                            <span className="text-xs text-slate-500 ml-auto flex items-center gap-1">
+                                              <User className="w-3 h-3" /> {history.changedBy}
+                                            </span>
+                                          </div>
+                                          {history.note && (
+                                            <p className="text-sm text-slate-700 mt-2 bg-white/60 p-2 rounded border border-slate-100">{history.note}</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-slate-500">No tracking history available.</p>
+                              );
+                            })()}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -7316,7 +7390,7 @@ Priority: ${task.priority}`;
       )}
       
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40 shadow-sm">
         <div className="px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -7409,7 +7483,7 @@ Priority: ${task.priority}`;
       <div>
         {/* Sidebar */}
         <div
-          className={`fixed left-0 bg-white border-r border-gray-200 shadow-lg transition-all duration-300 z-50 flex flex-col ${
+          className={`fixed left-0 bg-white/80 backdrop-blur-md border-r border-gray-200 shadow-lg transition-all duration-300 z-50 flex flex-col ${
             /* Mobile: slide-in overlay */
             'md:top-[73px] md:h-[calc(100vh-73px)]'
           } ${
@@ -8330,27 +8404,29 @@ Priority: ${task.priority}`;
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Task Title *</label>
+              <div className="relative pt-2">
                 <input
                   type="text"
+                  id="floating_title"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter task title"
+                  className="block px-4 pb-2.5 pt-5 w-full text-sm text-gray-900 bg-transparent rounded-lg border-2 border-gray-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                  placeholder=" "
                   required
                 />
+                <label htmlFor="floating_title" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] left-4 bg-white px-1 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4">Task Title *</label>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <div className="relative pt-2">
                 <textarea
+                  id="floating_desc"
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="block px-4 pb-2.5 pt-5 w-full text-sm text-gray-900 bg-transparent rounded-lg border-2 border-gray-200 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                   rows="3"
-                  placeholder="Task description"
+                  placeholder=" "
                 />
+                <label htmlFor="floating_desc" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] left-4 bg-white px-1 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4">Description</label>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
