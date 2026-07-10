@@ -2642,6 +2642,24 @@ Priority: ${task.priority}`;
 
   // Login Screen Component
   const LoginScreen = () => {
+    // Array of engineering/productivity quotes
+    const quotes = [
+      "Engineering is the closest thing to magic that exists in the world.",
+      "The ideal engineer is a composite: using knowledge of all disciplines in solving problems.",
+      "Strive for perfection in everything you do. When it does not exist, design it.",
+      "To the engineer, the glass is twice as big as it needs to be.",
+      "Innovation is taking two things that exist and putting them together in a new way.",
+      "Science can amuse and fascinate us all, but it is engineering that changes the world.",
+      "Engineers believe that if it ain't broke, it doesn't have enough features yet.",
+      "Architecture begins where engineering ends.",
+      "The fewer moving parts, the better. Exactly. No truer words were ever spoken.",
+      "A good engineer is a person who makes a design that works with as few original ideas as possible."
+    ];
+    
+    // Calculate week number for weekly quotes
+    const weekNumber = Math.ceil(Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 1)) / (86400000)) / 7);
+    const weeklyQuote = quotes[(weekNumber || 1) % quotes.length];
+
     const [loginData, setLoginData] = useState({ username: '', password: '' });
     const [isRegistering, setIsRegistering] = useState(false);
     const [registerData, setRegisterData] = useState({
@@ -2695,67 +2713,44 @@ Priority: ${task.priority}`;
     };
 
     return (
-      <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-slate-900 font-sans">
-        {/* Inline styles for custom animations */}
-        <style>{`
-          @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
-          }
-          .animate-blob {
-            animation: blob 7s infinite;
-          }
-          .animation-delay-2000 {
-            animation-delay: 2s;
-          }
-          .animation-delay-4000 {
-            animation-delay: 4s;
-          }
-        `}</style>
-
-        {/* Animated background elements */}
-        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob"></div>
-        <div className="absolute top-[20%] right-[-10%] w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-[100px] opacity-60 animate-blob animation-delay-4000"></div>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 font-sans relative overflow-hidden">
+        {/* Subtle background color accents matching the app's cards */}
+        <div className="absolute top-0 left-0 w-full h-2 flex">
+          <div className="h-full flex-1 bg-blue-500"></div>
+          <div className="h-full flex-1 bg-green-500"></div>
+          <div className="h-full flex-1 bg-yellow-400"></div>
+          <div className="h-full flex-1 bg-red-500"></div>
+        </div>
 
         {/* Content Container */}
-        <div className="relative z-10 w-full max-w-5xl flex flex-col md:flex-row bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] overflow-hidden m-4">
+        <div className="w-full max-w-5xl flex flex-col md:flex-row bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden z-10 border border-gray-100">
           
-          {/* Left Side: Branding / Unique Element */}
-          <div className="hidden md:flex md:w-5/12 flex-col justify-between p-12 bg-gradient-to-br from-white/10 to-transparent border-r border-white/10 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,white,transparent)] opacity-50"></div>
+          {/* Left Side: Branding & Quote */}
+          <div className="hidden md:flex md:w-5/12 flex-col justify-between p-12 bg-blue-600 relative overflow-hidden text-white">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,white,transparent)] opacity-30"></div>
             
+            {/* Top Branding */}
             <div className="relative z-10">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl shadow-xl mb-6 border border-white/30">
-                <Users className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-xl shadow-md mb-6">
+                <Users className="w-7 h-7 text-blue-600" />
               </div>
-              <h1 className="text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4 leading-tight">
-                Welcome to <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-teal-200">Enjinia-do</span>
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4">
+                Welcome to <br/><span className="text-blue-200">Enjinia-do</span>
               </h1>
-              <p className="text-lg text-blue-100 font-medium max-w-sm leading-relaxed">
+              <p className="text-lg text-blue-100/90 font-medium leading-relaxed max-w-sm">
                 The ultimate workspace to manage, track, and elevate your engineering projects.
               </p>
             </div>
             
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm transition-transform hover:scale-105 duration-300">
-                <div className="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold">Lightning Fast</h4>
-                  <p className="text-blue-200 text-sm">Optimized for rapid workflows</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm transition-transform hover:scale-105 duration-300">
-                <div className="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold">Secure & Reliable</h4>
-                  <p className="text-purple-200 text-sm">Your data is safe with us</p>
+            {/* Weekly Quote */}
+            <div className="relative z-10 mt-12">
+              <div className="p-6 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                <svg className="w-8 h-8 text-blue-300 mb-4 opacity-70" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" /></svg>
+                <p className="text-lg font-medium leading-relaxed italic text-white/95">
+                  "{weeklyQuote}"
+                </p>
+                <div className="mt-4 flex items-center gap-2 text-sm text-blue-200">
+                  <span className="w-4 h-[1px] bg-blue-300"></span> Weekly Inspiration
                 </div>
               </div>
             </div>
