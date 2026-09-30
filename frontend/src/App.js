@@ -97,6 +97,7 @@ const TaskManagementSystem = () => {
   const [projects, setProjects] = useState([]);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectNotes, setNewProjectNotes] = useState('');
   const [editingProject, setEditingProject] = useState(null);
   const [associates, setAssociates] = useState([]);
   const [showAssociateModal, setShowAssociateModal] = useState(false);
@@ -715,6 +716,12 @@ const TaskManagementSystem = () => {
     }
   };
 
+  const getProjectNotes = useCallback((projectName) => {
+    if (!projectName || !projects || !Array.isArray(projects)) return null;
+    const projectObj = projects.find(p => (typeof p === 'string' ? p : p?.name) === projectName);
+    return (typeof projectObj === 'object' && projectObj?.notes && projectObj.notes.trim() !== '') ? projectObj.notes : null;
+  }, [projects]);
+
   const loadAssociates = async () => {
     try {
       if (!currentUser?.username) return;
@@ -1243,10 +1250,13 @@ const TaskManagementSystem = () => {
       try {
         if (editingProject) {
           // Editing existing project
-          const projectToEdit = editingProject._id ? editingProject : 
-            { _id: projects.find(p => typeof p === 'object' && p.name === editingProject)?._id };
+          const pId = editingProject._id ? editingProject._id : projects.find(p => typeof p === 'object' && p.name === editingProject.name)?._id;
           
-          await axios.put(`${API_URL}/projects/${editingProject._id}`, { name: projectName });
+          await axios.put(`${API_URL}/projects/${pId}`, { 
+            name: projectName,
+            notes: newProjectNotes,
+            username: currentUser?.username
+          });
           
           // Update local state
           await loadProjects();
@@ -1261,6 +1271,7 @@ const TaskManagementSystem = () => {
           // Adding new project
           await axios.post(`${API_URL}/projects`, { 
             name: projectName, 
+            notes: newProjectNotes,
             username: currentUser?.username 
           });
           await loadProjects();
@@ -1268,6 +1279,7 @@ const TaskManagementSystem = () => {
         }
         
         setNewProjectName('');
+        setNewProjectNotes('');
         setShowProjectModal(false);
       } catch (error) {
         console.error('Error saving project:', error);
@@ -1281,8 +1293,10 @@ const TaskManagementSystem = () => {
   };
 
   const editProject = (projectObj) => {
-    setEditingProject(projectObj);
-    setNewProjectName(projectObj.name);
+    const pObj = typeof projectObj === 'string' ? projects.find(p => typeof p === 'object' && p.name === projectObj) : projectObj;
+    setEditingProject(pObj || { name: projectObj });
+    setNewProjectName(typeof projectObj === 'string' ? projectObj : projectObj?.name || '');
+    setNewProjectNotes(typeof projectObj === 'object' ? projectObj?.notes || '' : '');
     setShowProjectModal(true);
   };
 
@@ -3290,10 +3304,18 @@ Priority: ${task.priority}`;
                             <h4 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
                               <Clock className="w-4 h-4 text-indigo-500" /> Note & Timeline Tracking
                             </h4>
+                            {getProjectNotes(task.project) && (
+                              <div className="mb-4 bg-amber-50/90 border border-amber-200 rounded-lg p-3">
+                                <div className="text-xs font-semibold text-amber-900 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                  <FolderKanban className="w-3.5 h-3.5 text-amber-600" /> Auto-Linked Project Note ({task.project}):
+                                </div>
+                                <p className="text-xs text-amber-950 whitespace-pre-wrap">{getProjectNotes(task.project)}</p>
+                              </div>
+                            )}
                             {task.initialNote && (
                               <div className="mb-4 bg-indigo-50/80 border border-indigo-200 rounded-lg p-3">
                                 <div className="text-xs font-semibold text-indigo-900 uppercase tracking-wider mb-1 flex items-center gap-1">
-                                  📌 Keeper Note (Permanent):
+                                  📌 Task Keeper Note (Permanent):
                                 </div>
                                 <p className="text-xs text-indigo-950 whitespace-pre-wrap">{task.initialNote}</p>
                               </div>
@@ -7665,6 +7687,23 @@ Priority: ${task.priority}`;
                 </button>
               )}
 
+              {/* Notes Keeper */}
+              <button
+                onClick={() => { 
+                  setCurrentView('notes-keeper');
+                  if (window.innerWidth < 768) setIsSidebarOpen(false);
+                }}
+                title="Notes Keeper"
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                  currentView === 'notes-keeper'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                } ${!isSidebarOpen ? 'justify-center' : ''}`}
+              >
+                <FileText className="w-5 h-5 flex-shrink-0" />
+                {isSidebarOpen && <span className="whitespace-nowrap">Notes Keeper</span>}
+              </button>
+
               <div className="border-t border-gray-200 my-2"></div>
 
               {/* MOM History */}
@@ -7772,6 +7811,144 @@ Priority: ${task.priority}`;
           {currentView === 'associate-tasks' && <AssociateTasksView />}
           {currentView === 'external-tasks' && <ExternalTasksView />}
           {currentView === 'confidential-tasks' && userPermissions.confidentialTasks && <ConfidentialTasksView />}
+          {currentView === 'notes-keeper' && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 rounded-2xl p-6 text-white shadow-xl">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <ClipboardList className="w-8 h-8 text-indigo-300" />
+                      <h1 className="text-2xl font-bold tracking-tight">Notes Keeper Hub</h1>
+                    </div>
+                    <p className="text-indigo-200 text-sm">
+                      Centralized hub for Project Notes (auto-linked to every task) & Task Keeper Notes.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowProjectModal(true)}
+                    className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-xs transition-all self-start md:self-auto"
+                  >
+                    <Plus className="w-4 h-4" /> Manage Projects & Notes
+                  </button>
+                </div>
+              </div>
+
+              {/* Project Notes Grid */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <FolderKanban className="w-5 h-5 text-indigo-600" /> Project Notes (Auto-linked to Tasks)
+                  </h2>
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    {projects.length} Project(s)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {projects.map((project, idx) => {
+                    const pName = typeof project === 'string' ? project : project?.name || '';
+                    const pObj = typeof project === 'object' ? project : null;
+                    const pNotes = pObj?.notes || '';
+                    const pId = pObj?._id || idx;
+                    const linkedTasksCount = tasks.filter(t => t.project === pName).length;
+
+                    return (
+                      <div key={pId} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs hover:border-indigo-300 transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                                <FolderKanban className="w-5 h-5 text-indigo-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-gray-900 text-base">{pName}</h3>
+                                <span className="text-xs text-gray-500">{linkedTasksCount} linked task(s)</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => editProject(project)}
+                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" /> Edit Note
+                            </button>
+                          </div>
+
+                          <div className="mt-2 bg-amber-50/90 border border-amber-200/90 rounded-xl p-3.5">
+                            <div className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1 flex items-center gap-1">
+                              <FileText className="w-3.5 h-3.5 text-amber-600" /> Project Keeper Note:
+                            </div>
+                            <p className="text-xs text-amber-950 whitespace-pre-wrap leading-relaxed">
+                              {pNotes || <span className="italic text-amber-700/70">No project note added yet. Click 'Edit Note' to add notes that cascade to all tasks in this project.</span>}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                          <span>Appears on all <strong className="text-gray-800">{linkedTasksCount}</strong> tasks</span>
+                          <button
+                            onClick={() => {
+                              setFilters({ ...filters, project: pName });
+                              setCurrentView('all-tasks');
+                            }}
+                            className="text-indigo-600 hover:underline font-medium"
+                          >
+                            View Tasks →
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Task Notes Section */}
+              <div className="space-y-4 pt-6 border-t border-gray-200">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-indigo-600" /> Individual Task Notes
+                </h2>
+
+                <div className="space-y-3">
+                  {tasks.filter(t => t.initialNote || getProjectNotes(t.project)).map(task => (
+                    <div key={task._id} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-gray-900 text-sm">{task.title}</h4>
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">
+                            {task.project}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setNoteTimelineTask(task);
+                            setShowNoteTimelineModal(true);
+                          }}
+                          className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold flex items-center gap-1"
+                        >
+                          <Clock className="w-3.5 h-3.5" /> Note Timeline
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                        {getProjectNotes(task.project) && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs">
+                            <span className="font-bold text-amber-900 block mb-0.5">📁 Auto-Linked Project Note ({task.project}):</span>
+                            <p className="text-amber-950 whitespace-pre-wrap">{getProjectNotes(task.project)}</p>
+                          </div>
+                        )}
+                        {task.initialNote && (
+                          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-2.5 text-xs">
+                            <span className="font-bold text-indigo-900 block mb-0.5">📌 Task Keeper Note:</span>
+                            <p className="text-indigo-950 whitespace-pre-wrap">{task.initialNote}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           {currentView === 'mom-history' && <MOMHistory currentUser={currentUser} />}
           {currentView === 'admin-dashboard' && userPermissions.adminPanel && <AdminDashboard currentUser={currentUser} onBack={() => setCurrentView('my-tasks')} />}
           {currentView === 'admin-reports' && userPermissions.adminReports && <AdminReportsView />}
@@ -7795,31 +7972,44 @@ Priority: ${task.priority}`;
             <div className="p-6 space-y-4 overflow-y-auto">
               {/* Add/Edit Form */}
               <div className="bg-blue-50 p-4 rounded-lg space-y-3">
-                <label className="block text-sm font-medium text-gray-700">Project Name *</label>
-                <div className="flex gap-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
                   <input
                     type="text"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                     placeholder="Enter project name"
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    onKeyPress={(e) => e.key === 'Enter' && addProject()}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
                   />
-                  <button
-                    onClick={addProject}
-                    disabled={!newProjectName.trim()}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap"
-                  >
-                    {editingProject ? 'Update' : 'Add'}
-                  </button>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <FileText className="w-3.5 h-3.5 text-blue-600" /> Project Keeper Note (Appears automatically on every task linked to this project)
+                  </label>
+                  <textarea
+                    value={newProjectNotes}
+                    onChange={(e) => setNewProjectNotes(e.target.value)}
+                    placeholder="Enter notes for this project (will automatically show on every task linked to this project)..."
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
+                    rows="2"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-1">
                   {editingProject && (
                     <button
-                      onClick={() => { setEditingProject(null); setNewProjectName(''); }}
-                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                      onClick={() => { setEditingProject(null); setNewProjectName(''); setNewProjectNotes(''); }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
                     >
                       Cancel
                     </button>
                   )}
+                  <button
+                    onClick={addProject}
+                    disabled={!newProjectName.trim()}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap text-sm font-medium"
+                  >
+                    {editingProject ? 'Update Project' : 'Add Project'}
+                  </button>
                 </div>
               </div>
 
@@ -7839,28 +8029,37 @@ Priority: ${task.priority}`;
                       return (
                       <div
                         key={projectId}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
+                        className="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors space-y-2"
                       >
-                        <div className="flex items-center gap-3">
-                          <FolderKanban className="w-5 h-5 text-blue-600" />
-                          <span className="font-medium text-gray-900">{projectName}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <FolderKanban className="w-5 h-5 text-blue-600" />
+                            <span className="font-medium text-gray-900">{projectName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => editProject(project)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Edit project & notes"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteProject(project)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete project"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => editProject(project)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit project"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => deleteProject(project)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete project"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+
+                        {typeof project === 'object' && project.notes && (
+                          <div className="bg-amber-50 border border-amber-200 rounded p-2 text-xs text-amber-900">
+                            <span className="font-bold block mb-0.5">📁 Project Note:</span>
+                            <p className="whitespace-pre-wrap">{project.notes}</p>
+                          </div>
+                        )}
                       </div>
                     )})
                   )}
@@ -8415,6 +8614,15 @@ Priority: ${task.priority}`;
                     Add
                   </button>
                 </div>
+                {formData.project && getProjectNotes(formData.project) && (
+                  <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">
+                    <div className="font-bold uppercase tracking-wider mb-1 flex items-center gap-1 text-amber-800">
+                      <FolderKanban className="w-3.5 h-3.5 text-amber-600" />
+                      Auto-Linked Project Note ({formData.project}):
+                    </div>
+                    <p className="whitespace-pre-wrap text-amber-950 font-medium">{getProjectNotes(formData.project)}</p>
+                  </div>
+                )}
               </div>
 
               <div className="relative pt-2">
@@ -9290,6 +9498,17 @@ Priority: ${task.priority}`;
                   Project: <span className="font-semibold text-gray-900">{getProjectName(noteTimelineTask.project)}</span>
                 </p>
               </div>
+
+              {/* Auto-Linked Project Note Card */}
+              {getProjectNotes(noteTimelineTask.project) && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-xs">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <FolderKanban className="w-4 h-4 text-amber-600" />
+                    <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">Auto-Linked Project Note ({noteTimelineTask.project})</h4>
+                  </div>
+                  <p className="text-sm text-amber-950 whitespace-pre-wrap font-medium">{getProjectNotes(noteTimelineTask.project)}</p>
+                </div>
+              )}
 
               {/* Permanent Keeper Note Card */}
               {noteTimelineTask.initialNote && (

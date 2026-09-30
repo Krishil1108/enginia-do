@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 // Create a new project
 router.post('/', async (req, res) => {
   try {
-    const { name, username } = req.body;
+    const { name, notes, username } = req.body;
     
     // Check if project already exists
     const existingProject = await Project.findOne({ name: name.trim() });
@@ -37,7 +37,18 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Project already exists' });
     }
 
-    const projectData = { name: name.trim() };
+    const projectData = { 
+      name: name.trim(),
+      notes: notes ? notes.trim() : ''
+    };
+
+    if (notes && notes.trim() !== '') {
+      projectData.notesHistory = [{
+        note: notes.trim(),
+        addedBy: username || 'System',
+        addedAt: new Date()
+      }];
+    }
     
     // Check if the user creating the project is a demo user
     if (username) {
@@ -56,31 +67,77 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update a project
+// Update a project (name & notes)
 router.put('/:id', async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, notes, username } = req.body;
     
     // Check if new name already exists (excluding current project)
-    const existingProject = await Project.findOne({ 
-      name: name.trim(), 
-      _id: { $ne: req.params.id } 
-    });
-    
-    if (existingProject) {
-      return res.status(400).json({ message: 'Project with this name already exists' });
+    if (name) {
+      const existingProject = await Project.findOne({ 
+        name: name.trim(), 
+        _id: { $ne: req.params.id } 
+      });
+      
+      if (existingProject) {
+        return res.status(400).json({ message: 'Project with this name already exists' });
+      }
+    }
+
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name.trim();
+    if (notes !== undefined) updateFields.notes = notes.trim();
+
+    const currentProject = await Project.findById(req.params.id);
+    if (!currentProject) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    if (notes !== undefined && notes.trim() !== currentProject.notes) {
+      updateFields.notesHistory = currentProject.notesHistory || [];
+      updateFields.notesHistory.push({
+        note: notes.trim(),
+        addedBy: username || 'System',
+        addedAt: new Date()
+      });
     }
 
     const project = await Project.findByIdAndUpdate(
       req.params.id,
-      { name: name.trim() },
+      updateFields,
       { new: true, runValidators: true }
     );
 
+    res.json(project);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Add a note to a project
+router.post('/:id/notes', async (req, res) => {
+  try {
+    const { note, addedBy } = req.body;
+    if (!note || note.trim() === '') {
+      return res.status(400).json({ message: 'Note text is required' });
+    }
+
+    const project = await Project.findById(req.params.id);
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
 
+    project.notes = note.trim();
+    if (!project.notesHistory) {
+      project.notesHistory = [];
+    }
+    project.notesHistory.push({
+      note: note.trim(),
+      addedBy: addedBy || 'User',
+      addedAt: new Date()
+    });
+
+    await project.save();
     res.json(project);
   } catch (error) {
     res.status(400).json({ message: error.message });
