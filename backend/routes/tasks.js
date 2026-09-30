@@ -59,12 +59,59 @@ router.post('/', async (req, res) => {
       }
     }
     
+    if (taskData.initialNote && taskData.initialNote.trim() !== '') {
+      if (!taskData.statusHistory) {
+        taskData.statusHistory = [];
+      }
+      taskData.statusHistory.push({
+        fromStatus: '',
+        toStatus: 'Created',
+        note: taskData.initialNote.trim(),
+        changedBy: taskData.assignedBy || 'System',
+        changedAt: new Date()
+      });
+    }
+
     const task = new Task(taskData);
     const newTask = await task.save();
     res.status(201).json(newTask);
   } catch (error) {
     console.error('Error creating task:', error);
     res.status(400).json({ message: error.message, details: error.errors });
+  }
+});
+
+// Add a note to task timeline history
+router.post('/:id/notes', async (req, res) => {
+  try {
+    const { note, addedBy } = req.body;
+    if (!note || note.trim() === '') {
+      return res.status(400).json({ message: 'Note text is required' });
+    }
+
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    const noteEntry = {
+      fromStatus: task.status,
+      toStatus: task.status,
+      note: note.trim(),
+      changedBy: addedBy || 'User',
+      changedAt: new Date()
+    };
+
+    if (!task.statusHistory) {
+      task.statusHistory = [];
+    }
+    task.statusHistory.push(noteEntry);
+    await task.save();
+
+    res.json(task);
+  } catch (error) {
+    console.error('Error adding note to task:', error);
+    res.status(400).json({ message: error.message });
   }
 });
 

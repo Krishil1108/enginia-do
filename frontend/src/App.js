@@ -211,6 +211,7 @@ const TaskManagementSystem = () => {
   const [taskDetails, setTaskDetails] = useState(null);
   const [showNoteTimelineModal, setShowNoteTimelineModal] = useState(false);
   const [noteTimelineTask, setNoteTimelineTask] = useState(null);
+  const [newTimelineNote, setNewTimelineNote] = useState('');
   const [showMOMModal, setShowMOMModal] = useState(false);
   const [selectedTaskForMOM, setSelectedTaskForMOM] = useState(null);
   
@@ -1383,6 +1384,7 @@ const TaskManagementSystem = () => {
     project: '',
     title: '',
     description: '',
+    initialNote: '',
     priority: 'Medium',
     severity: 'Minor',
     inDate: '',
@@ -1413,6 +1415,7 @@ const TaskManagementSystem = () => {
       project: selectedProject || '',
       title: '',
       description: '',
+      initialNote: '',
       priority: 'Medium',
       severity: 'Minor',
       inDate: '',
@@ -1472,6 +1475,7 @@ const TaskManagementSystem = () => {
         project: formData.project,
         title: formData.title,
         description: formData.description,
+        initialNote: formData.initialNote || '',
         priority: formData.priority,
         severity: formData.severity,
         inDate: formData.inDate,
@@ -1693,6 +1697,7 @@ Priority: ${task.priority}`;
       project: task.project,
       title: task.title,
       description: task.description,
+      initialNote: task.initialNote || '',
       priority: task.priority,
       severity: task.severity,
       inDate: task.inDate ? new Date(task.inDate).toISOString().split('T')[0] : '',
@@ -3285,13 +3290,21 @@ Priority: ${task.priority}`;
                             <h4 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
                               <Clock className="w-4 h-4 text-indigo-500" /> Note & Timeline Tracking
                             </h4>
+                            {task.initialNote && (
+                              <div className="mb-4 bg-indigo-50/80 border border-indigo-200 rounded-lg p-3">
+                                <div className="text-xs font-semibold text-indigo-900 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                  📌 Keeper Note (Permanent):
+                                </div>
+                                <p className="text-xs text-indigo-950 whitespace-pre-wrap">{task.initialNote}</p>
+                              </div>
+                            )}
                             {(() => {
                               const timelineEvents = [
                                 ...(task.statusHistory || []),
                                 {
                                   isCreation: true,
                                   toStatus: 'Created',
-                                  note: task.description || 'Task created',
+                                  note: task.initialNote || task.description || 'Task created',
                                   changedBy: task.assignedBy,
                                   changedAt: task.createdAt || task.inDate
                                 }
@@ -8429,6 +8442,20 @@ Priority: ${task.priority}`;
                 <label htmlFor="floating_desc" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] left-4 bg-white px-1 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4">Description</label>
               </div>
 
+              <div className="relative pt-2">
+                <textarea
+                  id="floating_initial_note"
+                  value={formData.initialNote || ''}
+                  onChange={(e) => setFormData({...formData, initialNote: e.target.value})}
+                  className="block px-4 pb-2.5 pt-5 w-full text-sm text-gray-900 bg-transparent rounded-lg border-2 border-indigo-200 appearance-none focus:outline-none focus:ring-0 focus:border-indigo-600 peer"
+                  rows="3"
+                  placeholder=" "
+                />
+                <label htmlFor="floating_initial_note" className="absolute text-sm text-indigo-700 font-semibold duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] left-4 bg-white px-1 peer-focus:text-indigo-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4 flex items-center gap-1">
+                  📌 Note Keeper / Initial Note (Stays permanently with task)
+                </label>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
@@ -9264,21 +9291,84 @@ Priority: ${task.priority}`;
                 </p>
               </div>
 
+              {/* Permanent Keeper Note Card */}
+              {noteTimelineTask.initialNote && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 shadow-xs">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <ClipboardList className="w-4 h-4 text-indigo-600" />
+                    <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Permanent Keeper Note</h4>
+                  </div>
+                  <p className="text-sm text-indigo-950 whitespace-pre-wrap font-medium">{noteTimelineTask.initialNote}</p>
+                </div>
+              )}
+
+              {/* Add New Note Keeper Input */}
+              <div className="bg-white border border-gray-200 rounded-xl p-3 shadow-xs">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5 text-indigo-600" /> Add New Note to Keeper Timeline
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTimelineNote}
+                    onChange={(e) => setNewTimelineNote(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter' && newTimelineNote.trim()) {
+                        e.preventDefault();
+                        try {
+                          const res = await axios.post(`${API_URL}/tasks/${noteTimelineTask._id}/notes`, {
+                            note: newTimelineNote.trim(),
+                            addedBy: currentUser?.name || currentUser?.username || 'User'
+                          });
+                          setNoteTimelineTask(res.data);
+                          setNewTimelineNote('');
+                          await loadTasks();
+                        } catch (err) {
+                          showError('Failed to add note');
+                        }
+                      }
+                    }}
+                    placeholder="Type a new note..."
+                    className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!newTimelineNote.trim()) return;
+                      try {
+                        const res = await axios.post(`${API_URL}/tasks/${noteTimelineTask._id}/notes`, {
+                          note: newTimelineNote.trim(),
+                          addedBy: currentUser?.name || currentUser?.username || 'User'
+                        });
+                        setNoteTimelineTask(res.data);
+                        setNewTimelineNote('');
+                        await loadTasks();
+                      } catch (err) {
+                        showError('Failed to add note');
+                      }
+                    }}
+                    className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-xs font-medium flex items-center gap-1"
+                  >
+                    Add Note
+                  </button>
+                </div>
+              </div>
+
               {/* Status History Timeline */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  Status Change History
+                  Note & Status History Timeline
                 </h3>
                 
-                <div className="overflow-y-auto max-h-96 pr-2">
+                <div className="overflow-y-auto max-h-80 pr-2">
                   {(() => {
                     const timelineEvents = noteTimelineTask ? [
                       ...(noteTimelineTask.statusHistory || []),
                       {
                         isCreation: true,
                         toStatus: 'Created',
-                        note: noteTimelineTask.description || 'Task created',
+                        note: noteTimelineTask.initialNote || noteTimelineTask.description || 'Task created',
                         changedBy: noteTimelineTask.assignedBy,
                         changedAt: noteTimelineTask.createdAt || noteTimelineTask.inDate
                       }
@@ -9381,6 +9471,7 @@ Priority: ${task.priority}`;
                   onClick={() => { 
                     setShowNoteTimelineModal(false); 
                     setNoteTimelineTask(null); 
+                    setNewTimelineNote('');
                   }}
                   className="w-full px-6 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
